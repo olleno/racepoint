@@ -144,8 +144,11 @@ for (const bit of liveHtml.split('class="g-row"').slice(1)) {
                  t[iNat + 2] || '', t.find(x => x === 'M' || x === 'W') || '', tid].join('|'));
 }
 
-// avgjorda lopp med livetiming: ur punktlistan
-const avgjorda = rac.filter(r => r.Live === '1')
+/* Avgjorda lopp ur punktlistan – ALLA, inte bara de som hade livetiming.
+   Tidigare stod här ett filter på Live === '1', och det gömde drygt hälften
+   av loppen: störtlopp, kombination och alla tävlingar som körts utan
+   livetiming syntes aldrig i kalendern. */
+const avgjorda = rac
   .sort((a, b) => b.Racedate.localeCompare(a.Racedate))
   .map(r => [String(r.Racecodex).padStart(4, '0'), r.Racedate, r.Place, r.Nationcode,
              r.Catcode, GRENNAMN[r.Disciplinecode] || r.Disciplinecode, r.Gender, ''].join('|'));
