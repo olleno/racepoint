@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index,follow">
+<meta name="description" content="Lagg till dina sociala medier och dina sponsorer pa din sida hos Race Point. Kostar ingenting.">
+<link rel="icon" href="ikoner/ikon-192.png" sizes="192x192">
+<meta name="theme-color" content="#12305a">
+<title>Lägg till dina länkar</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --ink:#0f1419; --ink2:#3d4753; --muted:#6b7684;
+  --line:#e4e8ec; --line2:#eef1f4; --falt:#fff;
+  --sport:#0a5fbf; --sport-bg:#e8f0fb; --sigill:#12305a; --sigill-txt:#fff;
+  --ok:#0a7a41; --ok-bg:#e6f4ec; --bad:#b03a2c; --bad-bg:#fdf1ef;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+    --line:#252b32; --line2:#1d2228; --falt:#11151a;
+    --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+    --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --bad-bg:#2a1512;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+  --line:#252b32; --line2:#1d2228; --falt:#11151a;
+  --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+  --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --bad-bg:#2a1512;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";display:block;height:4px;
+  background:linear-gradient(90deg,var(--sport) 0%,var(--sport) 55%,#d92d20 55%,#d92d20 100%)}
+.wrap{max-width:580px;margin:0 auto;padding:22px 16px 70px}
+
+.topprad{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.topprad svg{flex:none;width:42px;height:42px;display:block}
+.wm b{display:block;font-size:17px;font-weight:700;letter-spacing:.135em;
+  text-transform:uppercase;color:var(--sigill);line-height:1;white-space:nowrap}
+.wm .rule{display:block;height:1px;margin:6px 0 5px;background:var(--sigill);opacity:.35}
+.wm span{display:block;font-size:8px;font-weight:700;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--sport)}
+
+h1{font-size:26px;font-weight:680;letter-spacing:-.02em;margin:0 0 6px;line-height:1.2;
+  text-wrap:balance}
+.lead{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:52ch}
+
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  border-top:3px solid var(--sport);padding:20px 22px 22px;box-shadow:var(--shadow)}
+fieldset{border:0;padding:0;margin:0 0 22px}
+fieldset:last-of-type{margin-bottom:18px}
+legend{font-size:11px;font-weight:620;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--sport);padding:0;margin-bottom:4px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--falt);
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+input:focus{outline:2px solid var(--sport);outline-offset:1px;border-color:var(--sport)}
+input::placeholder{color:var(--muted);opacity:.7}
+.rad{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.falt{margin-bottom:13px}
+.falt:last-child{margin-bottom:0}
+
+button{font:inherit;font-size:15px;font-weight:640;color:#fff;background:var(--sport);
+  border:0;border-radius:10px;padding:11px 20px;cursor:pointer;width:100%}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:default;filter:none}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.svar{margin-top:14px;padding:13px 15px;border-radius:10px;font-size:14px;line-height:1.5}
+.svar.ok{background:var(--ok-bg);color:var(--ok)}
+.svar.fel{background:var(--bad-bg);color:var(--bad)}
+.svar b{display:block;margin-bottom:2px}
+
+.varfor{background:var(--sport-bg);border-radius:14px;padding:18px 22px 20px;margin-bottom:18px}
+.varfor h2{font-size:11px;font-weight:620;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--sport);margin:0 0 12px}
+.varfor ol{margin:0;padding-left:20px}
+.varfor li{font-size:13.5px;line-height:1.6;margin-bottom:9px}
+.varfor li:last-child{margin-bottom:0}
+.varfor li b{color:var(--ink)}
+.varfor .obs{font-size:12.5px;line-height:1.6;color:var(--ink2);margin:14px 0 0;
+  border-top:1px solid var(--line);padding-top:12px}
+.kryss label{display:flex;gap:9px;align-items:flex-start;font-weight:450;font-size:13.5px;
+  line-height:1.5;color:var(--ink);margin-bottom:10px;cursor:pointer}
+.kryss label:last-child{margin-bottom:0}
+.kryss input{width:17px;height:17px;flex:none;margin-top:2px;accent-color:var(--sport)}
+.villkor{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:20px;
+  border-top:1px solid var(--line);padding-top:16px}
+.villkor b{color:var(--ink2)}
+@media(max-width:520px){ .rad{grid-template-columns:1fr} .wrap{padding:16px 12px 50px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topprad">
+    <svg viewBox="0 0 52 52" aria-hidden="true">
+      <circle cx="26" cy="26" r="25" fill="var(--sigill)"/>
+      <circle cx="26" cy="26" r="21.5" fill="none" stroke="var(--sigill-txt)" stroke-opacity=".28" stroke-width="1.2"/>
+      <rect x="14" y="33" width="24" height="2.4" fill="var(--sigill-txt)"/>
+      <rect x="16" y="26" width="4.4" height="5.6" fill="var(--sigill-txt)"/>
+      <rect x="23.8" y="21" width="4.4" height="10.6" fill="var(--sigill-txt)"/>
+      <rect x="31.6" y="16" width="4.4" height="15.6" fill="var(--sigill-txt)"/>
+    </svg>
+    <div class="wm"><b>Race Point</b><span class="rule"></span><span>Alpint</span></div>
+  </div>
+
+  <h1>Lägg till dina länkar</h1>
+  <p class="lead">Din sida på Race Point finns redan — den byggs ur FIS officiella
+    punktlista. Här fyller du på med det som är ditt eget: sociala medier, din egen
+    sajt och dina sponsorer. Det kostar ingenting.</p>
+
+  <section class="varfor">
+    <h2>Varför det är värt din kvart</h2>
+    <ol>
+      <li><b>Dina sponsorer syns där folk faktiskt tittar.</b> Din sida hittas av
+        alla som söker på ditt namn eller följer dina resultat. En sponsorlogotyp där
+        är värd mer än en i en Instagram-story som är borta efter ett dygn.</li>
+      <li><b>Du blir sökbar som dig själv.</b> I dag finns du hos FIS som ett nummer
+        och en poänglista. Här finns du med dina kanaler och din historia.</li>
+      <li><b>Du får en egen länk att dela.</b> Delar du den och någon köper något
+        genom den, går <b>80 procent till dig</b> — utbetalt till din klubb och
+        öronmärkt för din verksamhet. 10 procent går till Race Point Foundation som
+        delar ut stipendier, och 10 procent till att driva sajten.</li>
+      <li><b>Vi förhandlar med större partners.</b> Målet är egna avtal med tjänster
+        skidåkare faktiskt använder — valutakort, reseförsäkring, eSIM — där du kan
+        tjäna på att någon skriver upp sig via din länk.</li>
+    </ol>
+    <p class="obs"><b>Ärligt om läget:</b> länkarna och sponsorerna fungerar i dag.
+      Affiliate&shy;programmet och stödknappen är under uppbyggnad och öppnar under
+      säsongen. Kryssa i nedan så hör vi av oss när de går igång — du binder dig inte
+      till något.</p>
+  </section>
+
+  <form id="f" novalidate>
+
+    <fieldset>
+      <legend>Vem du är</legend>
+      <p class="hint">FIS-koden står på din sida på racepoint.net, och i din FIS-biografi.</p>
+      <div class="rad">
+        <div class="falt">
+          <label for="fis">FIS-kod</label>
+          <input id="fis" name="fis" inputmode="numeric" placeholder="507358" required>
+        </div>
+        <div class="falt">
+          <label for="namn">Namn</label>
+          <input id="namn" name="namn" placeholder="Förnamn Efternamn" required>
+        </div>
+      </div>
+      <div class="falt">
+        <label for="klubb">Klubb</label>
+        <input id="klubb" name="klubb" placeholder="Mälaröarnas Alpina SK">
+      </div>
+      <div class="falt">
+        <label for="epost">Din e-post</label>
+        <p class="hint" style="margin:-1px 0 5px">Används bara för att höra av oss om
+          din sida, och för enstaka Race Point-nyheter som du kan tacka nej till.
+          Aldrig till marknadsföring, aldrig vidare till någon annan.</p>
+        <input id="epost" name="epost" type="email" placeholder="namn@exempel.se" required>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Sociala medier</legend>
+      <p class="hint">Fyll bara i det du har. Hela adressen, eller bara användarnamnet.</p>
+      <div class="rad">
+        <div class="falt">
+          <label for="instagram">Instagram</label>
+          <input id="instagram" name="instagram" placeholder="@dittnamn">
+        </div>
+        <div class="falt">
+          <label for="tiktok">TikTok</label>
+          <input id="tiktok" name="tiktok" placeholder="@dittnamn">
+        </div>
+        <div class="falt">
+          <label for="youtube">YouTube</label>
+          <input id="youtube" name="youtube" placeholder="youtube.com/@dittnamn">
+        </div>
+        <div class="falt">
+          <label for="facebook">Facebook</label>
+          <input id="facebook" name="facebook" placeholder="facebook.com/dittnamn">
+        </div>
+        <div class="falt">
+          <label for="linkedin">LinkedIn</label>
+          <input id="linkedin" name="linkedin" placeholder="linkedin.com/in/dittnamn">
+        </div>
+        <div class="falt">
+          <label for="strava">Strava</label>
+          <input id="strava" name="strava" placeholder="strava.com/athletes/…">
+        </div>
+      </div>
+      <div class="falt">
+        <label for="webb">Egen webbplats</label>
+        <input id="webb" name="webb" placeholder="https://">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dina sponsorer</legend>
+      <p class="hint">Namn och adress. Har du fler än tre, skriv dem i sista fältet.</p>
+      <div class="falt">
+        <label for="sponsor1">Sponsor 1</label>
+        <input id="sponsor1" name="sponsor1" placeholder="Namn – https://">
+      </div>
+      <div class="falt">
+        <label for="sponsor2">Sponsor 2</label>
+        <input id="sponsor2" name="sponsor2" placeholder="Namn – https://">
+      </div>
+      <div class="falt">
+        <label for="sponsor3">Sponsor 3 och övrigt</label>
+        <input id="sponsor3" name="sponsor3" placeholder="Namn – https://">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Vill du vara med när pengadelen öppnar?</legend>
+      <p class="hint">Inget av det här kostar något, och du binder dig inte.
+        Vi hör av oss innan något aktiveras på din sida.</p>
+      <div class="kryss">
+        <label><input type="checkbox" id="affiliate" name="affiliate" value="ja">
+          <span>Affiliate — jag vill ha en egen länk och 80 procent av det den ger,
+            utbetalt till min klubb.</span></label>
+        <label><input type="checkbox" id="stod" name="stod" value="ja">
+          <span>Stödknapp — jag vill kunna ta emot gåvor till min satsning.</span></label>
+      </div>
+      <div class="rad" style="margin-top:13px">
+        <div class="falt">
+          <label for="fodd">Födelseår</label>
+          <input id="fodd" name="fodd" inputmode="numeric" placeholder="2005">
+        </div>
+        <div class="falt">
+          <label for="malsman">Målsman, om du är under 18</label>
+          <input id="malsman" name="malsman" placeholder="Namn och e-post">
+        </div>
+      </div>
+    </fieldset>
+
+    <button type="submit" id="skicka">Skicka in</button>
+    <div id="svar" hidden></div>
+  </form>
+
+  <p class="villkor">
+    <b>Vad som händer sedan.</b> Vi tittar på länkarna innan något visas, så att ingen
+    kan lägga upp något i någon annans namn. Det tar normalt ett dygn. Vi publicerar
+    bara länkar till kända tjänster och till riktiga webbplatser — allt annat plockas bort.
+    Vill du ta bort något senare räcker det att du hör av dig till samma adress.
+    <br><br>
+    <b>Din e-postadress.</b> Vi använder den till två saker: att höra av oss om något
+    med din sida behöver redas ut, och att skicka enstaka besked när Race Point får nya
+    funktioner. Det andra kan du tacka nej till när som helst, och adressen säljs eller
+    lämnas aldrig vidare. Den visas inte på din sida.
+  </p>
+
+</div>
+
+<script>
+(function(){
+  var ADRESS='https://docs.google.com/forms/d/e/1FAIpQLScixFAi5Np-OWuCZO9oPLicBZggXI1-vVmLMw2uc7ppplLnkA/formResponse';
+  var FALT={
+    fis:'entry.867134889', namn:'entry.1329541619', klubb:'entry.1958046432',
+    epost:'entry.1114993548', instagram:'entry.514045800', tiktok:'entry.1763622319',
+    youtube:'entry.617569266', facebook:'entry.381434440', linkedin:'entry.2052223122',
+    strava:'entry.2023091398', webb:'entry.50052381', sponsor1:'entry.1066843836',
+    sponsor2:'entry.1764462641', sponsor3:'entry.526292633', fodd:'entry.2093418912',
+    malsman:'entry.514466216'
+  };
+  var KRYSS='entry.2138198092';
+  var VAL={affiliate:'Affiliate - egen lank, 80 procent till min klubb',
+           stod:'Stodknapp - kunna ta emot gavor'};
+
+  var form=document.getElementById('f');
+  var knapp=document.getElementById('skicka');
+  var svar=document.getElementById('svar');
+
+  function visa(typ,rubrik,text){
+    svar.className='svar '+typ;
+    svar.innerHTML='<b></b><span></span>';
+    svar.querySelector('b').textContent=rubrik;
+    svar.querySelector('span').textContent=text;
+    svar.hidden=false;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var d={};
+    Object.keys(FALT).forEach(function(k){
+      var el=document.getElementById(k);
+      if(el && el.value.trim()) d[k]=el.value.trim();
+    });
+
+    if(!d.fis || !d.namn || !d.epost){
+      visa('fel','Fyll i FIS-kod, namn och e-post.',
+        'De tre behovs for att vi ska kunna knyta lankarna till ratt person.');
+      return;
+    }
+    var lankfalt=['instagram','tiktok','youtube','facebook','linkedin','strava','webb',
+                  'sponsor1','sponsor2','sponsor3'];
+    var antal=0;
+    lankfalt.forEach(function(k){ if(d[k]) antal++; });
+    if(!antal){
+      visa('fel','Du har inte fyllt i nagon lank.',
+        'Lagg till minst en - annars finns det inget att visa pa din sida.');
+      return;
+    }
+
+    var kropp=new URLSearchParams();
+    Object.keys(d).forEach(function(k){ kropp.append(FALT[k], d[k]); });
+    ['affiliate','stod'].forEach(function(k){
+      var el=document.getElementById(k);
+      if(el && el.checked) kropp.append(KRYSS, VAL[k]);
+    });
+
+    knapp.disabled=true;
+    knapp.textContent='Skickar ...';
+
+    fetch(ADRESS,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:kropp.toString()})
+      .then(function(){
+        form.querySelectorAll('input').forEach(function(i){
+          if(i.type==='checkbox') i.checked=false; else i.value='';
+        });
+        knapp.textContent='Skickat';
+        visa('ok','Tack - vi har fatt dina lankar.',
+          'Vi tittar pa dem och lagger upp dem pa din sida, normalt inom ett dygn. '+
+          'Har vi en fraga hor vi av oss pa adressen du angav.');
+      })
+      .catch(function(){
+        knapp.disabled=false;
+        knapp.textContent='Skicka in';
+        visa('fel','Det gick inte att skicka just nu.',
+          'Kontrollera att du har natverk och prova igen om en stund.');
+      });
+  });
+})();
+</script>
+</body>
+</html>

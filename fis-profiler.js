@@ -23,8 +23,8 @@
      Godkänd   ja
    ─────────────────────────────────────────────────────────────────────── */
 
-window.FIS_PROFIL_ARK = "";   // t.ex.
-// "https://docs.google.com/spreadsheets/d/DITT-ARK-ID/gviz/tq?tqx=out:csv&sheet=Svar"
+window.FIS_PROFIL_ARK =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSwUT7ciIAIZ9vdXFiDkQcPoLHAywC1PVetS8HNm7xcUPlBT0mIoCyAX4Ub7bEQb62nNPkiL1WTjjkb/pub?gid=0&single=true&output=csv";
 
 /* Tills arket finns kan du lägga in åkare för hand här.
    Exemplen nedan är påhittade och finns bara för att visa formen –

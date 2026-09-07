@@ -144,6 +144,7 @@ en: {
   laddar:"Loading the athlete's own links …",
   poangForkl:"Lower points are better. The ranking is the athlete's place on the FIS world list for that event.",
 
+  dinSidaFraga:"Is this your page?", dinSidaKnapp:"Add your links",
   ejPublicerat:"No results",
   ingenLive:"No live timing for codex {c}.",
   ingenLiveForkl:"Either the race has not opened yet, or FIS has removed the feed — it stays up for about a month afterwards.",
@@ -204,6 +205,7 @@ sv: {
   laddar:"Laddar åkarens egna länkar …",
   poangForkl:"Lägre poäng är bättre. Placeringen är åkarens plats på FIS världslista i den grenen.",
 
+  dinSidaFraga:"Är det här din sida?", dinSidaKnapp:"Lägg till dina länkar",
   ejPublicerat:"Inga resultat",
   ingenLive:"Ingen livetiming för codex {c}.",
   ingenLiveForkl:"Antingen har tävlingen inte öppnats än, eller så har FIS tagit bort flödet — det ligger kvar ungefär en månad efteråt.",
@@ -264,6 +266,7 @@ de: {
   laddar:"Eigene Links werden geladen …",
   poangForkl:"Niedrigere Punkte sind besser. Die Platzierung ist der Rang auf der FIS-Weltliste dieser Disziplin.",
 
+  dinSidaFraga:"Ist das deine Seite?", dinSidaKnapp:"Links hinzufügen",
   ejPublicerat:"Keine Ergebnisse",
   ingenLive:"Kein Live-Timing für Codex {c}.",
   ingenLiveForkl:"Entweder ist das Rennen noch nicht geöffnet, oder FIS hat den Feed entfernt — er bleibt etwa einen Monat lang bestehen.",
@@ -324,6 +327,7 @@ it: {
   laddar:"Caricamento dei collegamenti dell'atleta …",
   poangForkl:"Punti più bassi sono migliori. La posizione è quella dell'atleta nella lista mondiale FIS della specialità.",
 
+  dinSidaFraga:"È la tua pagina?", dinSidaKnapp:"Aggiungi i tuoi link",
   ejPublicerat:"Nessun risultato",
   ingenLive:"Nessun cronometraggio in diretta per il codex {c}.",
   ingenLiveForkl:"O la gara non è ancora stata aperta, oppure la FIS ha rimosso il flusso — resta disponibile circa un mese.",
@@ -384,6 +388,7 @@ fr: {
   laddar:"Chargement des liens du coureur …",
   poangForkl:"Des points plus bas sont meilleurs. Le classement est la place du coureur sur la liste mondiale FIS de l'épreuve.",
 
+  dinSidaFraga:"C'est votre page ?", dinSidaKnapp:"Ajouter vos liens",
   ejPublicerat:"Pas de résultats",
   ingenLive:"Pas de chronométrage en direct pour le codex {c}.",
   ingenLiveForkl:"Soit la course n'est pas encore ouverte, soit la FIS a retiré le flux — il reste disponible environ un mois.",
@@ -444,6 +449,7 @@ es: {
   laddar:"Cargando los enlaces del corredor …",
   poangForkl:"Menos puntos es mejor. La posición es el puesto del corredor en la lista mundial FIS de esa disciplina.",
 
+  dinSidaFraga:"¿Es tu página?", dinSidaKnapp:"Añade tus enlaces",
   ejPublicerat:"Sin resultados",
   ingenLive:"No hay cronometraje en directo para el codex {c}.",
   ingenLiveForkl:"O la carrera aún no se ha abierto, o la FIS ha retirado el flujo — se mantiene alrededor de un mes.",

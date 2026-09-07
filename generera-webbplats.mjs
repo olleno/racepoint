@@ -313,6 +313,14 @@ for(const a of Object.values(akare)){
 (kl?`\n<a href="${esc(kl.webb)}" rel="noopener${kl.akta?'':' nofollow'}">${esc(kl.namn)}</a>`:'')+
 `</div></section>`;
 
+  /* Utan den här rutan hittar ingen åkare fram till formuläret, och då
+     står profilerna tomma hur bra röret än fungerar. */
+  inneh+=`<section class="kort dinsida"><h2>Is this you?</h2>
+<p class="not">Add your social media and your sponsors to this page. It is free, it takes
+a couple of minutes, and everything is checked before it appears.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a></div>
+</section>`;
+
   skriv(adress, sida({
     titel:`${visa} – FIS points and results | Race Point`,
     beskrivning, adress, rot:'../../',
@@ -510,8 +518,8 @@ skriv('/index.html', sida({
 }));
 
 /* ---- den levande sidan och dess data ---- */
-['index.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js','fis-media.js',
- 'fis-forbund.js','fis-nyheter.js','manifest.webmanifest'].forEach(f=>{
+['index.html','lagg-till.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
+ 'fis-media.js','fis-forbund.js','fis-nyheter.js','manifest.webmanifest'].forEach(f=>{
   if(existsSync(join(HAR,f))) copyFileSync(join(HAR,f), join(UT,'alpine-skiing',f));
 });
 ['ikon-192.png','ikon-512.png','ikon-maskbar-512.png','apple-touch-icon.png'].forEach(f=>{
@@ -613,6 +621,9 @@ transition:transform .15s}
 .sponsorer img{width:auto;display:block}
 .sponsorer img.marke{height:16px}
 .sponsorer .namn{white-space:nowrap}
+.dinsida{border-top:3px solid var(--sport)}
+.lankar a.knapp{background:var(--sport);color:#fff;border-color:var(--sport);font-weight:620}
+.lankar a.knapp:hover{filter:brightness(1.08)}
 .foot{font-size:12px;color:var(--muted);margin-top:30px;line-height:1.7;
 border-top:1px solid var(--line);padding-top:16px}
 @media(max-width:640px){.wrap{padding:14px 12px 60px}h1{font-size:20px}

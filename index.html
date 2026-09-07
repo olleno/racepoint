@@ -1040,7 +1040,60 @@ async function arkCsv(url,idNamn){
     return ut;
   }catch(e){ return {}; }
 }
-const hamtaArk=()=>arkCsv(window.FIS_PROFIL_ARK,'fis');
+/* Åkarnas egna länkar kommer från ett publicerat Google-ark med en rad per
+   åkare och en kolumn per tjänst. Arket innehåller bara godkända rader och
+   bara offentliga kolumner – e-post, födelseår och målsman stannar i det
+   privata svarsarket. Google levererar tabbseparerat även när man ber om
+   csv, så vi klarar båda. */
+const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
+/* Åkare skriver "@namn" lika ofta som hela adressen. Vi bygger adressen
+   åt dem i stället för att kasta raden. */
+const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
+  youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
+  linkedin:'https://www.linkedin.com/in/',strava:'https://www.strava.com/athletes/'};
+function heladress(typ,v){
+  v=String(v||'').trim();
+  if(!v) return '';
+  if(/^https?:\/\//i.test(v)) return v;
+  if(/^www\./i.test(v)) return 'https://'+v;
+  if(/^[a-z0-9-]+\.[a-z]{2,}([/?#]|$)/i.test(v)) return 'https://'+v;
+  const bas=PROFILBAS[typ];
+  if(!bas) return '';
+  return bas+v.replace(/^@/,'');
+}
+async function profilCsv(url){
+  if(!url) return {};
+  try{
+    const txt=await (await fetch(url)).text();
+    const rader=txt.split(/\r?\n/).filter(r=>r.trim());
+    if(!rader.length) return {};
+    const tecken=rader[0].indexOf('\t')>=0?'\t':',';
+    const dela=r=>r.split(tecken).map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+    const rubrik=dela(rader[0]).map(c=>c.toLowerCase());
+    const kol=n=>rubrik.indexOf(n);
+    const iF=kol('fis'); if(iF<0) return {};
+    const ut={};
+    rader.slice(1).forEach(r=>{
+      const c=dela(r);
+      const fis=String(c[iF]||'').replace(/\D/g,''); if(!fis) return;
+      const lista=[];
+      PROFILKOL.forEach(namn=>{
+        const j=kol(namn); const a=heladress(namn, j>=0?c[j]:'');
+        if(a) lista.push({typ:namn,namn:'',adress:a});
+      });
+      ['sponsor1','sponsor2','sponsor3'].forEach(namn=>{
+        const j=kol(namn); const v=j>=0?c[j]:''; if(!v) return;
+        /* "Namn – https://..." eller bara adressen */
+        const m=v.match(/^(.*?)[\s–—-]+((?:https?:\/\/|www\.)\S+)$/);
+        const a=heladress('webb', m?m[2]:v);
+        if(a) lista.push({typ:'sponsor',namn:m?m[1].trim():'',adress:a});
+      });
+      if(lista.length) ut[String(+fis)]=lista;
+    });
+    return ut;
+  }catch(e){ return {}; }
+}
+const hamtaArk=()=>profilCsv(window.FIS_PROFIL_ARK);
 let ARK=null, MEDIAARK=null;
 
 /* ---------- sändning och webbkameror ---------- */
@@ -1158,7 +1211,12 @@ async function ritaAkare(fis,codex){
   const egna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])]
     .filter(l=>l.adress&&saker(l.adress,l.typ));
   const box=document.getElementById('lankar'), txt=document.getElementById('egna');
-  if(!egna.length){ txt.textContent=T('ingaEgna'); return; }
+  /* Uppmaningen ska stå oavsett om åkaren fyllt i något eller inte – den som
+     redan lagt upp länkar vill också kunna ändra dem. */
+  const uppmaning='<p class="lead" style="margin:12px 0 0">'+esc(T('dinSidaFraga'))+
+    ' <a href="lagg-till.html">'+esc(T('dinSidaKnapp'))+'</a></p>';
+  if(!egna.length){ txt.textContent=T('ingaEgna');
+    txt.insertAdjacentHTML('afterend',uppmaning); return; }
   txt.remove();
   const sociala=egna.filter(l=>l.typ!=='sponsor');
   const sponsor=egna.filter(l=>l.typ==='sponsor');
@@ -1172,6 +1230,7 @@ async function ritaAkare(fis,codex){
       '<div class="lankar">'+sponsor.map(l=>'<a href="'+esc(l.adress)+'" target="_blank" '+
       'rel="noopener nofollow">🤝 '+esc(l.namn||l.adress)+'</a>').join('')+'</div>');
   }
+  box.insertAdjacentHTML('afterend',uppmaning);
 }
 
 /* ============ 9. Hämtning, uppdatering och routing ============ */
