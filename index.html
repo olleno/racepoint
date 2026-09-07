@@ -1067,8 +1067,26 @@ async function profilCsv(url){
     const txt=await (await fetch(url)).text();
     const rader=txt.split(/\r?\n/).filter(r=>r.trim());
     if(!rader.length) return {};
-    const tecken=rader[0].indexOf('\t')>=0?'\t':',';
-    const dela=r=>r.split(tecken).map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+    /* Google levererar ibland tabb, ibland komma. Vi väljer det tecken som
+       faktiskt delar filen i flest fält i stället för att gissa. */
+    const prov=rader.slice(0,3).join('\n');
+    const tecken=(prov.match(/\t/g)||[]).length>(prov.match(/,/g)||[]).length?'\t':',';
+    /* Citattecken måste hanteras: en sponsorrad kan innehålla kommatecken. */
+    const dela=r=>{
+      const ut=[]; let f='', i=0, cit=false;
+      while(i<r.length){
+        const c=r[i];
+        if(cit){
+          if(c==='"'){ if(r[i+1]==='"'){f+='"';i+=2;continue;} cit=false; i++; continue; }
+          f+=c; i++; continue;
+        }
+        if(c==='"'){ cit=true; i++; continue; }
+        if(c===tecken){ ut.push(f.trim()); f=''; i++; continue; }
+        f+=c; i++;
+      }
+      ut.push(f.trim());
+      return ut;
+    };
     const rubrik=dela(rader[0]).map(c=>c.toLowerCase());
     const kol=n=>rubrik.indexOf(n);
     const iF=kol('fis'); if(iF<0) return {};
