@@ -298,7 +298,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
     if(!d.fis || !d.namn || !d.epost){
       visa('fel','Fyll i FIS-kod, namn och e-post.',
-        'De tre behovs for att vi ska kunna knyta lankarna till ratt person.');
+        'De tre behövs för att vi ska kunna knyta länkarna till rätt person.');
       return;
     }
     var lankfalt=['instagram','tiktok','youtube','facebook','linkedin','strava','webb',
@@ -306,8 +306,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     var antal=0;
     lankfalt.forEach(function(k){ if(d[k]) antal++; });
     if(!antal){
-      visa('fel','Du har inte fyllt i nagon lank.',
-        'Lagg till minst en - annars finns det inget att visa pa din sida.');
+      visa('fel','Du har inte fyllt i någon länk.',
+        'Lägg till minst en — annars finns det inget att visa på din sida.');
       return;
     }
 
@@ -319,7 +319,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     });
 
     knapp.disabled=true;
-    knapp.textContent='Skickar ...';
+    knapp.textContent='Skickar …';
 
     fetch(ADRESS,{method:'POST',mode:'no-cors',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
@@ -329,15 +329,15 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
           if(i.type==='checkbox') i.checked=false; else i.value='';
         });
         knapp.textContent='Skickat';
-        visa('ok','Tack - vi har fatt dina lankar.',
-          'Vi tittar pa dem och lagger upp dem pa din sida, normalt inom ett dygn. '+
-          'Har vi en fraga hor vi av oss pa adressen du angav.');
+        visa('ok','Tack — vi har fått dina länkar.',
+          'Vi tittar på dem och lägger upp dem på din sida, normalt inom ett dygn. '+
+          'Har vi en fråga hör vi av oss på adressen du angav.');
       })
       .catch(function(){
         knapp.disabled=false;
         knapp.textContent='Skicka in';
         visa('fel','Det gick inte att skicka just nu.',
-          'Kontrollera att du har natverk och prova igen om en stund.');
+          'Kontrollera att du har nätverk och prova igen om en stund.');
       });
   });
 })();
