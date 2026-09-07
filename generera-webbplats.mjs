@@ -271,6 +271,10 @@ function skriv(adress, html){
 }
 
 /* ---- åkarsidor ---- */
+/* Register över alla åkare, så att sökrutan på den levande sidan kan hitta
+   dem. Utan det går 7 000 sidor inte att nå för någon som inte råkar tävla
+   just i dag. Formen är avsiktligt kompakt – en rad per åkare. */
+const register=[];
 let antalAkare=0;
 for(const a of Object.values(akare)){
   const grenar=GRENAR.filter(g=>a.poang[g]!=null);
@@ -330,9 +334,39 @@ a couple of minutes, and everything is checked before it appears.</p>
       nationality:a.nat, identifier:a.fis,
       sameAs:`https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${a.id}`}
   }));
+  register.push([a.fis, visa, a.nat, adress.replace('/alpine-skiing/athletes/','').replace('.html','')].join('|'));
   antalAkare++;
 }
 console.log(`Skrev ${antalAkare} åkarsidor`);
+
+/* Registret som en egen fil, hämtas först när någon börjar söka. */
+register.sort((x,y)=>x.split('|')[1].localeCompare(y.split('|')[1],'sv'));
+mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
+writeFileSync(join(UT,'alpine-skiing','fis-akare.js'),
+`/* Skapad av generera-webbplats.mjs. fis|namn|nation|filnamn, en per rad. */
+window.FIS_AKARE = ${JSON.stringify(register.join('\n'))};
+`);
+console.log(`Skrev register över ${register.length} åkare`);
+
+/* Förteckning som Google kan gå igenom – annars hittar sökmotorerna aldrig
+   in till de enskilda sidorna, eftersom sökrutan är javascript. */
+const perNation={};
+register.forEach(r=>{ const d=r.split('|'); (perNation[d[2]]=perNation[d[2]]||[]).push(d); });
+let listaInneh=`<h1>Alpine skiing athletes</h1>
+<p class="ingress">Every athlete on the current FIS points list, ${register.length} in total.
+Find yours and see points, world ranking and results.</p>`;
+Object.keys(perNation).sort().forEach(nat=>{
+  listaInneh+=`<section class="kort"><h2>${flagga(nat)} ${esc(nat)} · ${perNation[nat].length}</h2>
+<div class="lankar">`+perNation[nat]
+    .map(d=>`<a href="${esc(d[3])}.html">${esc(d[1])}</a>`).join('')+`</div></section>`;
+});
+skriv('/alpine-skiing/athletes/index.html', sida({
+  titel:'Alpine skiing athletes – FIS points and results | Race Point',
+  beskrivning:`All ${register.length} athletes on the FIS alpine points list, with points, world ranking and results.`,
+  adress:'/alpine-skiing/athletes/', rot:'../../',
+  brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Athletes`,
+  innehall:listaInneh
+}));
 
 /* ---- tävlingssidor: avgjorda ---- */
 let antalTavling=0;

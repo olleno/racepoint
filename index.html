@@ -89,6 +89,24 @@
   .klocka b{display:block;font-size:12.5px;font-weight:620;letter-spacing:.02em}
   .klocka span{display:block;font-size:12.5px;color:var(--muted)}
 
+  /* ---------- sök efter åkare ---------- */
+  .sokruta{position:relative;margin:0 0 18px}
+  .sokruta input{width:100%;font:inherit;font-size:15.5px;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:11px 13px 11px 38px;box-shadow:var(--shadow)}
+  .sokruta input:focus{outline:2px solid var(--sport);outline-offset:1px;border-color:var(--sport)}
+  .sokruta .lupp{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    font-size:14px;color:var(--muted);pointer-events:none}
+  .traffar{margin-top:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .traffar a{display:flex;align-items:center;gap:11px;padding:10px 14px;
+    text-decoration:none;color:inherit;border-bottom:1px solid var(--line2)}
+  .traffar a:last-child{border-bottom:0}
+  .traffar a:hover{background:var(--sport-bg)}
+  .traffar .nm{font-weight:560;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .traffar .kod{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .traffar p{margin:0;padding:11px 14px;font-size:13.5px;color:var(--muted)}
   .lead{color:var(--muted);font-size:13.5px;margin:0 0 18px}
   .toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
   .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);
@@ -799,6 +817,52 @@ function sponsorMarke(s){
   return h;
 }
 
+/* ---------- sök efter åkare ----------
+   Registret med alla 9 800 åkare är stort, så det hämtas först när någon
+   börjar skriva. Innan dess kostar det ingenting. */
+let AKARREG=null, akarHamtning=null;
+function hamtaAkare(){
+  if(AKARREG) return Promise.resolve(AKARREG);
+  if(akarHamtning) return akarHamtning;
+  akarHamtning=fetch('fis-akare.js').then(r=>r.ok?r.text():'').then(t=>{
+    const m=t.match(/window\.FIS_AKARE\s*=\s*("(?:[^"\\]|\\.)*")/);
+    let rad='';
+    try{ rad=m?JSON.parse(m[1]):''; }catch(e){ rad=''; }
+    AKARREG=rad.split('\n').filter(Boolean).map(r=>{
+      const d=r.split('|');
+      return {fis:d[0], namn:d[1]||'', nat:d[2]||'', fil:d[3]||''};
+    });
+    AKARREG.forEach(a=>a.sok=jamn(a.namn+' '+a.nat+' '+a.fis));
+    return AKARREG;
+  }).catch(()=>{ AKARREG=[]; return AKARREG; });
+  return akarHamtning;
+}
+const jamn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/ø/g,'o').replace(/æ/g,'ae').replace(/ß/g,'ss');
+
+function kopplaSok(){
+  const falt=document.getElementById('sok'), ut=document.getElementById('traffar');
+  if(!falt||!ut||!falt.addEventListener) return;
+  let sista='';
+  const rita=lista=>{
+    if(!lista.length){ ut.innerHTML='<div class="traffar"><p>'+esc(T('sokInga'))+'</p></div>'; return; }
+    ut.innerHTML='<div class="traffar">'+lista.slice(0,12).map(a=>
+      '<a href="athletes/'+esc(a.fil)+'.html">'+flagga(a.nat)+
+      '<span class="nm">'+esc(a.namn)+'</span>'+
+      '<span class="kod">'+esc(a.fis)+'</span></a>').join('')+'</div>';
+  };
+  falt.addEventListener('input', async ()=>{
+    const q=jamn(falt.value.trim());
+    sista=q;
+    if(q.length<2){ ut.innerHTML=''; return; }
+    ut.innerHTML='<div class="traffar"><p>'+esc(T('sokLaddar'))+'</p></div>';
+    const reg=await hamtaAkare();
+    if(sista!==q) return;                       // användaren har skrivit vidare
+    const delar=q.split(/\s+/).filter(Boolean);
+    rita(reg.filter(a=>delar.every(d=>a.sok.indexOf(d)>=0)));
+  });
+}
+
 function ritaValjare(){
   const idag=new Date().toISOString().slice(0,10);
   let lopp=KAL.filter(r=>(!filterKon||r.kon===filterKon)&&(!filterGren||r.gren===filterGren));
@@ -812,6 +876,9 @@ function ritaValjare(){
   const grenar=[...new Set(KAL.map(r=>r.gren))];
   const grenText=g=>GRENNAMN()[GRENKOD[g]]||g;
   let h='<p class="lead">'+esc(T('ingress'))+'</p>'+
+        '<div class="sokruta"><span class="lupp">\u2315</span>'+
+        '<input id="sok" type="search" autocomplete="off" spellcheck="false" '+
+        'placeholder="'+esc(T('sokPlats'))+'"></div><div id="traffar"></div>'+
         '<div class="toolbar"><div class="seg">'+
         ['','M','W'].map(v=>'<button data-kon="'+v+'" aria-pressed="'+(filterKon===v)+'">'+
           esc(v===''?T('alla'):(v==='M'?T('herrar'):T('damer')))+'</button>').join('')+'</div>'+
@@ -880,6 +947,7 @@ function ritaValjare(){
        '</div></div>';
   }
   document.getElementById('app').innerHTML=h;
+  kopplaSok();
   document.querySelectorAll('[data-kon]').forEach(b=>b.onclick=()=>{filterKon=b.dataset.kon;ritaValjare();});
   document.querySelectorAll('[data-gren]').forEach(b=>b.onclick=()=>{filterGren=b.dataset.gren;ritaValjare();});
   nollstallKlocka();

@@ -144,6 +144,7 @@ en: {
   laddar:"Loading the athlete's own links …",
   poangForkl:"Lower points are better. The ranking is the athlete's place on the FIS world list for that event.",
 
+  sokPlats:"Search for an athlete by name", sokInga:"No athlete matches that.", sokLaddar:"Searching…",
   dinSidaFraga:"Is this your page?", dinSidaKnapp:"Add your links",
   ejPublicerat:"No results",
   ingenLive:"No live timing for codex {c}.",
@@ -205,6 +206,7 @@ sv: {
   laddar:"Laddar åkarens egna länkar …",
   poangForkl:"Lägre poäng är bättre. Placeringen är åkarens plats på FIS världslista i den grenen.",
 
+  sokPlats:"Sök efter en åkare", sokInga:"Ingen åkare matchar.", sokLaddar:"Söker…",
   dinSidaFraga:"Är det här din sida?", dinSidaKnapp:"Lägg till dina länkar",
   ejPublicerat:"Inga resultat",
   ingenLive:"Ingen livetiming för codex {c}.",
@@ -266,6 +268,7 @@ de: {
   laddar:"Eigene Links werden geladen …",
   poangForkl:"Niedrigere Punkte sind besser. Die Platzierung ist der Rang auf der FIS-Weltliste dieser Disziplin.",
 
+  sokPlats:"Athlet suchen", sokInga:"Kein Athlet passt dazu.", sokLaddar:"Suche…",
   dinSidaFraga:"Ist das deine Seite?", dinSidaKnapp:"Links hinzufügen",
   ejPublicerat:"Keine Ergebnisse",
   ingenLive:"Kein Live-Timing für Codex {c}.",
@@ -327,6 +330,7 @@ it: {
   laddar:"Caricamento dei collegamenti dell'atleta …",
   poangForkl:"Punti più bassi sono migliori. La posizione è quella dell'atleta nella lista mondiale FIS della specialità.",
 
+  sokPlats:"Cerca un atleta", sokInga:"Nessun atleta corrisponde.", sokLaddar:"Ricerca…",
   dinSidaFraga:"È la tua pagina?", dinSidaKnapp:"Aggiungi i tuoi link",
   ejPublicerat:"Nessun risultato",
   ingenLive:"Nessun cronometraggio in diretta per il codex {c}.",
@@ -388,6 +392,7 @@ fr: {
   laddar:"Chargement des liens du coureur …",
   poangForkl:"Des points plus bas sont meilleurs. Le classement est la place du coureur sur la liste mondiale FIS de l'épreuve.",
 
+  sokPlats:"Rechercher un coureur", sokInga:"Aucun coureur ne correspond.", sokLaddar:"Recherche…",
   dinSidaFraga:"C'est votre page ?", dinSidaKnapp:"Ajouter vos liens",
   ejPublicerat:"Pas de résultats",
   ingenLive:"Pas de chronométrage en direct pour le codex {c}.",
@@ -449,6 +454,7 @@ es: {
   laddar:"Cargando los enlaces del corredor …",
   poangForkl:"Menos puntos es mejor. La posición es el puesto del corredor en la lista mundial FIS de esa disciplina.",
 
+  sokPlats:"Buscar un corredor", sokInga:"Ningún corredor coincide.", sokLaddar:"Buscando…",
   dinSidaFraga:"¿Es tu página?", dinSidaKnapp:"Añade tus enlaces",
   ejPublicerat:"Sin resultados",
   ingenLive:"No hay cronometraje en directo para el codex {c}.",
