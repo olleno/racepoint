@@ -280,13 +280,18 @@ for(const bit of liveHtml.split('class="g-row"').slice(1)){
 console.log(`  ${kommande.length} kommande`);
 
 /* ─────────────── 2. sortera datan ─────────────── */
+/* FIS-filen kommer ur en databasexport där apostrofer är escapade: klubben
+   heter "Saint Michael\\'s College" i filen. Utan den här städningen står
+   bakstrecket kvar på sidan. */
+const stada = t => String(t==null?'':t).replace(/\\(['"\\])/g,'$1').trim();
+
 const tillFis={}, akare={};
 com.forEach(c=>{
   const f=String(Number(c.Fiscode));
   tillFis[c.Competitorid]=f;
-  akare[f]={fis:f, id:c.Competitorid, efter:c.Lastname, forn:c.Firstname,
+  akare[f]={fis:f, id:c.Competitorid, efter:stada(c.Lastname), forn:stada(c.Firstname),
             kon:c.Gender, fodd:(c.Birthdate||'').slice(0,4), nat:c.Nationcode,
-            klubb:c.Skiclub||'', poang:{}, rank:{}, resultat:[]};
+            klubb:stada(c.Skiclub), poang:{}, rank:{}, resultat:[]};
 });
 pts.forEach(p=>{
   const a=akare[tillFis[p.Competitorid]]; if(!a) return;
@@ -379,7 +384,8 @@ for(const a of Object.values(akare)){
 <a href="/alpine-skiing/">Live race points</a>
 <a href="https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${esc(a.id)}&type=result" rel="noopener">FIS biography</a>
 <a href="${esc(fb.webb)}" rel="noopener${fb.akta?'':' nofollow'}">${esc(fb.namn)}</a>`+
-(kl?`\n<a href="${esc(kl.webb)}" rel="noopener${kl.akta?'':' nofollow'}">${esc(kl.namn)}</a>`:'')+
+(kl?`\n<a href="${esc(kl.webb)}" rel="noopener${kl.akta?'':' nofollow'}">${esc(kl.namn)}</a>`
+   :`\n<span class="lank-tom">Club not listed by FIS</span>`)+
 ((PROFIL[String(+a.fis)]||{sociala:[]}).sociala||[]).map(x=>
   `\n<a href="${esc(x.adress)}" rel="noopener nofollow">${esc({instagram:'Instagram',
    tiktok:'TikTok',youtube:'YouTube',facebook:'Facebook',linkedin:'LinkedIn',
@@ -774,6 +780,8 @@ transition:transform .15s}
 .reklamnot{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 11px;
 background:#fdf3e3;border-radius:8px;padding:8px 11px}
 .lankar a .sm{color:var(--muted);font-weight:400}
+.lank-tom{display:inline-flex;align-items:center;font-size:13px;color:var(--muted);
+border:1px dashed var(--line);border-radius:8px;padding:6px 11px}
 .lankar a.knapp{background:var(--sport);color:#fff;border-color:var(--sport);font-weight:620}
 .lankar a.knapp:hover{filter:brightness(1.08)}
 .foot{font-size:12px;color:var(--muted);margin-top:30px;line-height:1.7;
