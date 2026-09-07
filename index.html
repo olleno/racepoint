@@ -913,13 +913,19 @@ const manadstext=ym=>{
   const s=d.toLocaleDateString(SPR,{month:'long',year:'numeric'});
   return s.charAt(0).toUpperCase()+s.slice(1);
 };
-/* "15–21 dec" eller "28 nov – 1 dec". Ett endagsevenemang blir bara "2 okt". */
+/* "15–21 dec" eller "28 nov – 1 dec". Ett endagsevenemang blir bara "2 okt".
+   Var månaden hamnar i förhållande till dagen skiljer sig mellan språken –
+   "Sep 4" på engelska, "4 sep." på svenska – så vi låter webbläsaren sätta
+   ihop intervallet själv i stället för att limma ihop två datum för hand. */
 const datumspann=(a,b)=>{
   const f=s=>new Date(s+'T12:00:00Z');
-  const kort=d=>d.toLocaleDateString(SPR,{day:'numeric',month:'short'});
+  const opt={day:'numeric',month:'short'};
+  const kort=d=>d.toLocaleDateString(SPR,opt);
   if(a===b) return kort(f(a));
-  if(a.slice(0,7)===b.slice(0,7))
-    return f(a).toLocaleDateString(SPR,{day:'numeric'})+'–'+kort(f(b));
+  try{
+    const fmt=new Intl.DateTimeFormat(SPR,opt);
+    if(fmt.formatRange) return fmt.formatRange(f(a),f(b));
+  }catch(e){}
   return kort(f(a))+' – '+kort(f(b));
 };
 
