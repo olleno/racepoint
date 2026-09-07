@@ -17,20 +17,21 @@ import { writeFileSync } from 'node:fs';
 
 const KALLOR = [
   // Bekräftad: svarar med application/rss+xml
-  {namn:'Ski Racing Media', url:'https://skiracing.com/feed/', sprak:'en'},
+  {namn:'Ski Racing Media', url:'https://skiracing.com/feed/', sprak:'en', alpinKalla:true},
 
   // Kandidater – tas bort automatiskt om de inte svarar
-  {namn:'FIS Alpine',            url:'https://www.fis-ski.com/en/alpine-skiing/rss', sprak:'en'},
+  {namn:'FIS Alpine',            url:'https://www.fis-ski.com/en/alpine-skiing/rss', sprak:'en', alpinKalla:true},
   {namn:'GB Snowsport',          url:'https://gbsnowsport.com/feed/', sprak:'en'},
   {namn:'Snow Australia',        url:'https://snow.org.au/feed/', sprak:'en'},
   {namn:'Snow Sports NZ',        url:'https://snowsports.co.nz/feed/', sprak:'en'},
   {namn:'Svenska Skidförbundet', url:'https://www.skidor.com/rss', sprak:'sv'},
   {namn:'FISI',                  url:'https://www.fisi.org/feed/', sprak:'it'},
-  {namn:'Skiweltcup.tv',         url:'https://www.skiweltcup.tv/feed/', sprak:'de'},
+  {namn:'Skiweltcup.tv',         url:'https://www.skiweltcup.tv/feed/', sprak:'de', alpinKalla:true},
   {namn:'Ski Chrono',            url:'https://www.skichrono.com/feed', sprak:'fr'}
 ];
 
 const ANTAL = 14;              // så många rubriker sparas
+const PER_KALLA = 4;           // högst så många från en och samma källa
 const TIMEOUT = 12000;
 
 /* ---------- liten flödesläsare, utan paket ---------- */
@@ -98,13 +99,28 @@ for(const k of KALLOR){
   poster.forEach(p=>alla.push({...p, kalla:k.namn, sprak:k.sprak}));
 }
 
-/* dubbletter bort (samma rubrik från flera flöden), nyast först */
-const sedda = new Set();
+/* Rena alpinkällor (alpinKalla:true) släpps igenom som de är – allt de
+   skriver om är alpint. Förbundsflödena (FISI, Skidor, GB Snowsport …)
+   skickar allt: längd, freeski, skidskytte. Rutan heter "Alpine news", så
+   från dem behålls bara rubriker som faktiskt handlar om alpint. */
+const ALPINT = new RegExp([
+  'alpin','slalom','gigante','gigant','discesa','downhill','super-?g','supergigante',
+  'kombination','combinata','combined','abfahrt','riesenslalom','descente',
+  'world cup','weltcup','coppa del mondo','coupe du monde','världscup',
+  'europa cup','far east cup','nor-?am','fis race','störtlopp','storslalom'
+].join('|'),'i');
+
+/* dubbletter bort, ämnesfilter för förbundsflöden, tak per källa, nyast först */
+const sedda = new Set(), perKalla = {};
 const nyheter = alla
   .map(n=>({...n, tid: Date.parse(n.datum) || 0}))
   .sort((a,b)=>b.tid-a.tid)
   .filter(n=>{ const nyckel=n.rubrik.toLowerCase().slice(0,60);
                if(sedda.has(nyckel)) return false; sedda.add(nyckel); return true; })
+  .filter(n=>{ const k=KALLOR.find(x=>x.namn===n.kalla);
+               return (k && k.alpinKalla) ? true : ALPINT.test(n.rubrik); })
+  /* ingen enskild källa får fylla hela rutan */
+  .filter(n=>{ perKalla[n.kalla]=(perKalla[n.kalla]||0)+1; return perKalla[n.kalla]<=PER_KALLA; })
   .slice(0, ANTAL)
   .map(n=>({rubrik:n.rubrik.slice(0,140), lank:n.lank, kalla:n.kalla,
             datum: n.tid ? new Date(n.tid).toISOString().slice(0,10) : ''}));
