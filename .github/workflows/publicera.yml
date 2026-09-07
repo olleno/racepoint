@@ -1,0 +1,56 @@
+# Hämtar färsk data från FIS, bygger om hela webbplatsen och publicerar den.
+# Punktlistan byts en gång i veckan, kalendern ändras oftare, och resultat
+# tillkommer efter varje tävling - därför körs det varje natt. Kostar
+# ingenting: publika GitHub-projekt har fria byggminuter.
+
+name: Uppdatera och publicera
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Hämta färsk data från FIS
+        run: node generera-poangdata.mjs
+
+      - name: Bygg webbplatsen
+        run: node generera-webbplats.mjs
+        env:
+          RP_DOMAN: https://racepoint.net
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: webbplats
+
+  publicera:
+    needs: bygg
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
