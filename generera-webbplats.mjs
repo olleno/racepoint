@@ -552,9 +552,20 @@ skriv('/index.html', sida({
 }));
 
 /* ---- den levande sidan och dess data ---- */
+/* Databerarfilerna byts varje natt. Utan ett versionsnummer i adressen
+   serverar webbläsaren gamla poäng och gamla texter i upp till tio minuter
+   efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
+const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 ['index.html','lagg-till.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
  'fis-media.js','fis-forbund.js','fis-nyheter.js','manifest.webmanifest'].forEach(f=>{
-  if(existsSync(join(HAR,f))) copyFileSync(join(HAR,f), join(UT,'alpine-skiing',f));
+  if(!existsSync(join(HAR,f))) return;
+  if(f.endsWith('.html')){
+    const html=readFileSync(join(HAR,f),'utf8')
+      .replace(/(<script src=")([a-z0-9-]+\.js)(")/g, `$1$2?v=${VERSION}$3`);
+    writeFileSync(join(UT,'alpine-skiing',f), html);
+  } else {
+    copyFileSync(join(HAR,f), join(UT,'alpine-skiing',f));
+  }
 });
 ['ikon-192.png','ikon-512.png','ikon-maskbar-512.png','apple-touch-icon.png'].forEach(f=>{
   const kalla=join(HAR,'ikoner',f);

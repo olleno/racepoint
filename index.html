@@ -824,7 +824,7 @@ let AKARREG=null, akarHamtning=null;
 function hamtaAkare(){
   if(AKARREG) return Promise.resolve(AKARREG);
   if(akarHamtning) return akarHamtning;
-  akarHamtning=fetch('fis-akare.js').then(r=>r.ok?r.text():'').then(t=>{
+  akarHamtning=fetch('fis-akare.js?v='+(window.FIS_CFG&&FIS_CFG.giltig||'1').replace(/\W/g,'')).then(r=>r.ok?r.text():'').then(t=>{
     const m=t.match(/window\.FIS_AKARE\s*=\s*("(?:[^"\\]|\\.)*")/);
     let rad='';
     try{ rad=m?JSON.parse(m[1]):''; }catch(e){ rad=''; }
