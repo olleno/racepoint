@@ -29,6 +29,15 @@ import { fileURLToPath } from 'node:url';
 
 const HAR = dirname(fileURLToPath(import.meta.url));
 const UT  = join(HAR, 'webbplats');
+
+/* Hämta färska nyhetsrubriker först, så de följer med i bygget. Går det inte
+   – flödet nere, ingen nätverksåtkomst – byggs sajten ändå, med de rubriker
+   som redan ligger i fis-nyheter.js. Nyheter får aldrig stoppa bygget. */
+try{
+  await import('./generera-nyheter.mjs');
+}catch(e){
+  console.log('Nyheter kunde inte hämtas den här gången ('+e.message+') – bygger vidare.');
+}
 const DOMAN = process.env.RP_DOMAN || 'https://racepoint.net';
 const SASONG = 27;
 const GRENAR = ['DH','SL','GS','SG','AC'];

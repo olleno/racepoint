@@ -109,6 +109,11 @@ const nyheter = alla
   .map(n=>({rubrik:n.rubrik.slice(0,140), lank:n.lank, kalla:n.kalla,
             datum: n.tid ? new Date(n.tid).toISOString().slice(0,10) : ''}));
 
+/* Gav inget flöde träff är nätet nere eller källorna tillfälligt borta.
+   Då rör vi inte fis-nyheter.js – gamla rubriker är bättre än inga. */
+if(!nyheter.length){
+  console.log('Inget flöde svarade – behåller de rubriker som redan finns.');
+}else{
 writeFileSync(new URL('./fis-nyheter.js', import.meta.url),
 `/* Skapad av generera-nyheter.mjs ${new Date().toISOString().slice(0,16).replace('T',' ')}
    Rubrik, datum och länk från öppna nyhetsflöden. Ingen artikeltext –
@@ -116,6 +121,7 @@ writeFileSync(new URL('./fis-nyheter.js', import.meta.url),
 
 window.FIS_NYHETER = ${JSON.stringify(nyheter, null, 1)};
 `);
+}
 
 console.log('Flöden som svarade:');
 funkade.forEach(f=>console.log('  OK  '+f));
@@ -123,4 +129,6 @@ if(misslyckades.length){
   console.log('Svarade inte (hoppas över):');
   misslyckades.forEach(f=>console.log('  --  '+f));
 }
-console.log(`\nSkrev ${nyheter.length} nyheter till fis-nyheter.js`);
+console.log(nyheter.length
+  ? `\nSkrev ${nyheter.length} nyheter till fis-nyheter.js`
+  : `\nfis-nyheter.js lämnades orörd.`);
