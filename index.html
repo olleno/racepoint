@@ -485,10 +485,26 @@ function analysera(d){
     if(String(e['2']).toLowerCase().startsWith('dns'))continue;
     startande.push(e['0']);}
 
+  /* Varje åkare har en rad med mellantider och sist måltiden:
+     {0: 30280, 1: 52960, 2: 78160}. Tidigare läste vi plats 0, alltså
+     FÖRSTA mellantiden — därav tider på trettio sekunder i ett störtlopp.
+     Måltiden ligger på den högsta platsen, och hur många mellantider banan
+     har varierar. Vi räknar därför fram platsen ur dem som faktiskt gått i
+     mål: den högsta plats någon av dem har ett värde på är målplatsen. */
+  let malPlats=0;
+  for(const i in sl[sista]){
+    const e=sl[sista][i];
+    if(!e||e['2']!=='finish') continue;
+    const r=res&&res[sista]?res[sista][i]:null;
+    if(!r) continue;
+    for(const k in r) if(r[k]!=null && +k>malPlats) malPlats=+k;
+  }
+
   const klara=[], kvar=[];
   for(const i in sl[sista]){
     const e=sl[sista][i];if(!e)continue;
-    const t=TID(res&&res[sista]&&res[sista][i]?res[sista][i]['0']:null);
+    const r=res&&res[sista]?res[sista][i]:null;
+    const t=TID(r?r[String(malPlats)]:null);
     if(e['2']==='finish'&&t) klara.push({fis:e['0'],bib:e['1'],t});
     else kvar.push({fis:e['0'],bib:e['1'],status:e['2']||''});
   }
