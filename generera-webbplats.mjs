@@ -110,6 +110,71 @@ try{
 }catch(e){ /* filen är valfri */ }
 const SPONSORER=(mediaStubbe.SIDSPONSORER||[])
   .filter(s=>s && s.adress && /^https?:\/\//i.test(s.adress));
+/* Affiliate-partners. Rutan visas bara om någon är aktiv och ligger i en
+   konfliktfri kategori – se kommentaren överst i fis-affiliate.js. */
+const affStubbe={};
+try{
+  new Function('window', readFileSync(join(HAR,'fis-affiliate.js'),'utf8'))(affStubbe);
+}catch(e){ /* filen är valfri */ }
+const AFF=(affStubbe.FIS_AFFILIATE||[]).filter(p=>
+  p.aktiv && !p.baraEgetVal && (affStubbe.FIS_AFFILIATE_FRIA||[]).includes(p.kategori) && p.adress);
+
+/* Åkarnas egna länkar hämtas ur det publicerade arket redan vid bygget, så
+   att de syns även för den som inte kör javascript – och för Google. */
+const profStubbe={};
+try{
+  new Function('window', readFileSync(join(HAR,'fis-profiler.js'),'utf8'))(profStubbe);
+}catch(e){ /* filen är valfri */ }
+const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
+const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
+  youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
+  linkedin:'https://www.linkedin.com/in/',strava:'https://www.strava.com/athletes/'};
+function heladress(typ,v){
+  v=String(v||'').trim();
+  if(!v) return '';
+  if(/^https?:\/\//i.test(v)) return v;
+  if(/^www\./i.test(v)) return 'https://'+v;
+  if(/^[a-z0-9-]+\.[a-z]{2,}([/?#]|$)/i.test(v)) return 'https://'+v;
+  const bas=PROFILBAS[typ];
+  return bas ? bas+v.replace(/^@/,'') : '';
+}
+let PROFIL={};
+try{
+  const url=profStubbe.FIS_PROFIL_ARK;
+  if(url){
+    const txt=await (await fetch(url)).text();
+    const rader=txt.split(/\r?\n/).filter(r=>r.trim());
+    const prov=rader.slice(0,3).join('\n');
+    const tecken=(prov.match(/\t/g)||[]).length>(prov.match(/,/g)||[]).length?'\t':',';
+    const dela=r=>{ const ut=[]; let f='',i=0,cit=false;
+      while(i<r.length){ const c=r[i];
+        if(cit){ if(c==='"'){ if(r[i+1]==='"'){f+='"';i+=2;continue;} cit=false;i++;continue; } f+=c;i++;continue; }
+        if(c==='"'){cit=true;i++;continue;}
+        if(c===tecken){ut.push(f.trim());f='';i++;continue;}
+        f+=c;i++; }
+      ut.push(f.trim()); return ut; };
+    const rubrik=dela(rader[0]).map(c=>c.toLowerCase());
+    const kol=x=>rubrik.indexOf(x);
+    const iF=kol('fis');
+    if(iF>=0) rader.slice(1).forEach(r=>{
+      const c=dela(r), fis=String(c[iF]||'').replace(/\D/g,'');
+      if(!fis) return;
+      const post={sociala:[], sponsorer:[], kontakt:false};
+      PROFILKOL.forEach(namn=>{ const j=kol(namn); const a=heladress(namn, j>=0?c[j]:'');
+        if(a) post.sociala.push({typ:namn, adress:a}); });
+      ['sponsor1','sponsor2','sponsor3'].forEach(namn=>{
+        const j=kol(namn); const v=j>=0?c[j]:''; if(!v) return;
+        const m=v.match(/^(.*?)[\s–—-]+((?:https?:\/\/|www\.)\S+)$/);
+        const a=heladress('webb', m?m[2]:v);
+        if(a) post.sponsorer.push({namn:m?m[1].trim():'', adress:a}); });
+      const iK=kol('kontakt');
+      post.kontakt = iK>=0 && /^(ja|yes|x|1|true)$/i.test(String(c[iK]||'').trim());
+      PROFIL[String(+fis)]=post;
+    });
+    console.log(`Hämtade egna länkar för ${Object.keys(PROFIL).length} åkare`);
+  }
+}catch(e){ console.log('Kunde inte hämta åkarnas länkar ('+e.message+') – bygger vidare.'); }
+
 const sok = f => 'https://www.google.com/search?q='+encodeURIComponent(f);
 function forbundLank(nat){
   const f=FORBUND[nat];
@@ -315,7 +380,46 @@ for(const a of Object.values(akare)){
 <a href="https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${esc(a.id)}&type=result" rel="noopener">FIS biography</a>
 <a href="${esc(fb.webb)}" rel="noopener${fb.akta?'':' nofollow'}">${esc(fb.namn)}</a>`+
 (kl?`\n<a href="${esc(kl.webb)}" rel="noopener${kl.akta?'':' nofollow'}">${esc(kl.namn)}</a>`:'')+
+((PROFIL[String(+a.fis)]||{sociala:[]}).sociala||[]).map(x=>
+  `\n<a href="${esc(x.adress)}" rel="noopener nofollow">${esc({instagram:'Instagram',
+   tiktok:'TikTok',youtube:'YouTube',facebook:'Facebook',linkedin:'LinkedIn',
+   strava:'Strava',webb:'Own website'}[x.typ]||x.typ)}</a>`).join('')+
 `</div></section>`;
+
+  const egna=PROFIL[String(+a.fis)]||null;
+  /* Åkarens egna sponsorer. Egen ruta, aldrig ihopblandad med affiliate –
+     annars ser det ut som att ett märke sponsrar henne när det inte gör det. */
+  if(egna && egna.sponsorer.length){
+    inneh+=`<section class="kort"><h2>Sponsors</h2><div class="lankar">`+
+      egna.sponsorer.map(x=>`<a href="${esc(x.adress)}" rel="noopener nofollow">`+
+        `${esc(x.namn||x.adress)}</a>`).join('')+`</div></section>`;
+  }
+
+  /* Utrustning och resa. Bara aktiva partners i konfliktfria kategorier, och
+     alltid med utmärkning – reklam måste gå att känna igen. */
+  if(AFF.length){
+    inneh+=`<section class="kort"><h2>Equipment and travel</h2>
+<p class="reklamnot">Advertising. Race Point earns a commission if you buy through these
+links, and most of it goes to this athlete's club. You pay exactly the same price.</p>
+<div class="lankar">`+AFF.map(x=>
+      `<a href="${esc(String(x.adress).replace(/\{FIS\}/g, encodeURIComponent(a.fis)))}" `+
+      `rel="noopener sponsored nofollow">${esc(x.namn)}`+
+      (x.text?` <span class="sm">${esc(x.text)}</span>`:'')+`</a>`).join('')+
+      `</div></section>`;
+  }
+
+  /* Sponsringsförfrågningar. Avstängd som standard – rutan finns bara för den
+     som själv satt ja i arket. Är åkaren under 18 går kontakten till klubben,
+     aldrig till barnet, och adressen visas aldrig här. */
+  if(egna && egna.kontakt){
+    const ung = a.fodd && (new Date().getFullYear() - Number(a.fodd)) < 18;
+    inneh+=`<section class="kort"><h2>Sponsorship enquiries</h2>
+<p class="not">${ung
+  ? 'Enquiries go to the club, which passes them on. Nothing is sent directly to the athlete.'
+  : 'Your message is forwarded. The address is never shown here.'}</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html?kontakt=${esc(a.fis)}">Get in touch</a></div>
+</section>`;
+  }
 
   /* Utan den här rutan hittar ingen åkare fram till formuläret, och då
      står profilerna tomma hur bra röret än fungerar. */
@@ -557,7 +661,7 @@ skriv('/index.html', sida({
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 ['index.html','lagg-till.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
- 'fis-media.js','fis-forbund.js','fis-nyheter.js','manifest.webmanifest'].forEach(f=>{
+ 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
   if(f.endsWith('.html')){
     const html=readFileSync(join(HAR,f),'utf8')
@@ -667,6 +771,9 @@ transition:transform .15s}
 .sponsorer img.marke{height:16px}
 .sponsorer .namn{white-space:nowrap}
 .dinsida{border-top:3px solid var(--sport)}
+.reklamnot{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 11px;
+background:#fdf3e3;border-radius:8px;padding:8px 11px}
+.lankar a .sm{color:var(--muted);font-weight:400}
 .lankar a.knapp{background:var(--sport);color:#fff;border-color:var(--sport);font-weight:620}
 .lankar a.knapp:hover{filter:brightness(1.08)}
 .foot{font-size:12px;color:var(--muted);margin-top:30px;line-height:1.7;

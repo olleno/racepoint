@@ -269,6 +269,13 @@
   .cam{display:block;width:100%;border-radius:10px;margin-bottom:8px;background:var(--line2)}
   .medianamn{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 
+  /* ---------- utrustning och resa (affiliate) ---------- */
+  .affiliate{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  .affiliate h3{margin:0 0 4px}
+  .reklamnot{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 10px;
+    background:var(--warn-bg);border-radius:8px;padding:8px 11px}
+  .affiliate .lankar a .sm{color:var(--muted);font-weight:400}
+
   /* ---------- sponsorer på startsidan ---------- */
   /* vit panel – sponsorernas logotyper får synas i sina egna färger */
   .sponsorer{margin-top:26px;padding:16px 20px 18px;border-radius:14px;
@@ -363,6 +370,7 @@
 <script src="fis-media.js"></script>
 <script src="fis-forbund.js"></script>
 <script src="fis-nyheter.js"></script>
+<script src="fis-affiliate.js"></script>
 <script src="fis-arkiv.js"></script>
 <script>
 /* ============ 0. Språk ============
@@ -1306,17 +1314,48 @@ async function ritaAkare(fis,codex){
   txt.remove();
   const sociala=egna.filter(l=>l.typ!=='sponsor');
   const sponsor=egna.filter(l=>l.typ==='sponsor');
+  const P=()=>(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
   sociala.forEach(l=>{
     const t=TYPNAMN[l.typ]||['Länk','🔗'];
     box.insertAdjacentHTML('beforeend','<a href="'+esc(l.adress)+'" target="_blank" '+
       'rel="noopener nofollow">'+t[1]+' '+esc(l.namn||t[0])+'</a>');
   });
+  /* Åkarens egna sponsorer. Den här rutan är hennes skyltfönster – den
+     ska aldrig blandas ihop med affiliate-länkarna nedan, för då ser det ut
+     som att ett märke sponsrar henne när det inte gör det. */
   if(sponsor.length){
-    box.insertAdjacentHTML('afterend','<h3 style="margin-top:16px">'+esc(T('sponsorer'))+'</h3>'+
+    box.insertAdjacentHTML('afterend','<h3 style="margin-top:16px">'+esc(P().sponsorer||T('sponsorer'))+'</h3>'+
       '<div class="lankar">'+sponsor.map(l=>'<a href="'+esc(l.adress)+'" target="_blank" '+
       'rel="noopener nofollow">🤝 '+esc(l.namn||l.adress)+'</a>').join('')+'</div>');
   }
   box.insertAdjacentHTML('afterend',uppmaning);
+  ritaAffiliate(fis);
+}
+
+/* Rutan "Utrustning och resa". Visas bara om det finns en aktiv partner –
+   en tom ruta är sämre än ingen. Länkarna bär åkarens FIS-kod, så partnern
+   ser vem som skickade köparen. */
+function affiliateLankar(fis){
+  const P=(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
+  const fria=window.FIS_AFFILIATE_FRIA||[];
+  return (window.FIS_AFFILIATE||[])
+    .filter(p=>p.aktiv && !p.baraEgetVal && fria.indexOf(p.kategori)>=0 && p.adress)
+    .map(p=>({namn:p.namn, text:p.text||'',
+              adress:String(p.adress).replace(/\{FIS\}/g, encodeURIComponent(fis))}));
+}
+function ritaAffiliate(fis){
+  const lista=affiliateLankar(fis);
+  if(!lista.length) return;
+  const P=(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
+  const box=document.getElementById('lankar');
+  if(!box) return;
+  box.insertAdjacentHTML('afterend',
+    '<section class="affiliate"><h3>'+esc(P.affiliate||'Equipment and travel')+'</h3>'+
+    '<p class="reklamnot">'+esc(P.affiliateNot||'')+'</p>'+
+    '<div class="lankar">'+lista.map(p=>
+      '<a href="'+esc(p.adress)+'" target="_blank" rel="noopener sponsored nofollow">'+
+      esc(p.namn)+(p.text?' <span class="sm">'+esc(p.text)+'</span>':'')+'</a>').join('')+
+    '</div></section>');
 }
 
 /* ============ 9. Hämtning, uppdatering och routing ============ */

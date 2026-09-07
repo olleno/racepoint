@@ -468,3 +468,38 @@ es: {
 }
 
 };
+
+/* Rutorna på åkarsidan: egna sponsorer, affiliate och kontakt.
+   Utmärkningstexten är inte valfri – reklam måste gå att känna igen. */
+window.SPRAK_PROFIL = {
+  en:{sponsorer:'Sponsors', affiliate:'Equipment and travel',
+      affiliateNot:'Advertising. Race Point earns a commission if you buy through these links, and most of it goes to this athlete\u2019s club. You pay exactly the same price.',
+      kontakt:'Sponsorship enquiries', kontaktKnapp:'Get in touch',
+      kontaktUng:'Enquiries go to the club, which passes them on.',
+      kontaktVuxen:'Your message is forwarded. The address is never shown here.'},
+  sv:{sponsorer:'Sponsorer', affiliate:'Utrustning och resa',
+      affiliateNot:'Reklam. Race Point får provision om du k\u00f6per via l\u00e4nkarna, och st\u00f6rsta delen g\u00e5r till \u00e5karens klubb. Du betalar exakt samma pris.',
+      kontakt:'Sponsring', kontaktKnapp:'H\u00f6r av dig',
+      kontaktUng:'F\u00f6rfr\u00e5gningar g\u00e5r till klubben, som f\u00f6r dem vidare.',
+      kontaktVuxen:'Ditt meddelande vidarebefordras. Adressen visas aldrig h\u00e4r.'},
+  de:{sponsorer:'Sponsoren', affiliate:'Ausr\u00fcstung und Reise',
+      affiliateNot:'Werbung. Race Point erh\u00e4lt eine Provision, wenn du \u00fcber diese Links kaufst; der gr\u00f6\u00dfte Teil geht an den Verein der Athletin. Du zahlst genau denselben Preis.',
+      kontakt:'Sponsoring', kontaktKnapp:'Kontakt aufnehmen',
+      kontaktUng:'Anfragen gehen an den Verein, der sie weiterleitet.',
+      kontaktVuxen:'Deine Nachricht wird weitergeleitet. Die Adresse wird hier nie gezeigt.'},
+  it:{sponsorer:'Sponsor', affiliate:'Attrezzatura e viaggi',
+      affiliateNot:'Pubblicit\u00e0. Race Point riceve una commissione se acquisti tramite questi link, e la maggior parte va alla societ\u00e0 dell\u2019atleta. Tu paghi esattamente lo stesso prezzo.',
+      kontakt:'Sponsorizzazioni', kontaktKnapp:'Contatta',
+      kontaktUng:'Le richieste vanno alla societ\u00e0, che le inoltra.',
+      kontaktVuxen:'Il messaggio viene inoltrato. L\u2019indirizzo non appare mai qui.'},
+  fr:{sponsorer:'Sponsors', affiliate:'\u00c9quipement et voyage',
+      affiliateNot:'Publicit\u00e9. Race Point per\u00e7oit une commission si vous achetez via ces liens, et l\u2019essentiel revient au club du coureur. Vous payez exactement le m\u00eame prix.',
+      kontakt:'Partenariats', kontaktKnapp:'Nous contacter',
+      kontaktUng:'Les demandes vont au club, qui les transmet.',
+      kontaktVuxen:'Votre message est transmis. L\u2019adresse n\u2019appara\u00eet jamais ici.'},
+  es:{sponsorer:'Patrocinadores', affiliate:'Equipo y viajes',
+      affiliateNot:'Publicidad. Race Point recibe una comisi\u00f3n si compras a trav\u00e9s de estos enlaces, y la mayor parte va al club del corredor. T\u00fa pagas exactamente el mismo precio.',
+      kontakt:'Patrocinio', kontaktKnapp:'Ponte en contacto',
+      kontaktUng:'Las consultas van al club, que las reenv\u00eda.',
+      kontaktVuxen:'Tu mensaje se reenv\u00eda. La direcci\u00f3n nunca se muestra aqu\u00ed.'}
+};
