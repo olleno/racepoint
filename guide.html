@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index,follow">
+<meta name="description" content="Three ways to fund your season as a ski racer: your own page, a local sponsor, and asking for help towards one trip. Free guide from Race Point.">
+<link rel="icon" href="ikoner/ikon-192.png" sizes="192x192">
+<meta name="theme-color" content="#12305a">
+<title>Funding your season</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --ink:#0f1419; --ink2:#3d4753; --muted:#6b7684;
+  --line:#e4e8ec; --line2:#eef1f4;
+  --sport:#0a5fbf; --sport-bg:#e8f0fb; --sigill:#12305a; --sigill-txt:#fff;
+  --ruta:#f7f9fb;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+    --line:#252b32; --line2:#1d2228;
+    --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+    --ruta:#11151a; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+  --line:#252b32; --line2:#1d2228;
+  --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+  --ruta:#11151a; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";display:block;height:4px;
+  background:linear-gradient(90deg,var(--sport) 0%,var(--sport) 55%,#d92d20 55%,#d92d20 100%)}
+.wrap{max-width:620px;margin:0 auto;padding:22px 16px 70px}
+
+.topprad{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.topprad svg{flex:none;width:42px;height:42px;display:block}
+.topprad .wm{flex:1;min-width:0}
+.wm b{display:block;font-size:17px;font-weight:700;letter-spacing:.135em;
+  text-transform:uppercase;color:var(--sigill);line-height:1;white-space:nowrap}
+.wm .rule{display:block;height:1px;margin:6px 0 5px;background:var(--sigill);opacity:.35}
+.wm span{display:block;font-size:8px;font-weight:700;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--sport)}
+.sprakval select{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--card);
+  border:1px solid var(--line);border-radius:8px;padding:5px 8px;cursor:pointer}
+
+article{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  border-top:3px solid var(--sport);padding:24px 24px 26px;box-shadow:var(--shadow)}
+article>*:first-child{margin-top:0}
+h1{font-size:27px;font-weight:680;letter-spacing:-.02em;margin:0 0 8px;line-height:1.2;
+  text-wrap:balance}
+h2{font-size:19px;font-weight:660;letter-spacing:-.01em;margin:32px 0 8px;line-height:1.25;
+  padding-top:22px;border-top:1px solid var(--line2);text-wrap:balance}
+h3{font-size:14px;font-weight:660;margin:22px 0 6px;color:var(--ink)}
+p{margin:0 0 12px}
+.ing{color:var(--muted);font-size:14.5px;margin-bottom:20px}
+ol,ul{margin:0 0 14px;padding-left:20px}
+li{margin-bottom:5px}
+b,strong{font-weight:650}
+a{color:var(--sport)}
+blockquote{margin:12px 0 14px;padding:13px 16px;background:var(--ruta);
+  border-left:3px solid var(--sport);border-radius:0 8px 8px 0;color:var(--ink2);font-size:14.5px}
+blockquote p:last-child{margin-bottom:0}
+.tabellhalla{overflow-x:auto;margin:0 0 16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:420px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+th{font-size:11px;font-weight:620;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);border-bottom:1px solid var(--line)}
+.obs{background:var(--sport-bg);border-radius:10px;padding:13px 15px;font-size:14px;
+  color:var(--ink2);margin:16px 0}
+.knapprad{margin:26px 0 0}
+.knapp{display:inline-block;background:var(--sport);color:#fff;text-decoration:none;
+  font-weight:620;font-size:14.5px;border-radius:10px;padding:11px 18px}
+.foot{color:var(--muted);font-size:12.5px;margin:22px 2px 0;line-height:1.6}
+[data-sprak]{display:none}
+[data-sprak].pa{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topprad">
+    <svg viewBox="0 0 52 52" aria-hidden="true">
+      <circle cx="26" cy="26" r="25" fill="var(--sigill)"/>
+      <circle cx="26" cy="26" r="21.5" fill="none" stroke="var(--sigill-txt)" stroke-opacity=".28" stroke-width="1.2"/>
+      <rect x="14" y="33" width="24" height="2.4" fill="var(--sigill-txt)"/>
+      <rect x="16" y="26" width="4.4" height="5.6" fill="var(--sigill-txt)"/>
+      <rect x="23.8" y="21" width="4.4" height="10.6" fill="var(--sigill-txt)"/>
+      <rect x="31.6" y="16" width="4.4" height="15.6" fill="var(--sigill-txt)"/>
+    </svg>
+    <div class="wm"><b>Race Point</b><span class="rule"></span><span>Alpine skiing</span></div>
+    <div id="sprakval" class="sprakval"></div>
+  </div>
+
+<!-- ══════════════════════════ ENGELSKA ══════════════════════════ -->
+<article data-sprak="en">
+
+<h1>Three ways to fund your season</h1>
+<p class="ing">A guide for racers — and for the parent reading over your shoulder. None of the three
+needs you to be famous, to have a following, or to win races. Together they take about one afternoon.</p>
+
+<p><b>Before you start: the money goes to your club.</b> Everything you bring in goes to your club,
+earmarked for you. That sounds like a detour, and it makes everything simpler:</p>
+<ul>
+  <li>You do not have to be of legal age.</li>
+  <li>It counts as a contribution to a sports club, not as pay to you.</li>
+  <li>Your club can issue an invoice, which the sponsor needs for their bookkeeping.</li>
+</ul>
+<p>So talk to your coach or the club treasurer <b>before</b> you start, not after. It takes five
+minutes and saves a lot of trouble.</p>
+
+<h2>1. Make your page yours <span style="font-weight:400;color:var(--muted)">— 15 minutes, once</span></h2>
+<p>You already have a page on Race Point. It is built from the official FIS points list, so it exists
+whether or not you have ever done anything. But it holds nothing except numbers until you fill it in.</p>
+<ol>
+  <li>Go to <a href="lagg-till.html">racepoint.net/alpine-skiing/lagg-till.html</a>.</li>
+  <li>Fill in your FIS code, your name and your email.</li>
+  <li>Add your accounts — Instagram, TikTok, YouTube, your own site.</li>
+  <li>Add your sponsors: name and web address. They appear as logos on your page.</li>
+  <li>Send. We check the links and put them up, normally within a day.</li>
+</ol>
+<p><b>Why it matters:</b> your page is the one address about you that a sponsor can open and take
+seriously. An Instagram account is hard to show an accountant. A results page with official FIS points
+and a logo on it is not.</p>
+<p><b>Two things to do straight afterwards:</b></p>
+<ul>
+  <li>Put the address of your page in your Instagram bio. It is the only link you need there.</li>
+  <li>Leave the <b>Sponsorship</b> box on your page. It lets a company that finds you get in touch
+    without you having to publish your email address. If you would rather not have it, ask us to
+    remove it.</li>
+</ul>
+<p><b>What it pays:</b> nothing directly. But it is what makes point 2 possible, and point 2 is where
+the money is.</p>
+
+<h2>2. Find a local sponsor <span style="font-weight:400;color:var(--muted)">— one afternoon, and this is the one that pays</span></h2>
+<p>This feels like the hardest of the three and it is by far the most productive. One afternoon can
+bring in the equivalent of five hundred to two and a half thousand euros, and the sponsor usually stays
+for next season.</p>
+
+<h3>Who to ask</h3>
+<p><b>Not</b> big brands. They have marketing departments, long processes, and they say no.</p>
+<p><b>Instead:</b> businesses in your own town where one single person decides.</p>
+<ul>
+  <li>The garage, the tyre shop, the car dealer</li>
+  <li>The builder, the electrician, the plumber, the painter</li>
+  <li>The dentist, the optician, the physiotherapist, the hairdresser</li>
+  <li>The estate agent, the accountant, the insurance broker</li>
+  <li>The restaurant, the pizzeria, the café, the gym</li>
+  <li>The sports shop, the paint shop, the florist</li>
+</ul>
+<p><b>Best of all: businesses your family already buys from.</b> You have a relationship. Start there.</p>
+<p><b>Why they say yes:</b> to them it is not marketing. It is a local business owner backing a local
+kid in a sport the town cares about. It is a pleasant decision to make, it takes ten minutes, and the
+money is already in the budget under entertainment or marketing.</p>
+
+<h3>How to ask</h3>
+<p><b>Phone them or walk in. Do not email.</b> Email works for booking a meeting, never for asking
+about money. A conversation face to face says yes far more often than an email does.</p>
+<p>Take a parent along if you are under 18. Wear the club jacket.</p>
+<blockquote>
+<p>“Hello, my name is Anna Andersson and I ski race for Storängen SK. I am racing FIS races in Sweden
+and around Europe this season, about twenty-five starts between November and April.</p>
+<p>I am looking for local sponsors who want to come along for the season. For five hundred euros you
+get your logo on my helmet and on my page on Race Point, a post from me after every race weekend, and
+a framed picture to put up in here.</p>
+<p>The club sends the invoice, so it is an ordinary deductible cost for you.</p>
+<p>Is that something you would be interested in?”</p>
+</blockquote>
+<p>Then <b>silence.</b> Say nothing more. Whoever speaks first after a question about money loses.</p>
+<p><b>Have your page open on your phone when you ask.</b> Being able to show “this is where your logo
+goes” makes the whole thing concrete in ten seconds.</p>
+
+<h3>What to offer and what to ask for</h3>
+<p>Always name the figure yourself. Never ask “what would you like to give?” — you will get half.</p>
+<div class="tabellhalla">
+<table>
+  <tr><th>Level</th><th>Per season</th><th>What they get</th></tr>
+  <tr><td>Club friend</td><td>€200</td><td>Logo on your Race Point page, a mention in your season post</td></tr>
+  <tr><td>Season sponsor</td><td>€500</td><td>The above + logo on the helmet + a post after every race weekend + a framed picture</td></tr>
+  <tr><td>Main sponsor</td><td>€1,000</td><td>The above + name on the race jacket + an invitation to a race + a photo of their own with your logo</td></tr>
+  <tr><td>Family partner</td><td>€2,500</td><td>The above + exclusivity in their trade + named in everything you do</td></tr>
+</table>
+</div>
+<p>The figures are a rule of thumb. Wherever you live, ask what a local business in your town would
+consider a normal amount to back a young athlete with, and pitch there.</p>
+<p>Always sell <b>a whole season, November to April.</b> Write into the agreement that you will talk
+again in September next year. That one sentence is what turns a sponsor into a five-year sponsor.</p>
+
+<h3>Expect to hear no</h3>
+<p>Of ten businesses you ask, roughly two or three say yes. That means seven say no, and that is
+completely normal. Ask ten, not three. A no is not a judgement on you — it is usually a matter of
+timing or a budget that is already spent.</p>
+
+<h3>What decides whether they are back next year</h3>
+<p>This is the whole difference, and almost everyone misses it.</p>
+<ul>
+  <li><b>After every race weekend:</b> a photo and one line. “Fifth in Åre this weekend, thanks Berg’s
+    Garage.” Ten seconds. Send it even when it went badly.</li>
+  <li><b>Once a month:</b> a proper post where you tag them.</li>
+  <li><b>At the end of the season:</b> a summary, a thank-you picture, and a conversation where you
+    ask about next year.</li>
+</ul>
+<p>A sponsor who has heard from you fifteen times during the season says yes again without hesitating.
+One who paid in November and then heard nothing says no.</p>
+
+<h2>3. Ask for help towards one specific trip <span style="font-weight:400;color:var(--muted)">— 30 minutes, once per trip</span></h2>
+<p>Relatives, neighbours and club mates are happy to put money towards a season. But only when it is
+about <b>one concrete goal with one concrete price.</b></p>
+<div class="tabellhalla">
+<table>
+  <tr><th>Works</th><th>Does not work</th></tr>
+  <tr><td>“Europa Cup in Italy in January — €1,800 for travel, accommodation and entry fees”</td><td>“Support my season”</td></tr>
+  <tr><td>A closing date</td><td>Open for ever</td></tr>
+  <tr><td>An update when you are halfway</td><td>Silence</td></tr>
+  <tr><td>A picture of you on the hill</td><td>No picture</td></tr>
+</table>
+</div>
+<p><b>How to do it, today:</b></p>
+<ol>
+  <li>Write the goal in one sentence, with the amount.</li>
+  <li>Write three lines on what the money is for. Be specific: flights, accommodation, entry fees,
+    wax service.</li>
+  <li>Ask your club for their account details, and what the giver should put as the message — your name.</li>
+  <li>Add a picture and set a closing date, ideally four to six weeks out.</li>
+  <li>Share it — and ask your club and your parents to share it. It is their network that gives the
+    money, not yours.</li>
+</ol>
+<p><b>One important thing about words:</b> this is a <b>gift</b>, not sponsorship. Whoever gives gets
+nothing back — no logo, no thank-you video, no merchandise. That is why it is not taxable. If someone
+wants their name on the helmet they are a sponsor, and they belong in part 2 instead.</p>
+
+<h2>What is being built right now</h2>
+<p>Two things do not exist yet, and we would rather not pretend they do.</p>
+<ul>
+  <li><b>Your own link.</b> If you share your page and someone buys something through one of the
+    partner links on it, 80 per cent of the commission goes to your club, earmarked for you. 10 per
+    cent goes to the Race Point Foundation, which awards grants, and 10 per cent to running the site.
+    It opens during the season.</li>
+  <li><b>The support button.</b> A button on your page where relatives and neighbours can give
+    directly, instead of you having to pass round the club’s account details by hand. Also during
+    the season.</li>
+</ul>
+<p>Tick the boxes at the bottom of the form at
+<a href="lagg-till.html">racepoint.net/alpine-skiing/lagg-till.html</a> and we will let you know when
+they open. You are not committing to anything, and nothing is switched on for your page without us
+asking you first.</p>
+
+<h2>What to ignore</h2>
+<p>You will be told to build a brand, make content, sell your own beanies and chase ambassadorships
+with energy drink companies.</p>
+<p><b>Don’t.</b> It takes an enormous amount of time and returns almost nothing while you have a few
+hundred followers. The same hours spent on three local businesses bring in a thousand euros.</p>
+<p>Build content when you have something to build it on. Start with the three things above.</p>
+
+<h2>In short</h2>
+<div class="tabellhalla">
+<table>
+  <tr><th>What</th><th>Your time</th><th>What it brings in a season</th></tr>
+  <tr><td>Fill in your page</td><td>15 minutes</td><td>No money in itself — but it is what makes the next line possible</td></tr>
+  <tr><td>A local sponsor</td><td>One afternoon</td><td>€500 – €2,500, and it renews</td></tr>
+  <tr><td>One specific trip</td><td>30 minutes</td><td>€300 – €2,000</td></tr>
+</table>
+</div>
+<p>Start with the page, because it takes a quarter of an hour. Then do the sponsor visits, because
+that is where the money is. Save the fundraiser until you have a trip you actually need to cover.</p>
+<p>Good luck. See you on the hill.</p>
+
+<div class="knapprad"><a class="knapp" href="lagg-till.html">Add your links</a></div>
+
+</article>
+
+<!-- ══════════════════════════ SVENSKA ══════════════════════════ -->
+<article data-sprak="sv">
+
+<h1>Tre sätt att få in pengar till din säsong</h1>
+<p class="ing">En guide för dig som tävlar — och för föräldern som läser över axeln. Ingen av de tre
+kräver att du är känd, har många följare eller vinner tävlingar. Tillsammans tar de ungefär en
+eftermiddag.</p>
+
+<p><b>Innan du börjar: pengarna går till din klubb.</b> Allt du får in går till din klubb, öronmärkt
+för dig. Det låter som en omväg, och det gör allt enklare:</p>
+<ul>
+  <li>Du behöver inte vara myndig.</li>
+  <li>Det räknas som ett bidrag till föreningen, inte som lön till dig.</li>
+  <li>Din klubb kan skriva faktura, vilket sponsorn behöver för sin bokföring.</li>
+</ul>
+<p>Prata därför med din tränare eller klubbens kassör <b>innan</b> du börjar, inte efter. Det tar fem
+minuter och sparar en massa strul.</p>
+
+<h2>1. Gör din sida till din <span style="font-weight:400;color:var(--muted)">— 15 minuter, en gång</span></h2>
+<p>Du har redan en sida på Race Point. Den byggs ur FIS officiella poänglista, så den finns även om du
+aldrig gjort något. Men den innehåller bara siffror tills du fyller på den.</p>
+<ol>
+  <li>Gå till <a href="lagg-till.html">racepoint.net/alpine-skiing/lagg-till.html</a>.</li>
+  <li>Fyll i din FIS-kod, ditt namn och din e-post.</li>
+  <li>Lägg till dina konton — Instagram, TikTok, YouTube, din egen sajt.</li>
+  <li>Lägg till dina sponsorer: namn och webbadress. De visas som logotyper på din sida.</li>
+  <li>Skicka. Vi kontrollerar länkarna och lägger upp dem, normalt inom ett dygn.</li>
+</ol>
+<p><b>Varför det spelar roll:</b> din sida är den enda adress om dig som en sponsor kan öppna och ta på
+allvar. Ett Instagramkonto är svårt att visa för en revisor. En resultatsida med officiella FIS-poäng
+och en logotyp på är det inte.</p>
+<p><b>Två saker att göra direkt efteråt:</b></p>
+<ul>
+  <li>Lägg adressen till din sida i din Instagram-bio. Det är den enda länken du behöver ha där.</li>
+  <li>Låt rutan <b>Sponsring</b> stå kvar på din sida. Den gör att ett företag som hittar dig kan höra
+    av sig utan att du behöver lämna ut din e-postadress publikt. Vill du inte ha den kan du be oss ta
+    bort den.</li>
+</ul>
+<p><b>Vad det ger:</b> inga pengar direkt. Men det är förutsättningen för punkt 2, och punkt 2 är där
+pengarna finns.</p>
+
+<h2>2. Skaffa en lokal sponsor <span style="font-weight:400;color:var(--muted)">— en eftermiddag, och det här är det som ger pengar</span></h2>
+<p>Det här känns svårast av de tre och är det som ger absolut mest. En eftermiddag kan ge fem till
+tjugofemtusen kronor, och sponsorn brukar vara kvar nästa säsong.</p>
+
+<h3>Vem du ska fråga</h3>
+<p><b>Inte</b> stora varumärken. De har marknadsavdelningar, långa processer och säger nej.</p>
+<p><b>Utan</b> företag i din egen stad där en enda person bestämmer.</p>
+<ul>
+  <li>Bilverkstaden, däckfirman, bilhandlaren</li>
+  <li>Byggfirman, elektrikern, VVS-firman, målaren</li>
+  <li>Tandläkaren, optikern, fysioterapeuten, frisören</li>
+  <li>Mäklaren, revisorn, försäkringsmäklaren</li>
+  <li>Restaurangen, pizzerian, caféet, gymmet</li>
+  <li>Sportbutiken, färghandeln, blomsteraffären</li>
+</ul>
+<p><b>Bäst av alla: företag din familj redan är kund hos.</b> Ni har en relation. Börja där.</p>
+<p><b>Varför de säger ja:</b> för dem är det inte marknadsföring. Det är att en lokal företagare stöttar
+ett lokalt barn i en sport folk i orten bryr sig om. Det är ett trevligt beslut att fatta, det tar tio
+minuter, och pengarna finns redan i budgeten under representation eller marknad.</p>
+
+<h3>Hur du frågar</h3>
+<p><b>Ring eller gå dit. Mejla inte.</b> Mejl fungerar bara för att boka ett möte, aldrig för att fråga
+om pengar. Ett samtal öga mot öga säger ja långt oftare än ett mejl gör.</p>
+<p>Ta med en förälder om du är under 18. Ha på dig klubbjackan.</p>
+<blockquote>
+<p>”Hej, jag heter Anna Andersson och jag åker alpint för Storängens SK. Jag tävlar i FIS-tävlingar i
+Sverige och Europa den här säsongen, ungefär tjugofem starter mellan november och april.</p>
+<p>Jag söker lokala sponsorer som vill följa med på säsongen. För 5 000 kronor får ni er logotyp på min
+hjälm och på min sida på Race Point, ett inlägg från mig efter varje tävlingshelg, och en inramad bild
+att sätta upp här inne.</p>
+<p>Klubben skickar faktura, så det blir en vanlig avdragsgill kostnad för er.</p>
+<p>Är det något ni skulle vara intresserade av?”</p>
+</blockquote>
+<p>Sedan <b>tystnad.</b> Säg ingenting mer. Den som pratar först efter en fråga om pengar förlorar.</p>
+<p><b>Ha sidan uppe i telefonen när du frågar.</b> Att kunna visa ”här hamnar er logotyp” gör frågan
+konkret på tio sekunder.</p>
+
+<h3>Vad du kan erbjuda och vad du ska begära</h3>
+<p>Säg alltid summan själv. Fråga aldrig ”vad skulle ni vilja ge?” — då får du hälften.</p>
+<div class="tabellhalla">
+<table>
+  <tr><th>Nivå</th><th>Per säsong</th><th>Vad de får</th></tr>
+  <tr><td>Klubbkompis</td><td>2 000 kr</td><td>Logotyp på din Race Point-sida, omnämnande i ditt säsongsinlägg</td></tr>
+  <tr><td>Säsongssponsor</td><td>5 000 kr</td><td>Ovanstående + logotyp på hjälmen + inlägg efter varje tävlingshelg + inramad bild</td></tr>
+  <tr><td>Huvudsponsor</td><td>10 000 kr</td><td>Ovanstående + namn på tävlingsjackan + inbjudan till en tävling + egen bild med er logotyp</td></tr>
+  <tr><td>Familjepartner</td><td>25 000 kr</td><td>Ovanstående + exklusivitet i er bransch + ni nämns i allt jag gör</td></tr>
+</table>
+</div>
+<p>Beloppen är en tumregel för Sverige. Bor du någon annanstans: fråga vad ett lokalt företag i din
+stad skulle tycka är ett normalt stöd till en ungdomsidrottare, och lägg dig där.</p>
+<p>Sälj alltid för <b>en hel säsong, november till april.</b> Skriv in i avtalet att ni pratar igen i
+september nästa år. Det är den meningen som gör en sponsor till en femårig sponsor.</p>
+
+<h3>Räkna med nej</h3>
+<p>Av tio företag du frågar säger ungefär två eller tre ja. Det betyder att sju säger nej, och det är
+helt normalt. Fråga tio, inte tre. Ett nej är inte ett omdöme om dig — det är oftast en fråga om timing
+eller en budget som redan är slut.</p>
+
+<h3>Det som avgör om de är kvar nästa år</h3>
+<p>Det här är hela skillnaden, och nästan alla missar den.</p>
+<ul>
+  <li><b>Efter varje tävlingshelg:</b> ett foto och en rad. ”Femte plats i Åre i helgen, tack Bergs
+    Bilverkstad.” Tio sekunder. Skicka det även när det gick dåligt.</li>
+  <li><b>En gång i månaden:</b> ett riktigt inlägg där du taggar dem.</li>
+  <li><b>I slutet av säsongen:</b> en sammanfattning, en tackbild och ett samtal där du frågar om
+    nästa år.</li>
+</ul>
+<p>En sponsor som hört av dig femton gånger under säsongen säger ja igen utan att tveka. En som betalade
+i november och sedan inte hört ett ord säger nej.</p>
+
+<h2>3. Be om hjälp till ett bestämt mål <span style="font-weight:400;color:var(--muted)">— 30 minuter, en gång per resa</span></h2>
+<p>Släkt, grannar och klubbkamrater ger gärna pengar till en säsong. Men bara när det handlar om
+<b>ett konkret mål med ett konkret pris.</b></p>
+<div class="tabellhalla">
+<table>
+  <tr><th>Fungerar</th><th>Fungerar inte</th></tr>
+  <tr><td>”Europacup i Italien i januari — 18 000 kr för resa, boende och startavgifter”</td><td>”Stötta min säsong”</td></tr>
+  <tr><td>Ett slutdatum</td><td>Öppet i all evighet</td></tr>
+  <tr><td>Uppdatering när ni är halvvägs</td><td>Tystnad</td></tr>
+  <tr><td>En bild på dig i backen</td><td>Ingen bild</td></tr>
+</table>
+</div>
+<p><b>Gör så här, i dag:</b></p>
+<ol>
+  <li>Skriv målet i en mening, med summan.</li>
+  <li>Skriv tre rader om vad pengarna går till. Var konkret: flyg, boende, startavgifter, vallaservice.</li>
+  <li>Fråga din klubb om deras bankgiro eller Swish, och vad givaren ska skriva som meddelande — ditt
+    namn.</li>
+  <li>Lägg upp en bild och sätt ett slutdatum, gärna fyra till sex veckor bort.</li>
+  <li>Dela den — och be din klubb och dina föräldrar dela den. Det är deras nätverk som ger pengarna,
+    inte ditt.</li>
+</ol>
+<p><b>Viktigt om orden:</b> det här är en <b>gåva</b>, inte sponsring. Den som ger får ingenting
+tillbaka — ingen logotyp, ingen tackvideo, inga prylar. Det är därför den är skattefri. Vill någon ha
+sitt namn på hjälmen är de en sponsor, och då hör de hemma i del 2 istället.</p>
+
+<h2>Det som byggs just nu</h2>
+<p>Två saker finns inte än, och vi vill inte låtsas att de gör det.</p>
+<ul>
+  <li><b>Din egen länk.</b> Delar du din sida och någon köper något via en av partnerlänkarna där, går
+    80 procent av provisionen till din klubb, öronmärkt för dig. 10 procent går till Race Point
+    Foundation som delar ut stipendier, och 10 procent till driften av sajten. Det öppnar under
+    säsongen.</li>
+  <li><b>Stödknappen.</b> En knapp på din sida där släkt och grannar kan ge en gåva direkt, i stället
+    för att du behöver skicka klubbens kontonummer för hand. Också under säsongen.</li>
+</ul>
+<p>Kryssa i rutorna längst ner i formuläret på
+<a href="lagg-till.html">racepoint.net/alpine-skiing/lagg-till.html</a> så hör vi av oss när de öppnar.
+Du binder dig inte vid något, och inget slås på för din sida utan att vi frågat dig först.</p>
+
+<h2>Vad du ska strunta i</h2>
+<p>Du kommer att få rådet att bygga ett varumärke, göra innehåll, sälja egna mössor och söka
+ambassadörskap hos energidrycksföretag.</p>
+<p><b>Låt bli.</b> Det tar enormt mycket tid och ger nästan ingenting när du har några hundra följare.
+Samma timmar lagda på tre lokala företag ger tiotusen kronor.</p>
+<p>Bygg innehåll när du har något att bygga det på. Börja med de tre sakerna ovan.</p>
+
+<h2>Sammanfattning</h2>
+<div class="tabellhalla">
+<table>
+  <tr><th>Vad</th><th>Din tid</th><th>Vad det ger en säsong</th></tr>
+  <tr><td>Fyll i din sida</td><td>15 minuter</td><td>Inga pengar i sig — men det är förutsättningen för nästa rad</td></tr>
+  <tr><td>Lokal sponsor</td><td>En eftermiddag</td><td>5 000 – 25 000 kr, och den förnyas</td></tr>
+  <tr><td>Ett bestämt resmål</td><td>30 minuter</td><td>3 000 – 20 000 kr</td></tr>
+</table>
+</div>
+<p>Börja med sidan, för den tar en kvart. Gör sedan sponsorbesöken, för det är där pengarna finns. Spara
+insamlingen till du har en resa du faktiskt behöver få ihop pengar till.</p>
+<p>Lycka till. Vi ses i backen.</p>
+
+<div class="knapprad"><a class="knapp" href="lagg-till.html">Lägg upp dina länkar</a></div>
+
+</article>
+
+  <p class="foot" id="foot"></p>
+
+</div>
+
+<script src="sprak.js"></script>
+<script>
+(function(){
+  /* Guiden finns i dag på engelska och svenska. Varje språk är ett eget
+     <article data-sprak="xx">. Ett nytt språk läggs till genom att kopiera
+     ett block och översätta det — inget annat behöver ändras. Språk som
+     saknar block visar den engelska texten, och väljaren säger till. */
+  var SPARAT='rp-sprak';
+  var FINNS={};
+  Array.prototype.forEach.call(document.querySelectorAll('[data-sprak]'), function(a){
+    FINNS[a.getAttribute('data-sprak')]=a;
+  });
+
+  function valt(){
+    try{ var v=localStorage.getItem(SPARAT); if(v) return v; }catch(e){}
+    return 'en';
+  }
+  var SPR=valt();
+
+  function visa(){
+    var anvand=FINNS[SPR]?SPR:'en';
+    Object.keys(FINNS).forEach(function(k){
+      FINNS[k].className = (k===anvand ? 'pa' : '');
+    });
+    document.documentElement.lang=anvand;
+    var h=FINNS[anvand].querySelector('h1');
+    if(h) document.title=h.textContent;
+    var f=document.getElementById('foot');
+    if(f) f.textContent = (FINNS[SPR] ? '' :
+      'This guide is not translated into your language yet. Showing it in English.');
+  }
+
+  function ritaSprakval(){
+    var v=document.getElementById('sprakval');
+    if(!v || !window.SPRAK_NAMN) return;
+    var h='<select aria-label="Language">';
+    Object.keys(window.SPRAK_NAMN).forEach(function(k){
+      h+='<option value="'+k+'"'+(k===SPR?' selected':'')+'>'+window.SPRAK_NAMN[k]+
+         (FINNS[k]?'':' — EN')+'</option>';
+    });
+    v.innerHTML=h+'</select>';
+    v.querySelector('select').addEventListener('change', function(e){
+      SPR=e.target.value;
+      try{ localStorage.setItem(SPARAT, SPR); }catch(err){}
+      visa(); ritaSprakval();
+    });
+  }
+
+  visa(); ritaSprakval();
+})();
+</script>
+</body>
+</html>

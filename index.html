@@ -246,6 +246,11 @@
     font-size:13px;color:var(--ink2);background:var(--line2);border-radius:8px;
     padding:6px 11px}
   .lankar a:hover{background:var(--accent-bg);color:var(--accent)}
+  /* En rad som saknas ska synas som en lucka, inte försvinna. Samma
+     utseende som på de statiska åkarsidorna, så korten ser lika ut. */
+  .lankar .lank-tom{display:inline-flex;align-items:center;gap:6px;font-size:13px;
+    color:var(--muted);border:1px dashed var(--line);border-radius:8px;
+    padding:5px 10px;cursor:default}
   .tom{font-size:13px;color:var(--muted);line-height:1.65}
   .foot{font-size:12px;color:var(--muted);margin-top:26px;line-height:1.7}
 
@@ -956,7 +961,8 @@ function hamtaAkare(){
     try{ rad=m?JSON.parse(m[1]):''; }catch(e){ rad=''; }
     AKARREG=rad.split('\n').filter(Boolean).map(r=>{
       const d=r.split('|');
-      return {fis:d[0], namn:d[1]||'', nat:d[2]||'', fil:d[3]||''};
+      return {fis:d[0], namn:d[1]||'', nat:d[2]||'', fil:d[3]||'',
+              klubb:d[4]||'', klubbwebb:d[5]||''};
     });
     AKARREG.forEach(a=>a.sok=jamn(a.namn+' '+a.nat+' '+a.fis));
     return AKARREG;
@@ -1413,11 +1419,27 @@ async function ritaAkare(fis,codex){
   const p=window.FIS_POINTS[String(fis)]||{};
   const rank=(window.FIS_RANK||{})[String(fis)]||{};
   const bio=fisLank(fis);
-  const namn=(window.__namn&&window.__namn[fis])||null;
-  const nat=(window.__nat&&window.__nat[fis])||'';
+  /* Namn och nation fylls i när ett lopp ritats. Kommer besökaren rakt in
+     på en åkare – via sökrutan eller en delad länk – var de tomma, och då
+     försvann både flaggan och förbundslänken. Det var därför två åkarkort
+     kunde se olika ut. Saknas de hämtar vi dem ur åkarregistret i stället. */
+  let namn=(window.__namn&&window.__namn[fis])||null;
+  let nat=(window.__nat&&window.__nat[fis])||'';
+  let regRad=null;
+  if(!namn||!nat){
+    try{
+      const reg=await hamtaAkare();
+      regRad=(reg||[]).find(x=>String(x.fis)===String(fis))||null;
+      if(regRad){ namn=namn||regRad.namn||null; nat=nat||regRad.nat||''; }
+    }catch(e){}
+  }
   const GN=GRENNAMN();
 
-  let h='<a class="back" href="'+(codex?'#tavling/'+esc(codex):'#')+'">'+esc(T('tillbakaKort'))+'</a>';
+  /* Kom besökaren hit från ett lopp går pilen tillbaka dit. Kom hon via
+     sökningen eller en delad länk fanns tidigare en pil som bara sa
+     "Tillbaka" och ledde till startsidan – nu står det vad den gör. */
+  let h='<a class="back" href="'+(codex?'#tavling/'+esc(codex):'#')+'">'+
+        esc(codex?T('tillbakaKort'):T('tillbaka'))+'</a>';
   h+='<div class="card"><div class="rhead">'+flagga(nat)+
      '<div><h2>'+(namn?esc(namn):'FIS-kod '+esc(fis))+'</h2>'+
      '<div class="sub">FIS-kod '+esc(fis)+(nat?' · '+esc(nat):'')+'</div></div></div></div>';
@@ -1434,19 +1456,45 @@ async function ritaAkare(fis,codex){
     h+='</table></div><p class="formel">'+esc(T('poangForkl'))+'</p></div>';
   }
 
-  // Förbundslänk: riktig adress om nationen finns i fis-forbund.js,
-  // annars en färdig sökning – aldrig en trasig länk.
+  /* ── Länkrutan ────────────────────────────────────────────────────────
+     Fyra rader, alltid samma fyra och alltid i samma ordning: tillbaka till
+     livetimingen, FIS-biografin, skidförbundet och klubben. Tidigare fanns
+     bara biografin och förbundet här, medan den statiska åkarsidan hade
+     fyra – så två åkare kunde se helt olika ut beroende på var man kom in.
+
+     Saknas klubben i FIS export står det att den saknas, i stället för att
+     raden bara försvinner. En lucka som syns är ärligare än en rad som tyst
+     försvinner, och åkaren ser att det är något hon kan fylla i. */
   const fb=(window.FIS_FORBUND||{})[nat];
   const forbundNamn=fb?fb.namn:(nat?nat+' ski association':'');
   const forbundLank=fb?fb.webb:('https://www.google.com/search?q='+
     encodeURIComponent((nat||'')+' national ski association alpine'));
 
   h+='<div class="card"><h3>'+esc(T('lankar'))+'</h3><div class="lankar" id="lankar">'+
-     (bio?'<a href="'+esc(bio)+'" target="_blank" rel="noopener">📄 '+esc(T('fisBio'))+'</a>':'')+
+     '<a href="#">⛷ '+esc(T('tillLive'))+'</a>'+
+     (bio?'<a href="'+esc(bio)+'" target="_blank" rel="noopener">📄 '+esc(T('fisBio'))+'</a>'
+         :'<span class="lank-tom">📄 '+esc(T('ingenBio'))+'</span>')+
      (nat?'<a href="'+esc(forbundLank)+'" target="_blank" rel="noopener">🏔 '+
-        esc(forbundNamn)+'</a>':'')+
+        esc(forbundNamn)+'</a>'
+        :'<span class="lank-tom">🏔 '+esc(T('ingetForbund'))+'</span>')+
+     '<span id="klubbplats"></span>'+
      '</div><p class="tom" id="egna">'+esc(T('laddar'))+'</p></div>';
   app.innerHTML=h;
+
+  /* Klubben ligger i åkarregistret, som hämtas separat. Den rutan fylls i
+     efterhand så att resten av sidan inte behöver vänta på den. */
+  (regRad?Promise.resolve(null):hamtaAkare()).then(reg=>{
+    const plats=document.getElementById('klubbplats');
+    if(!plats) return;
+    const rad=regRad||(reg||[]).find(x=>String(x.fis)===String(fis));
+    plats.outerHTML = (rad&&rad.klubb)
+      ? '<a href="'+esc(rad.klubbwebb||('https://www.google.com/search?q='+
+          encodeURIComponent(rad.klubb+' '+nat+' ski club')))+'" target="_blank" '+
+        'rel="noopener">🏁 '+esc(rad.klubb)+'</a>'
+      : '<span class="lank-tom">🏁 '+esc(T('ingenKlubb'))+'</span>';
+  }).catch(()=>{
+    const plats=document.getElementById('klubbplats'); if(plats) plats.remove();
+  });
 
   if(ARK===null) ARK=await hamtaArk();
   const egna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])]
@@ -1455,7 +1503,8 @@ async function ritaAkare(fis,codex){
   /* Uppmaningen ska stå oavsett om åkaren fyllt i något eller inte – den som
      redan lagt upp länkar vill också kunna ändra dem. */
   const uppmaning='<p class="lead" style="margin:12px 0 0">'+esc(T('dinSidaFraga'))+
-    ' <a href="lagg-till.html">'+esc(T('dinSidaKnapp'))+'</a></p>';
+    ' <a href="lagg-till.html">'+esc(T('dinSidaKnapp'))+'</a>'+
+    ' · <a href="guide.html">'+esc(TX('SPRAK_FORMULAR','guideLank'))+'</a></p>';
   if(!egna.length){ txt.textContent=T('ingaEgna');
     txt.insertAdjacentHTML('afterend',uppmaning); return; }
   txt.remove();

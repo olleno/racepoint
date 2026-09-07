@@ -432,7 +432,8 @@ links, and most of it goes to this athlete's club. You pay exactly the same pric
   inneh+=`<section class="kort dinsida"><h2>Is this you?</h2>
 <p class="not">Add your social media and your sponsors to this page. It is free, it takes
 a couple of minutes, and everything is checked before it appears.</p>
-<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a></div>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a>
+<a class="knapp" href="/alpine-skiing/guide.html">Three ways to fund your season</a></div>
 </section>`;
 
   skriv(adress, sida({
@@ -444,7 +445,13 @@ a couple of minutes, and everything is checked before it appears.</p>
       nationality:a.nat, identifier:a.fis,
       sameAs:`https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${a.id}`}
   }));
-  register.push([a.fis, visa, a.nat, adress.replace('/alpine-skiing/athletes/','').replace('.html','')].join('|'));
+  /* Klubben följer med i registret. Åkarkortet inne i appen hade den inte
+     alls, och blev därför inkonsekvent mot den statiska åkarsidan: vissa
+     åkare visade fyra länkar, andra två. Registret hämtas ändå när någon
+     söker, så det kostar ingenting på förstasidan. */
+  register.push([a.fis, visa, a.nat,
+    adress.replace('/alpine-skiing/athletes/','').replace('.html',''),
+    kl?kl.namn:'', kl?kl.webb:''].join('|'));
   antalAkare++;
 }
 console.log(`Skrev ${antalAkare} åkarsidor`);
@@ -453,7 +460,8 @@ console.log(`Skrev ${antalAkare} åkarsidor`);
 register.sort((x,y)=>x.split('|')[1].localeCompare(y.split('|')[1],'sv'));
 mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
 writeFileSync(join(UT,'alpine-skiing','fis-akare.js'),
-`/* Skapad av generera-webbplats.mjs. fis|namn|nation|filnamn, en per rad. */
+`/* Skapad av generera-webbplats.mjs.
+   fis|namn|nation|filnamn|klubb|klubbadress, en per rad. */
 window.FIS_AKARE = ${JSON.stringify(register.join('\n'))};
 `);
 console.log(`Skrev register över ${register.length} åkare`);
@@ -666,7 +674,7 @@ skriv('/index.html', sida({
    serverar webbläsaren gamla poäng och gamla texter i upp till tio minuter
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-['index.html','lagg-till.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
+['index.html','lagg-till.html','guide.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
  'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js',
  'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
@@ -687,6 +695,9 @@ const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
   }
 });
 adresser.push('/alpine-skiing/');
+// guiden ska indexeras – den är sidans starkaste eget innehåll
+adresser.push('/alpine-skiing/guide.html');
+adresser.push('/alpine-skiing/lagg-till.html');
 
 /* ---- stilmall ---- */
 writeFileSync(join(UT,'stil.css'), `:root{--bg:#f4f6f8;--card:#fff;--ink:#0f1419;--ink2:#3d4753;

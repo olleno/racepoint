@@ -220,7 +220,11 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
           <span data-t="kryssAffiliate"></span></label>
         <label><input type="checkbox" id="stod" name="stod" value="ja">
           <span data-t="kryssStod"></span></label>
+        <label><input type="checkbox" id="guide" name="guide" value="ja">
+          <span data-t="kryssGuide"></span></label>
       </div>
+      <p class="hint" style="margin-top:9px"><span data-t="guideFore"></span>
+        <a href="guide.html" data-t="guideLank"></a></p>
       <div class="rad" style="margin-top:13px">
         <div class="falt">
           <label for="fodd" data-t="fodd">Year of birth</label>
@@ -309,8 +313,11 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     malsman:'entry.514466216'
   };
   var KRYSS='entry.2138198092';
+  /* Värdena måste stå ord för ord som alternativen i Google-formuläret.
+     Skickar vi något annat kastas hela svaret utan felmeddelande. */
   var VAL={affiliate:'Affiliate - egen lank, 80 procent till min klubb',
-           stod:'Stodknapp - kunna ta emot gavor'};
+           stod:'Stodknapp - kunna ta emot gavor',
+           guide:'Guide - skicka mig guiden om pengar och sponsring'};
 
   var form=document.getElementById('f');
   var knapp=document.getElementById('skicka');
@@ -347,7 +354,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
     var kropp=new URLSearchParams();
     Object.keys(d).forEach(function(k){ kropp.append(FALT[k], d[k]); });
-    ['affiliate','stod'].forEach(function(k){
+    ['affiliate','stod','guide'].forEach(function(k){
       var el=document.getElementById(k);
       if(el && el.checked) kropp.append(KRYSS, VAL[k]);
     });
