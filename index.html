@@ -511,27 +511,45 @@ function analysera(d){
     if(String(e['2']).toLowerCase().startsWith('dns'))continue;
     startande.push(e['0']);}
 
-  /* Varje åkare har en rad med mellantider och sist måltiden:
-     {0: 30280, 1: 52960, 2: 78160}. Tidigare läste vi plats 0, alltså
-     FÖRSTA mellantiden — därav tider på trettio sekunder i ett störtlopp.
-     Måltiden ligger på den högsta platsen, och hur många mellantider banan
-     har varierar. Vi räknar därför fram platsen ur dem som faktiskt gått i
-     mål: den högsta plats någon av dem har ett värde på är målplatsen. */
-  let malPlats=0;
-  for(const i in sl[sista]){
-    const e=sl[sista][i];
-    if(!e||e['2']!=='finish') continue;
-    const r=res&&res[sista]?res[sista][i]:null;
-    if(!r) continue;
-    for(const k in r) if(r[k]!=null && +k>malPlats) malPlats=+k;
-  }
+  /* ── Tider och åk ──────────────────────────────────────────────────────
+     Varje åkare har en rad med mellantider och sist måltiden för det åket:
+     {0: 30280, 1: 52960, 2: 78160}. Måltiden ligger på den högsta platsen,
+     och antalet mellantider varierar med banan – därför räknas platsen fram
+     ur dem som faktiskt gått i mål.
+
+     I ett tvåmansåk gäller dessutom två saker:
+       · Startlistan för åk 2 dyker upp så fort den är lottad, långt innan
+         någon åkt. Utgår vi från sista åket i startlistan tömmer sig hela
+         resultattabellen i pausen – åk 1 försvinner. Vi utgår därför från
+         det SENASTE ÅK SOM HAR RESULTAT.
+       · Poängen ska räknas på totaltiden, inte på ett enskilt åk. Vi
+         summerar därför åkarens måltider över alla åk som har resultat. */
+  const akMedRes=Object.keys(res||{}).map(Number)
+    .filter(r=>res[r]&&Object.keys(res[r]).length).sort((a,b)=>a-b);
+  const basAk=akMedRes.length?akMedRes[akMedRes.length-1]:sista;
+
+  const malPlatsFor={};
+  akMedRes.forEach(r=>{
+    let m=0;
+    for(const i in (sl[r]||sl[basAk]||{})){
+      const rad=res[r]?res[r][i]:null;
+      if(!rad) continue;
+      for(const k in rad) if(rad[k]!=null && +k>m) m=+k;
+    }
+    malPlatsFor[r]=m;
+  });
+  const tidIAk=(r,i)=>{
+    const rad=res&&res[r]?res[r][i]:null;
+    return TID(rad?rad[String(malPlatsFor[r])]:null);
+  };
 
   const klara=[], kvar=[];
-  for(const i in sl[sista]){
-    const e=sl[sista][i];if(!e)continue;
-    const r=res&&res[sista]?res[sista][i]:null;
-    const t=TID(r?r[String(malPlats)]:null);
-    if(e['2']==='finish'&&t) klara.push({fis:e['0'],bib:e['1'],t});
+  for(const i in sl[basAk]){
+    const e=sl[basAk][i];if(!e)continue;
+    const tider=akMedRes.map(r=>tidIAk(r,i));
+    const allaKlara=tider.length>0 && tider.every(t=>t);
+    if(e['2']==='finish' && allaKlara)
+      klara.push({fis:e['0'],bib:e['1'],t:tider.reduce((a,b)=>a+b,0),ak:tider});
     else kvar.push({fis:e['0'],bib:e['1'],status:e['2']||''});
   }
   klara.sort((a,b)=>a.t-b.t);
