@@ -1,0 +1,16 @@
+{
+  "name": "Race Point – Alpine Skiing",
+  "short_name": "Race Point",
+  "description": "FIS-poäng och penalty räknade medan tävlingen pågår.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f6f8",
+  "theme_color": "#12305a",
+  "icons": [
+    {"src": "ikoner/ikon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "ikoner/ikon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "ikoner/ikon-maskbar-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Race Point – Alpine Skiing</title>
+<meta name="description" content="FIS-poäng och penalty räknade medan tävlingen pågår.">
+<!-- Gör att sidan kan läggas på hemskärmen och öppnas som en app, med
+     egen ikon och utan webbläsarens ramar. Ingen app-butik inblandad. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ikoner/apple-touch-icon.png">
+<link rel="icon" href="ikoner/ikon-192.png" sizes="192x192">
+<meta name="theme-color" content="#12305a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Race Point">
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#fff; --ink:#0f1419; --ink2:#3d4753; --muted:#6b7684;
+    --line:#e4e8ec; --line2:#eef1f4; --accent:#0a5fbf; --accent-bg:#e8f0fb;
+    --brand1:#0a4fa0; --brand2:#2fb8ef;
+    --sigill:#12305a; --sigill-disk:#12305a; --sigill-ring:#12305a;
+    --sigill-berg:#ffffff; --sigill-dot:#2f7fb8;
+    --ok:#0a7a41; --ok-bg:#e6f4ec; --bad:#b03a2c; --live:#d92d20; --warn-bg:#fdf3e3;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+      --line:#252b32; --line2:#1d2228; --accent:#63a8ff; --accent-bg:#14243a;
+      --brand1:#2f7fd8; --brand2:#4fd0ff;
+      --sigill:#dfe7f0; --sigill-disk:#1c4a86; --sigill-ring:#5b86b8;
+      --sigill-berg:#ffffff; --sigill-dot:#7cc0ee;
+      --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --live:#ff5c4d; --warn-bg:#2a2213;
+      --shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px 72px}
+
+  /* ---------- logotyp ---------- */
+  .topprad{display:flex;align-items:flex-start;justify-content:space-between;
+    gap:16px;margin-bottom:16px}
+  .sprakval select{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--card);
+    border:1px solid var(--line);border-radius:8px;padding:5px 8px;cursor:pointer;
+    box-shadow:var(--shadow)}
+  .brand{display:inline-flex;align-items:center;gap:13px;
+    text-decoration:none;color:inherit}
+  .brand svg{display:block;flex:none}
+  .brand .wm{line-height:1}
+  .brand .wm b{display:block;font-size:20px;font-weight:700;letter-spacing:.135em;
+    text-transform:uppercase;color:var(--sigill)}
+  .brand .wm .rule{display:block;height:1px;margin:7px 0 6px;
+    background:var(--sigill);opacity:.35}
+  .brand .wm span{display:block;font-size:8.5px;font-weight:620;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- nedräkning till start ---------- */
+  .klocka{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:13px 17px;margin-bottom:16px}
+  .klocka .siffra{font-size:27px;font-weight:680;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;line-height:1.1;color:var(--accent)}
+  .klocka b{display:block;font-size:12.5px;font-weight:620;letter-spacing:.02em}
+  .klocka span{display:block;font-size:12.5px;color:var(--muted)}
+
+  .lead{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  .toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);
+    border-radius:9px;padding:2px;box-shadow:var(--shadow)}
+  .seg button{border:0;background:none;color:var(--ink2);font:inherit;font-size:13px;
+    padding:5px 11px;border-radius:7px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent);font-weight:560}
+  .spacer{flex:1}
+
+  /* skiljelinje mellan kommande och avgjorda tävlingar */
+  .avdelare{display:flex;align-items:center;gap:12px;margin:30px 0 14px;
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;
+    color:var(--muted)}
+  .avdelare.forst{margin-top:0}
+  .avdelare::after{content:"";flex:1;height:1px;background:var(--line)}
+  .daygroup{margin-bottom:22px}
+  .daygroup h2{font-size:12px;font-weight:620;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--muted);margin:0 0 8px 2px}
+  .races{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;box-shadow:var(--shadow)}
+  a.race{display:flex;align-items:center;gap:12px;padding:11px 14px;text-decoration:none;
+    color:inherit;border-bottom:1px solid var(--line2)}
+  a.race:last-child{border-bottom:0}
+  a.race:hover{background:var(--accent-bg)}
+  .flag{font-size:20px;line-height:1;width:26px;text-align:center;flex:none;
+    font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+  .flag.txt{font-size:10.5px;font-weight:700;color:var(--muted)}
+  .rmain{min-width:0;flex:1}
+  .rmain .l1{font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rmain .l2{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
+  .rside{display:flex;align-items:center;gap:7px;flex:none}
+  .chip{font-size:11px;font-weight:560;padding:2px 7px;border-radius:6px;
+    background:var(--line2);color:var(--muted);white-space:nowrap}
+  .chip.k{background:var(--accent-bg);color:var(--accent)}
+  .chip.live{background:var(--live);color:#fff}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)}
+  .arrow{color:var(--muted);font-size:15px}
+
+  .back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);
+    text-decoration:none;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:15px 17px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card h3{font-size:11.5px;font-weight:620;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--muted);margin:0 0 12px}
+  .rhead{display:flex;align-items:center;gap:13px}
+  .rhead .flag{font-size:26px;width:32px}
+  .rhead h2{font-size:18px;font-weight:640;margin:0;letter-spacing:-.01em}
+  .rhead h2 a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+  .rhead h2 a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  .rhead .sub{font-size:13px;color:var(--muted)}
+  .msg{font-size:13px;color:var(--ink2);background:var(--line2);border-radius:8px;
+    padding:8px 11px;margin-top:11px}
+
+  .nums{display:flex;gap:28px;flex-wrap:wrap}
+  .nums .n{font-size:29px;font-weight:640;font-variant-numeric:tabular-nums;
+    line-height:1.1;letter-spacing:-.02em}
+  .nums small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--muted);margin-top:2px}
+  .formel{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.6}
+
+  .tblwrap{overflow-x:auto;margin:0 -17px;padding:0 17px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+  th{font-size:11px;font-weight:620;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--muted);border-bottom-color:var(--line)}
+  tr:last-child td{border-bottom:0}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  td.pos{color:var(--muted);width:1%}
+  td.name a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;cursor:pointer}
+  td.name a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  .fam{font-weight:560} .giv{color:var(--muted);font-weight:400}
+  .up{color:var(--ok);font-weight:560} .down{color:var(--bad)} .muted{color:var(--muted)}
+  .warn{background:var(--warn-bg);border-radius:9px;padding:10px 12px;font-size:13px;
+    color:var(--ink2);margin-bottom:14px}
+  .err{color:var(--bad)}
+  .status{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-bg)}
+
+  .lankar{display:flex;flex-wrap:wrap;gap:8px}
+  .lankar a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    font-size:13px;color:var(--ink2);background:var(--line2);border-radius:8px;
+    padding:6px 11px}
+  .lankar a:hover{background:var(--accent-bg);color:var(--accent)}
+  .tom{font-size:13px;color:var(--muted);line-height:1.65}
+  .foot{font-size:12px;color:var(--muted);margin-top:26px;line-height:1.7}
+
+  /* ---------- väderpanel ---------- */
+  details.vader summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+    gap:12px;user-select:none}
+  details.vader summary::-webkit-details-marker{display:none}
+  details.vader summary .ikon{font-size:26px;line-height:1;
+    font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+  details.vader summary .sum{min-width:0;flex:1}
+  details.vader summary .sum b{display:block;font-size:15px;font-weight:600}
+  details.vader summary .sum span{display:block;font-size:12.5px;color:var(--muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  details.vader summary .pil{flex:none;font-size:10.5px;font-weight:620;
+    text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  details.vader summary .pil::after{content:" ▾";font-size:11px}
+  details.vader[open] summary .pil::after{content:" ▴"}
+  details.vader[open] summary{margin-bottom:14px;padding-bottom:12px;
+    border-bottom:1px solid var(--line2)}
+  details.vader[open] summary .sum span{display:none}
+  .wnu{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .wnu .ikon{font-size:38px;line-height:1;
+    font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+  .wnu .grad{font-size:34px;font-weight:660;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;line-height:1.05}
+  .wnu .txt{font-size:13px;color:var(--muted);margin-top:3px}
+  .wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+    gap:10px 14px;margin-top:14px}
+  .wgrid div b{display:block;font-size:10.5px;font-weight:620;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--muted)}
+  .wgrid div span{font-size:15px;font-variant-numeric:tabular-nums}
+  .wchart{margin-top:16px;overflow-x:auto}
+  .wchart svg{display:block;min-width:520px;width:100%;height:132px}
+
+  /* ---------- sändning och kameror ---------- */
+  .ram{position:relative;width:100%;padding-top:56.25%;border-radius:10px;
+    overflow:hidden;background:#000;margin-bottom:10px}
+  .ram iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .cam{display:block;width:100%;border-radius:10px;margin-bottom:8px;background:var(--line2)}
+  .medianamn{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+
+  /* ---------- sponsorer på startsidan ---------- */
+  .sponsorer{border-top:1px solid var(--line);margin-top:26px;padding-top:16px}
+  .sponsorer h4{font-size:10.5px;font-weight:620;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--muted);margin:0 0 12px}
+  .sponsorer .rad{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center}
+  .sponsorer a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    color:var(--ink2);font-size:14px;font-weight:560;opacity:.85}
+  .sponsorer a:hover{opacity:1;color:var(--accent)}
+  .sponsorer img{max-height:26px;width:auto;display:block}
+
+  /* ---------- lägg till på hemskärmen ---------- */
+  .install{position:fixed;left:12px;right:12px;z-index:60;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 6px 24px rgba(16,24,40,.16), 0 2px 6px rgba(16,24,40,.08);
+    padding:13px 14px;display:flex;align-items:flex-start;gap:12px;
+    animation:upp .28s ease-out}
+  @media (prefers-reduced-motion:reduce){.install{animation:none}}
+  @keyframes upp{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .install svg.marke{flex:none;margin-top:1px}
+  .install .txt{flex:1;min-width:0}
+  .install .txt b{display:block;font-size:14.5px;font-weight:620;line-height:1.3}
+  .install .txt span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+  .install .knappar{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+  .install button{font:inherit;font-size:13.5px;font-weight:560;border-radius:9px;
+    padding:8px 15px;cursor:pointer;border:1px solid var(--line);
+    background:var(--card);color:var(--ink2)}
+  .install button.ja{background:var(--sigill-disk);color:#fff;border-color:transparent}
+  .install .delaikon{display:inline-block;vertical-align:-3px;margin:0 2px}
+
+  /* ---------- mobil ---------- */
+  @media (max-width:640px){
+    .wrap{padding:14px 12px 60px}
+    .brand svg{width:42px;height:39px}
+    .brand .wm b{font-size:18px}
+    .card{padding:13px 13px;border-radius:11px}
+    .tblwrap{margin:0 -13px;padding:0 13px}
+    th,td{padding:8px 6px;font-size:13.5px}
+    .doljsmal{display:none}
+    .nums{gap:18px}
+    .nums .n{font-size:25px}
+    .rhead h2{font-size:16px}
+    .wnu .grad{font-size:30px}
+    .wchart svg{min-width:430px}
+    a.race{padding:12px 12px;gap:10px}
+    .rside .chip:not(.live):not(.k){display:none}
+    /* långa namn får radbrytas i stället för att tvinga fram sidled-scroll */
+    td.name{white-space:normal;min-width:104px}
+    .klocka{gap:12px;padding:12px 13px}
+    .klocka .siffra{font-size:24px}
+  }
+  @media (max-width:400px){
+    .rmain .l2{font-size:12px}
+    .doljsmycketsmal{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topprad">
+  <a class="brand" href="#" aria-label="Race Point, alpint">
+    <!-- Sigill: en mållinje med tre stigande staplar på – race och points.
+         Medvetet utan berg eller portar, så samma märke fungerar för längd,
+         skicross, backhoppning och allt annat FIS håller på med. Symmetriskt
+         och enfärgat: lika tydligt i 16 pixlar som på en tryckt rygglapp. -->
+    <svg width="50" height="50" viewBox="0 0 52 52" role="img" aria-hidden="true">
+      <circle cx="26" cy="26" r="25" fill="none" stroke="var(--sigill-ring)" stroke-width="1.6"/>
+      <circle cx="26" cy="26" r="21" fill="var(--sigill-disk)"/>
+      <path d="M12 33l7.5-11 5 7 6-9.5L38 33z" fill="var(--sigill-berg)"/>
+      <rect x="12" y="35.4" width="26" height="2" rx="1" fill="var(--sigill-dot)"/>
+    </svg>
+    <span class="wm"><b>Race Point</b><span class="rule"></span><span>Alpine Skiing</span></span>
+  </a>
+  <div id="sprakval" class="sprakval"></div>
+  </div>
+
+  <div id="nedrakning"></div>
+  <div id="app"></div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="sprak.js"></script>
+<script src="fis-kalender.js"></script>
+<script src="fis-poangdata.js"></script>
+<script src="fis-profiler.js"></script>
+<script src="fis-media.js"></script>
+<script src="fis-forbund.js"></script>
+<script>
+/* ============ 0. Språk ============
+   Ordningen är: sparat val → webbläsarens språk → engelska. Ingen tjänst
+   behöver frågas om var besökaren finns; webbläsarens inställning är både
+   gratis och ett bättre svar (en italienare i Åre vill ha italienska). */
+const SPARAT='rp-sprak';
+function valjSprak(){
+  let v=null;
+  try{ v=localStorage.getItem(SPARAT); }catch(e){}
+  if(v&&window.SPRAK[v]) return v;
+  const onskade=(navigator.languages&&navigator.languages.length)
+    ? navigator.languages : [navigator.language||'en'];
+  for(const o of onskade){
+    const kod=String(o).toLowerCase().split('-')[0];
+    if(window.SPRAK[kod]) return kod;
+  }
+  return 'en';
+}
+let SPR=valjSprak();
+function T(nyckel,varden){
+  const bord=window.SPRAK[SPR]||{}, res=window.SPRAK.en||{}, sv=window.SPRAK.sv||{};
+  let t=bord[nyckel]; if(t==null) t=res[nyckel]; if(t==null) t=sv[nyckel];
+  if(t==null) return nyckel;
+  if(varden) for(const k in varden) t=String(t).split('{'+k+'}').join(varden[k]);
+  return t;
+}
+const LOK=()=>window.SPRAK_LOCALE[SPR]||'en-GB';
+// extraordlistorna som ligger i egna objekt i sprak.js
+const TX=(bord,nyckel)=>{const b=window[bord]||{};
+  return (b[SPR]&&b[SPR][nyckel])||(b.en&&b.en[nyckel])||nyckel;};
+const GRENNAMN=()=>(window.SPRAK[SPR]&&window.SPRAK[SPR].grenar)||window.SPRAK.en.grenar;
+function bytSprak(kod){
+  if(!window.SPRAK[kod]) return;
+  SPR=kod;
+  try{ localStorage.setItem(SPARAT,kod); }catch(e){}
+  document.documentElement.lang=kod;
+  ritaSprakval(); ritaFot(); rutt();
+  if(typeof taBortInstall==='function'){ taBortInstall(); kanskeVisaInstall(); }
+}
+function ritaSprakval(){
+  const v=document.getElementById('sprakval'); if(!v) return;
+  v.innerHTML='<select aria-label="'+esc(T('sprakval'))+'">'+
+    window.SPRAK_ORDNING.filter(k=>window.SPRAK[k]).map(k=>
+      '<option value="'+k+'"'+(k===SPR?' selected':'')+'>'+esc(window.SPRAK_NAMN[k])+'</option>'
+    ).join('')+'</select>';
+  v.querySelector('select').onchange=e=>bytSprak(e.target.value);
+}
+function ritaFot(){
+  const f=document.getElementById('foot'); if(!f) return;
+  f.textContent=window.FIS_CFG
+    ? T('foot',{l:window.FIS_CFG.lista, v:window.FIS_CFG.giltig}) : '';
+}
+
+/* ============ 1. FIS eget dataformat (PHP-serialiserat) ============ */
+function unserialize(s){
+  let i=0;
+  function parse(){
+    const t=s[i];
+    if(t==='N'){i+=2;return null;}
+    if(t==='i'){i+=2;const j=s.indexOf(';',i);const v=parseInt(s.slice(i,j));i=j+1;return v;}
+    if(t==='d'){i+=2;const j=s.indexOf(';',i);const v=parseFloat(s.slice(i,j));i=j+1;return v;}
+    if(t==='b'){i+=2;const v=s[i]==='1';i+=2;return v;}
+    if(t==='s'){i+=2;const j=s.indexOf(':',i);const n=parseInt(s.slice(i,j));i=j+2;
+                const v=s.substr(i,n);i+=n+2;return v;}
+    if(t==='a'){i+=2;const j=s.indexOf(':',i);const n=parseInt(s.slice(i,j));i=j+2;
+                const o={};for(let k=0;k<n;k++){const key=parse();o[key]=parse();}i++;return o;}
+    throw new Error('Oväntat tecken "'+t+'"');
+  }
+  return parse();
+}
+const HOSTS=['https://sys1.novius.net','https://d27.novius.net'];
+async function grab(dir,fil){
+  let sist;
+  for(const h of HOSTS){
+    try{
+      const r=await fetch(h+'/'+dir+'/'+fil+'?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok){sist=new Error('status '+r.status);continue;}
+      const t=await r.text();
+      if(t.indexOf('<lt>')!==0){sist=new Error('oväntat svar');continue;}
+      return t.replace(/^<lt>/,'').replace(/<\/lt>$/,'');
+    }catch(e){sist=e;}
+  }
+  throw sist||new Error('ingen server svarade');
+}
+
+/* ============ 2. Nationsflaggor ============ */
+const ISO={AND:'AD',ALB:'AL',ARG:'AR',ARM:'AM',AUS:'AU',AUT:'AT',AZE:'AZ',BEL:'BE',BIH:'BA',
+ BLR:'BY',BOL:'BO',BRA:'BR',BUL:'BG',CAN:'CA',CHI:'CL',CHN:'CN',CIV:'CI',COL:'CO',CRC:'CR',
+ CRO:'HR',CYP:'CY',CZE:'CZ',DEN:'DK',DOM:'DO',ECU:'EC',EGY:'EG',ESP:'ES',EST:'EE',FIJ:'FJ',
+ FIN:'FI',FRA:'FR',GBR:'GB',GEO:'GE',GER:'DE',GHA:'GH',GRE:'GR',GUA:'GT',HAI:'HT',HKG:'HK',
+ HUN:'HU',IND:'IN',IRI:'IR',IRL:'IE',ISL:'IS',ISR:'IL',ITA:'IT',JAM:'JM',JPN:'JP',KAZ:'KZ',
+ KEN:'KE',KGZ:'KG',KOR:'KR',KOS:'XK',LAT:'LV',LBN:'LB',LIE:'LI',LTU:'LT',LUX:'LU',MAD:'MG',
+ MAR:'MA',MAS:'MY',MDA:'MD',MEX:'MX',MGL:'MN',MKD:'MK',MNE:'ME',MON:'MC',NED:'NL',NEP:'NP',
+ NGR:'NG',NOR:'NO',NZL:'NZ',PAK:'PK',PER:'PE',PHI:'PH',POL:'PL',POR:'PT',PRK:'KP',PUR:'PR',
+ ROU:'RO',RSA:'ZA',RUS:'RU',SGP:'SG',SLO:'SI',SMR:'SM',SRB:'RS',SUI:'CH',SVK:'SK',SWE:'SE',
+ SYR:'SY',THA:'TH',TPE:'TW',TTO:'TT',TUR:'TR',UKR:'UA',URU:'UY',USA:'US',UZB:'UZ',VEN:'VE',
+ VIE:'VN',ZIM:'ZW'};
+function flagga(nat){
+  const k=ISO[nat];
+  if(!k) return '<span class="flag txt" title="'+esc(nat)+'">'+esc(nat||'')+'</span>';
+  const e=String.fromCodePoint(...[...k].map(c=>0x1F1E6+c.charCodeAt(0)-65));
+  return '<span class="flag" title="'+esc(nat)+'">'+e+'</span>';
+}
+
+/* ============ 3. FIS regelverk ============ */
+const R2=v=>Math.round(v*100+1e-9)/100;
+// FIS skriver grennamnen på engelska i kalendern; vi kortar dem till koden
+// och slår upp namnet på besökarens språk.
+const GRENKOD={'Downhill':'DH','Slalom':'SL','Giant Slalom':'GS','Super G':'SG',
+               'Alpine Combined':'AC','Team Combined':'AC'};
+const TID=v=>{if(v==null)return null;
+  const n=parseInt(String(v).split(':')[0],10);return (isNaN(n)||n<=0)?null:n;};
+
+function analysera(d){
+  const info=d.raceinfodetail||{};
+  const gren=info.discipline, kon=info.gender, kat=info.category;
+  const rad=(window.FIS_CFG.dis||[]).find(x=>x[0]===gren&&x[1]===kon);
+  if(!rad) return {fel:T('okandGren',{g:gren+' '+kon})};
+  const F=rad[2], MAX=rad[3];
+  const niva=window.FIS_CFG.lvl[kat];
+  const tillagg=rad[4+(niva==null?3:niva)];
+  const minPen=window.FIS_CFG.min[kat]||0;
+
+  const sl=d.startlist&&d.startlist['0']?d.startlist['0']['0']:null;
+  const res=d.result?d.result['0']:null;
+  if(!sl) return {fel:T('ingenStartlista')};
+
+  const akare={};
+  for(const k in (d.racers||{})){const r=d.racers[k];
+    if(r) akare[r[0]]={efter:r[1]||'',forn:r[2]||'',nat:r[3]||''};}
+
+  const akt=Object.keys(sl).map(Number).sort((a,b)=>a-b);
+  const sista=akt[akt.length-1];
+
+  const poang=f=>{const p=window.FIS_POINTS[String(f)];if(!p)return null;
+                  const v=p[gren];return (v==null||isNaN(v))?null:v;};
+  const ordning=f=>{const v=poang(f);return v==null?Infinity:v;};
+  const varde=f=>Math.min(ordning(f),MAX);
+
+  const startande=[];
+  for(const i in sl[akt[0]]){const e=sl[akt[0]][i];if(!e)continue;
+    if(String(e['2']).toLowerCase().startsWith('dns'))continue;
+    startande.push(e['0']);}
+
+  const klara=[], kvar=[];
+  for(const i in sl[sista]){
+    const e=sl[sista][i];if(!e)continue;
+    const t=TID(res&&res[sista]&&res[sista][i]?res[sista][i]['0']:null);
+    if(e['2']==='finish'&&t) klara.push({fis:e['0'],bib:e['1'],t});
+    else kvar.push({fis:e['0'],bib:e['1'],status:e['2']||''});
+  }
+  klara.sort((a,b)=>a.t-b.t);
+
+  const utanPoang=startande.filter(f=>poang(f)==null).length;
+  const tackning=startande.length?1-utanPoang/startande.length:0;
+  const brutit=kvar.filter(x=>/dnf|dq|dsq/i.test(x.status)).length;
+
+  let penalty=null, last=false;
+  if(klara.length){
+    const To=klara[0].t;
+    klara.forEach((x,ix)=>{x.pos=ix+1;
+      x.rp=Math.min(Math.max(R2(F*x.t/To-F),0),MAX);
+      x.efter=x.t-To;});
+    const tionde=klara[9]?klara[9].pos:Infinity;
+    const A=klara.filter(x=>x.pos<=tionde)
+      .sort((a,b)=>ordning(a.fis)-ordning(b.fis)||b.rp-a.rp).slice(0,5)
+      .map(x=>({v:varde(x.fis),k:ordning(x.fis),rp:x.rp,har:poang(x.fis)!=null&&poang(x.fis)<=MAX}));
+    const B=startande.slice().sort((a,b)=>ordning(a)-ordning(b)).slice(0,5).map(f=>({v:varde(f)}));
+    const medPoang=A.filter(x=>x.har).length;
+    const a=A.slice(); while(a.length<5)a.push({v:MAX,rp:0,har:false,k:Infinity});
+    const b=B.slice(); while(b.length<5)b.push({v:MAX});
+    const sA=a.reduce((s,x)=>s+x.v,0), sB=b.reduce((s,x)=>s+x.v,0), sC=a.reduce((s,x)=>s+x.rp,0);
+    const P=R2((sA+sB-sC)/10+tillagg);
+    let till=Math.max(P,minPen);
+    if(medPoang<3) till=Math.max(till,2*MAX);
+    penalty={ber:P,till,sA:R2(sA),sB:R2(sB),sC:R2(sC),tillagg,minPen,medPoang,MAX};
+    // Summa B är låst från start. Penalty kan bara röra sig om någon som är
+    // kvar har bättre FIS-poäng än den femte bästa av dem som redan är i mål.
+    const femte=a[4]?a[4].k:Infinity;
+    const kanAndras=kvar.some(x=>!/dnf|dq|dsq|dns/i.test(x.status)&&ordning(x.fis)<femte);
+    last=!kanAndras;
+    klara.forEach(x=>{x.nya=R2(x.rp+till);const nu=poang(x.fis);
+      x.nu=nu; x.vinst=(nu==null)?null:R2(nu-x.nya);});
+  }
+  return {gren,kon,kat,F,MAX,akare,klara,kvar,startande,penalty,last,tackning,utanPoang,
+          brutit, akt:d.runno?d.runno['1']:null, meddelande:d.message||'', info};
+}
+
+/* ============ 4. Hjälpare ============ */
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const klocka=ms=>{if(!ms)return '';const s=ms/1000;const m=Math.floor(s/60);
+  const r=(s-m*60).toFixed(2).padStart(5,'0');return m?m+':'+r:r;};
+const tusen=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+// Veckodagar och månader kommer från webbläsaren på valt språk – inga
+// egna listor att översätta, och rätt ordning i varje land.
+function datumtext(d){
+  const dt=new Date(d+'T12:00:00'); const idag=new Date(); idag.setHours(12,0,0,0);
+  const diff=Math.round((dt-idag)/86400000);
+  let bas=dt.toLocaleDateString(LOK(),{weekday:'long',day:'numeric',month:'short'});
+  bas=bas.charAt(0).toUpperCase()+bas.slice(1);
+  if(diff===0)return T('idag')+' · '+bas;
+  if(diff===1)return T('imorgon')+' · '+bas;
+  if(diff===-1)return T('igar')+' · '+bas;
+  return bas;
+}
+const kartlank=plats=>'https://www.google.com/maps/search/?api=1&query='+
+  encodeURIComponent(plats+' skidanläggning');
+const fisLank=fis=>{const id=window.FIS_ID?window.FIS_ID[String(fis)]:null;
+  return id?'https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid='+id+'&type=result':null;};
+
+function namnHtml(a,fis,codex){
+  const r=a.akare[fis];
+  const txt=r?('<span class="fam">'+esc(r.efter.toUpperCase())+'</span> '+
+               '<span class="giv">'+esc(r.forn)+'</span>'):('#'+esc(fis));
+  return '<a href="#akare/'+esc(fis)+'/'+esc(codex||'')+'">'+txt+'</a>';
+}
+
+/* ============ 5. Väderband ============ */
+const VKOD={0:['Klart','☀️'],1:['Mest klart','🌤️'],
+ 2:['Halvklart','⛅'],3:['Mulet','☁️'],45:['Dimma','🌫️'],
+ 48:['Underkyld dimma','🌫️'],51:['Duggregn','🌦️'],
+ 53:['Duggregn','🌦️'],55:['Duggregn','🌦️'],
+ 61:['Regn','🌧️'],63:['Regn','🌧️'],65:['Kraftigt regn','🌧️'],
+ 71:['Snöfall','🌨️'],73:['Snöfall','🌨️'],75:['Ymnigt snöfall','❄️'],
+ 77:['Kornsnö','❄️'],80:['Skurar','🌦️'],81:['Skurar','🌦️'],
+ 82:['Kraftiga skurar','⛈️'],85:['Snöbyar','🌨️'],86:['Snöbyar','🌨️'],
+ 95:['Åska','⛈️'],96:['Åska med hagel','⛈️'],99:['Åska med hagel','⛈️']};
+const lager={
+  las(n){try{const v=localStorage.getItem(n);return v?JSON.parse(v):null;}catch(e){return null;}},
+  skriv(n,v){try{localStorage.setItem(n,JSON.stringify(v));}catch(e){}}
+};
+async function koordinater(plats){
+  const nyckel='rp-geo2-'+plats;
+  const cachad=lager.las(nyckel); if(cachad) return cachad;
+  const fraga=plats.split(',')[0].trim();
+  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&format=json&name='+
+    encodeURIComponent(fraga));
+  const j=await r.json();
+  if(!j.results||!j.results[0]) return null;
+  const k={lat:j.results[0].latitude, lon:j.results[0].longitude,
+           zon:j.results[0].timezone||null};
+  lager.skriv(nyckel,k); return k;
+}
+
+/* ---------- nedräkning till start ----------
+   Starttiden från FIS är lokal tid på tävlingsorten. Vi tar ortens tidszon
+   från geokodningen och räknar om till en exakt tidpunkt, så nedräkningen
+   stämmer oavsett var i världen den som tittar befinner sig. */
+function zonAvvikelse(tid,zon){
+  const f=new Intl.DateTimeFormat('en-US',{timeZone:zon,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d={}; f.formatToParts(tid).forEach(p=>d[p.type]=p.value);
+  const somUtc=Date.UTC(+d.year,+d.month-1,+d.day,(+d.hour)%24,+d.minute,+d.second);
+  return somUtc-tid.getTime();
+}
+function starttidpunkt(datum,klockslag,zon){
+  if(!datum||!klockslag) return null;
+  const [t,m]=klockslag.split(':').map(Number);
+  const [y,mo,da]=datum.split('-').map(Number);
+  const naiv=Date.UTC(y,mo-1,da,t||0,m||0,0);
+  if(!zon) return new Date(naiv);
+  let ms=naiv;
+  for(let i=0;i<2;i++) ms=naiv-zonAvvikelse(new Date(ms),zon);
+  return new Date(ms);
+}
+function kvarText(ms){
+  const e=(window.SPRAK_ENHETER&&(window.SPRAK_ENHETER[SPR]||window.SPRAK_ENHETER.en))
+          ||{d:'d',t:'h',m:'min',s:'s'};
+  const s=Math.floor(ms/1000);
+  const d=Math.floor(s/86400), t=Math.floor(s%86400/3600),
+        m=Math.floor(s%3600/60), sek=s%60;
+  if(d>0) return d+' '+e.d+' '+t+' '+e.t;
+  if(t>0) return t+' '+e.t+' '+String(m).padStart(2,'0')+' '+e.m;
+  return m+' '+e.m+' '+String(sek).padStart(2,'0')+' '+e.s;
+}
+async function ritaNedrakning(plats,meta,harResultat){
+  const ruta=document.getElementById('nedrakning');
+  if(!ruta||!meta||!meta.tid||!meta.datum) return;
+  let zon=null;
+  try{const k=await koordinater(plats); zon=k&&k.zon;}catch(e){}
+  const start=starttidpunkt(meta.datum,meta.tid,zon);
+  if(!start||isNaN(start)) return;
+  const lokal=start.toLocaleString(LOK(),
+    {weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  function tick(){
+    const kvar=start-Date.now();
+    if(kvar<=0){
+      ruta.innerHTML='<div class="card klocka"><div><b>'+
+        esc(harResultat?T('pagar'):T('passerat'))+'</b>'+
+        '<span>'+esc(T('forstaStart',{t:meta.tid}))+'</span></div></div>';
+      if(window.__klocka) clearInterval(window.__klocka);
+      return;
+    }
+    ruta.innerHTML='<div class="card klocka"><div class="siffra">'+kvarText(kvar)+'</div>'+
+      '<div><b>'+esc(T('tillStart'))+'</b><span>'+esc(meta.tid)+' '+esc(T('paPlats'))+
+      ' · '+esc(lokal)+' '+esc(T('hosDig'))+'</span></div></div>';
+  }
+  tick();
+  if(window.__klocka) clearInterval(window.__klocka);
+  window.__klocka=setInterval(tick,1000);
+}
+async function vader(plats){
+  const k=await koordinater(plats); if(!k) return null;
+  const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+k.lat+'&longitude='+k.lon+
+    '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,'+
+    'wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,snowfall'+
+    '&hourly=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,snowfall,'+
+    'visibility,freezing_level_height,snow_depth'+
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum,sunrise,sunset'+
+    '&timezone=auto&forecast_days=2');
+  const j=await r.json();
+  if(!j.current) return null;
+  const v=VKOD[j.current.weather_code]||['',''];
+  return {plats, hojd:j.elevation, c:j.current, h:j.hourly, d:j.daily,
+          temp:j.current.temperature_2m, vind:j.current.wind_speed_10m,
+          text:v[0], ikon:v[1],
+          sno:j.daily&&j.daily.snowfall_sum?j.daily.snowfall_sum[0]:null};
+}
+const VADERSTRECK=g=>['N','NNO','NO','ONO','O','OSO','SO','SSO','S','SSV','SV','VSV','V','VNV','NV','NNV']
+  [Math.round(((g||0)%360)/22.5)%16];
+
+/* Ritar en egen kurva över dygnet: temperatur som linje, snöfall som staplar.
+   Allt ritat i sidan, inga externa bilder eller kartor som kan sluta fungera. */
+function vaderKurva(h){
+  if(!h||!h.time) return '';
+  const nu=new Date();
+  let start=h.time.findIndex(t=>new Date(t)>=new Date(nu.getTime()-3600000));
+  if(start<0) start=0;
+  const idx=[]; for(let i=start;i<Math.min(start+24,h.time.length);i++) idx.push(i);
+  if(idx.length<4) return '';
+  const T=idx.map(i=>h.temperature_2m[i]);
+  const S=idx.map(i=>h.snowfall[i]||0);
+  const W=idx.map(i=>h.wind_gusts_10m?h.wind_gusts_10m[i]:0);
+  const B=770, H=132, vl=34, hl=8, bh=30;      // bredd, höjd, marginaler, stapelhöjd
+  const yb=H-26;                                // baslinje för kurvan
+  const min=Math.min(...T), max=Math.max(...T);
+  const spann=(max-min)||1;
+  const x=i=>vl+i*(B-vl-hl)/(idx.length-1);
+  const y=v=>18+(1-(v-min)/spann)*(yb-18-bh);
+  const punkter=T.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  const maxSno=Math.max(0.1,...S);
+  let ut='<svg viewBox="0 0 '+B+' '+H+'" preserveAspectRatio="none" role="img" '+
+         'aria-label="Väder timme för timme">';
+  // nollgradersstreck
+  if(min<0&&max>0){
+    const y0=y(0);
+    ut+='<line x1="'+vl+'" y1="'+y0+'" x2="'+(B-hl)+'" y2="'+y0+
+        '" stroke="currentColor" stroke-dasharray="3 4" opacity=".28"/>'+
+        '<text x="4" y="'+(y0+4)+'" font-size="10" fill="currentColor" opacity=".55">0°</text>';
+  }
+  // snöstaplar
+  S.forEach((v,i)=>{ if(v<=0)return;
+    const hh=Math.max(2,(v/maxSno)*bh);
+    ut+='<rect x="'+(x(i)-4)+'" y="'+(yb-hh)+'" width="8" height="'+hh+
+        '" rx="2" fill="var(--brand2)" opacity=".55"/>';});
+  // temperaturkurva
+  ut+='<polyline points="'+punkter+'" fill="none" stroke="var(--accent)" '+
+      'stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+  // klockslag och värden var tredje timme
+  idx.forEach((h_i,i)=>{
+    if(i%3) return;
+    const kl=h.time[h_i].slice(11,16);
+    ut+='<text x="'+x(i)+'" y="'+(H-6)+'" font-size="10" text-anchor="middle" '+
+        'fill="currentColor" opacity=".55">'+kl+'</text>'+
+        '<text x="'+x(i)+'" y="'+(y(T[i])-8)+'" font-size="10.5" text-anchor="middle" '+
+        'fill="currentColor" opacity=".8">'+Math.round(T[i])+'°</text>';
+    if(W[i]>=12)
+      ut+='<text x="'+x(i)+'" y="14" font-size="9.5" text-anchor="middle" '+
+          'fill="var(--bad)">'+Math.round(W[i])+'</text>';
+  });
+  ut+='<text x="4" y="14" font-size="9.5" fill="currentColor" opacity=".55">byar</text>';
+  return ut+'</svg>';
+}
+
+async function ritaVaderPanel(plats){
+  const ruta=document.getElementById('vaderpanel');
+  if(!ruta) return;
+  let v=null;
+  try{ v=await vader(plats); }catch(e){}
+  if(!v){ ruta.innerHTML='<div class="card"><h3>'+esc(T('vader'))+'</h3>'+
+    '<p class="tom">'+esc(T('ingenStation',{p:plats}))+'</p></div>'; return; }
+  const c=v.c, d=v.d, h=v.h;
+  const nollgrans=h&&h.freezing_level_height?h.freezing_level_height[0]:null;
+  const snodjup=h&&h.snow_depth?h.snow_depth[0]:null;
+  const sikt=h&&h.visibility?h.visibility[0]:null;
+  const ruta2=(rubrik,varde)=>'<div><b>'+rubrik+'</b><span>'+varde+'</span></div>';
+  // hopfälld som standard – en rad räcker oftast, resten öppnas vid klick
+  ruta.innerHTML='<div class="card"><details class="vader"><summary>'+
+    '<span class="ikon">'+v.ikon+'</span>'+
+    '<span class="sum"><b>'+Math.round(c.temperature_2m)+'° '+esc(v.text.toLowerCase())+'</b>'+
+    '<span>vind '+Math.round(c.wind_speed_10m)+' m/s'+
+    (nollgrans!=null?' · nollgräns '+Math.round(nollgrans)+' m':'')+
+    (d&&d.snowfall_sum&&d.snowfall_sum[0]>0?' · '+d.snowfall_sum[0].toFixed(1)+' cm snö i dag':'')+
+    '</span></span><span class="pil">'+esc(T('vader'))+'</span></summary>'+
+    '<div class="wnu"><span class="ikon">'+v.ikon+'</span>'+
+    '<div><div class="grad">'+Math.round(c.temperature_2m)+'°</div>'+
+    '<div class="txt">'+esc(v.text)+', '+
+    esc(T('kannsSom',{t:Math.round(c.apparent_temperature)}))+'</div></div></div>'+
+    '<div class="wgrid">'+
+      ruta2(esc(T('vind')), Math.round(c.wind_speed_10m)+' m/s '+VADERSTRECK(c.wind_direction_10m))+
+      ruta2(esc(T('byar')), Math.round(c.wind_gusts_10m)+' m/s')+
+      ruta2(esc(T('molnighet')), c.cloud_cover+' %')+
+      ruta2(esc(T('luftfuktighet')), c.relative_humidity_2m+' %')+
+      (nollgrans!=null?ruta2(esc(T('nollgrans')), Math.round(nollgrans)+' m'):'')+
+      (snodjup?ruta2(esc(T('snodjup')), Math.round(snodjup*100)+' cm'):'')+
+      (sikt!=null?ruta2(esc(T('sikt')), (sikt>=10000?T('over10'):(sikt/1000).toFixed(1))+' '+T('km')):'')+
+      (d&&d.snowfall_sum?ruta2(esc(T('snoIdag')), d.snowfall_sum[0].toFixed(1)+' cm'):'')+
+      (d&&d.temperature_2m_max?ruta2(esc(T('dygn')), Math.round(d.temperature_2m_min[0])+'° – '+
+         Math.round(d.temperature_2m_max[0])+'°'):'')+
+      (d&&d.sunrise?ruta2(esc(T('sol')), d.sunrise[0].slice(11,16)+'–'+d.sunset[0].slice(11,16)):'')+
+    '</div>'+
+    '<div class="wchart">'+vaderKurva(h)+'</div>'+
+    '<p class="formel">'+esc(T('kurvaForkl',{h:Math.round(v.hojd)}))+'</p></details></div>';
+}
+function nollstallKlocka(){
+  if(window.__klocka){clearInterval(window.__klocka);window.__klocka=null;}
+  const r=document.getElementById('nedrakning'); if(r) r.innerHTML='';
+}
+
+/* ============ 6. Vy: välj tävling ============ */
+const KAL=(window.FIS_KALENDER||'').split('\n').filter(Boolean).map(r=>{
+  const [codex,datum,plats,nat,kat,gren,kon,tid]=r.split('|');
+  return {codex,datum,plats,nat,kat,gren,kon,tid};
+});
+let filterKon='', filterGren='';
+
+function ritaValjare(){
+  const idag=new Date().toISOString().slice(0,10);
+  let lopp=KAL.filter(r=>(!filterKon||r.kon===filterKon)&&(!filterGren||r.gren===filterGren));
+  // Kommande först, sedan de avgjorda – båda i stigande datumordning,
+  // med en tydlig skiljelinje emellan.
+  lopp.sort((a,b)=>{
+    const ak=a.datum>=idag, bk=b.datum>=idag;
+    if(ak!==bk) return ak?-1:1;
+    return a.datum.localeCompare(b.datum);
+  });
+  const grenar=[...new Set(KAL.map(r=>r.gren))];
+  const grenText=g=>GRENNAMN()[GRENKOD[g]]||g;
+  let h='<p class="lead">'+esc(T('ingress'))+'</p>'+
+        '<div class="toolbar"><div class="seg">'+
+        ['','M','W'].map(v=>'<button data-kon="'+v+'" aria-pressed="'+(filterKon===v)+'">'+
+          esc(v===''?T('alla'):(v==='M'?T('herrar'):T('damer')))+'</button>').join('')+'</div>'+
+        '<div class="seg">'+
+        ['',...grenar].map(v=>'<button data-gren="'+esc(v)+'" aria-pressed="'+(filterGren===v)+'">'+
+          esc(v===''?T('allaGrenar'):grenText(v))+'</button>').join('')+'</div></div>';
+  if(!lopp.length) h+='<div class="card"><p class="muted">'+esc(T('ingaTraffar'))+'</p></div>';
+
+  let dag=null, iHistorik=false;
+  if(lopp.length && lopp[0].datum>=idag)
+    h+='<p class="avdelare forst">'+esc(TX('SPRAK_AVDELARE','kommande'))+'</p>';
+  lopp.forEach(r=>{
+    const historisk=r.datum<idag;
+    if(historisk && !iHistorik){
+      if(dag!==null){ h+='</div></section>'; dag=null; }
+      h+='<p class="avdelare">'+esc(TX('SPRAK_AVDELARE','tidigare'))+'</p>';
+      iHistorik=true;
+    }
+    if(r.datum!==dag){
+      if(dag!==null) h+='</div></section>';
+      dag=r.datum;
+      h+='<section class="daygroup"><h2>'+esc(datumtext(dag))+'</h2><div class="races">';
+    }
+    const live=r.datum===idag;
+    h+='<a class="race" href="#tavling/'+esc(r.codex)+'">'+flagga(r.nat)+
+       '<span class="rmain"><span class="l1">'+esc(r.plats)+'</span>'+
+       '<span class="l2">'+esc(grenText(r.gren))+' · '+
+       esc(r.kon==='M'?T('konM'):T('konW'))+
+       (r.tid?' · '+esc(T('startKl',{t:r.tid})):'')+'</span></span>'+
+       '<span class="rside">'+(live?'<span class="chip live">'+esc(T('live'))+'</span>':'')+
+       '<span class="chip k">'+esc(r.kat)+'</span>'+
+       '<span class="chip">'+esc(r.codex)+'</span>'+
+       '<span class="arrow">›</span></span></a>';
+  });
+  if(dag!==null) h+='</div></section>';
+
+  const sp=window.SIDSPONSORER||[];
+  if(sp.length){
+    h+='<div class="sponsorer"><h4>'+esc(TX('SPRAK_SPONSOR','rubrik'))+'</h4><div class="rad">'+
+       sp.filter(s=>s.adress&&/^https?:\/\//i.test(s.adress)).map(s=>
+         '<a href="'+esc(s.adress)+'" target="_blank" rel="noopener sponsored nofollow">'+
+         (s.bild?'<img src="'+esc(s.bild)+'" alt="'+esc(s.namn)+'">':esc(s.namn))+'</a>'
+       ).join('')+'</div></div>';
+  }
+  document.getElementById('app').innerHTML=h;
+  document.querySelectorAll('[data-kon]').forEach(b=>b.onclick=()=>{filterKon=b.dataset.kon;ritaValjare();});
+  document.querySelectorAll('[data-gren]').forEach(b=>b.onclick=()=>{filterGren=b.dataset.gren;ritaValjare();});
+  nollstallKlocka();
+}
+
+/* ============ 7. Vy: en tävling ============ */
+function ritaTavling(a,meta,codex){
+  if(a.fel){
+    document.getElementById('app').innerHTML='<a class="back" href="#">'+esc(T('tillbaka'))+'</a>'+
+      '<div class="card"><p class="err">'+esc(a.fel)+'</p></div>';
+    return;
+  }
+  const i=a.info;
+  const plats=i.place||(meta&&meta.plats)||'';
+  let h='<a class="back" href="#">'+esc(T('tillbaka'))+'</a>';
+
+  h+='<div class="card"><div class="rhead">'+flagga((meta&&meta.nat)||'')+
+     '<div><h2><a href="'+esc(kartlank(plats))+'" target="_blank" rel="noopener">'+
+     esc(plats)+'</a></h2><div class="sub">'+esc(i.event||'')+'</div></div></div>'+
+     '<div class="toolbar" style="margin:12px 0 0">'+
+     '<span class="chip k">'+esc(a.kat)+'</span>'+
+     '<span class="chip">'+esc(GRENNAMN()[a.gren]||a.gren)+'</span>'+
+     '<span class="chip">'+esc(a.kon==='M'?T('konM'):T('konW'))+'</span>'+
+     (a.akt?'<span class="chip">'+esc(a.akt)+'</span>':'')+
+     '<span class="spacer"></span><span class="status" id="status"></span></div>'+
+     (a.meddelande?'<div class="msg">'+esc(a.meddelande)+'</div>':'')+'</div>';
+
+  h+='<div id="media"></div>';
+
+  const svagt=a.tackning<0.8;
+  if(svagt && a.startande.length)
+    h+='<div class="warn"><b>'+esc(T('svagtRubrik'))+'</b> '+
+       esc(T('svagtText',{x:a.utanPoang, y:a.startande.length}))+'</div>';
+
+  if(a.penalty && !svagt){
+    const p=a.penalty;
+    h+='<div class="card"><h3>'+esc(T('penaltyNu'))+'</h3><div class="nums">'+
+       '<div><div class="n">'+p.till.toFixed(2)+'</div><small>'+esc(T('tillampad'))+'</small></div>'+
+       '<div><div class="n">'+p.ber.toFixed(2)+'</div><small>'+esc(T('beraknad'))+'</small></div>'+
+       '<div><div class="n">'+a.klara.length+'</div><small>'+esc(T('iMal'))+'</small></div>'+
+       '<div><div class="n">'+a.kvar.length+'</div><small>'+esc(T('kvar'))+'</small></div></div>'+
+       '<p class="formel">'+(a.last
+         ? '<b>'+esc(T('last'))+'</b> '+esc(T('lastForkl'))
+         : esc(T('rorlig')))+
+       '<br>'+esc(T('formel',{a:p.sA.toFixed(2), b:p.sB.toFixed(2), c:p.sC.toFixed(2),
+         d:p.tillagg, k:a.kat, m:p.minPen}))+'</p></div>';
+  }
+
+  if(a.startande.length){
+    const fullfoljt=a.startande.length?Math.round(100*a.klara.length/a.startande.length):0;
+    const spann=a.klara.length>1?(a.klara[Math.min(9,a.klara.length-1)].t-a.klara[0].t)/1000:null;
+    h+='<div class="card"><h3>'+esc(T('statistik'))+'</h3><div class="nums">'+
+       '<div><div class="n">'+a.startande.length+'</div><small>'+esc(T('startande'))+'</small></div>'+
+       '<div><div class="n">'+fullfoljt+'%</div><small>'+esc(T('fullfoljt'))+'</small></div>'+
+       '<div><div class="n">'+a.brutit+'</div><small>'+esc(T('brutit'))+'</small></div>'+
+       (spann!=null?'<div><div class="n">'+spann.toFixed(2)+'</div>'+
+          '<small>'+esc(T('sekTill',{n:Math.min(10,a.klara.length)}))+'</small></div>':'')+
+       (a.klara.length?'<div><div class="n">'+a.klara[0].rp.toFixed(0)+'</div>'+
+          '<small>'+esc(T('tavlPoangSegrare'))+'</small></div>':'')+
+       '</div></div>';
+  }
+  h+='<div id="vaderpanel"></div>';
+
+  if(a.klara.length){
+    h+='<div class="card"><h3>'+esc(a.kvar.length?T('resultatSaHarLangt'):T('resultat'))+'</h3>'+
+       '<div class="tblwrap"><table><tr><th class="n">#</th>'+
+       '<th class="n doljsmal">'+esc(T('nr'))+'</th>'+
+       '<th></th><th>'+esc(T('akare'))+'</th><th class="n">'+esc(T('tid'))+'</th>'+
+       '<th class="n doljsmal">'+esc(T('diff'))+'</th>'+
+       '<th class="n doljsmycketsmal">'+esc(T('tavlP'))+'</th>'+
+       (a.penalty&&!svagt?'<th class="n">'+esc(TX('SPRAK_POANG','fisRace'))+'</th>'+
+       '<th class="n doljsmal">'+esc(TX('SPRAK_POANG','harNu'))+'</th>'+
+       '<th class="n">'+esc(TX('SPRAK_POANG','battre'))+'</th>':'')+'</tr>';
+    a.klara.forEach(x=>{
+      const nat=(a.akare[x.fis]||{}).nat||'';
+      h+='<tr><td class="n pos">'+x.pos+'</td>'+
+         '<td class="n muted doljsmal">'+esc(x.bib)+'</td>'+
+         '<td>'+flagga(nat)+'</td><td class="name">'+namnHtml(a,x.fis,codex)+'</td>'+
+         '<td class="n">'+klocka(x.t)+'</td>'+
+         '<td class="n muted doljsmal">'+(x.efter?'+'+(x.efter/1000).toFixed(2):'')+'</td>'+
+         '<td class="n doljsmycketsmal">'+x.rp.toFixed(2)+'</td>';
+      if(a.penalty&&!svagt){
+        // Bara en förbättring visas. Ett svagare lopp sänker ingens poäng,
+        // så ett rött minustal här vore direkt missvisande.
+        const v=x.vinst;
+        h+='<td class="n"><b>'+x.nya.toFixed(2)+'</b></td>'+
+           '<td class="n muted doljsmal">'+(x.nu==null?'–':x.nu.toFixed(2))+'</td>'+
+           '<td class="n '+(v>0?'up':'muted')+'">'+
+             (v>0?'−'+v.toFixed(2):'–')+'</td>';
+      }
+      h+='</tr>';
+    });
+    h+='</table></div>'+(a.penalty&&!svagt?
+      '<p class="formel"><b>'+esc(TX('SPRAK_POANG','fisRace'))+'</b> = '+
+      esc(T('tavlP'))+' + penalty '+a.penalty.till.toFixed(2)+'. '+
+      esc(TX('SPRAK_POANG','ingenForsamring'))+'<br>'+
+      esc(T('resultatForkl'))+'</p>':'')+'</div>';
+  }
+
+  if(a.kvar.length){
+    h+='<div class="card"><h3>'+esc(T('kvarAttAka',{n:a.kvar.length}))+'</h3>'+
+       '<div class="tblwrap"><table><tr><th class="n">'+esc(T('nr'))+'</th><th></th>'+
+       '<th>'+esc(T('akare'))+'</th>'+
+       '<th class="n">'+esc(T('fisPoang'))+'</th><th>'+esc(T('status'))+'</th></tr>';
+    a.kvar.forEach(x=>{
+      const nat=(a.akare[x.fis]||{}).nat||'';
+      const p=window.FIS_POINTS[String(x.fis)];
+      const v=p?p[a.gren]:null;
+      h+='<tr><td class="n muted">'+esc(x.bib)+'</td><td>'+flagga(nat)+'</td>'+
+         '<td class="name">'+namnHtml(a,x.fis,codex)+'</td>'+
+         '<td class="n">'+(v==null?'<span class="muted">–</span>':v.toFixed(2))+'</td>'+
+         '<td><span class="chip">'+esc(x.status||T('vantar'))+'</span></td></tr>';
+    });
+    h+='</table></div></div>';
+  }
+  document.getElementById('app').innerHTML=h;
+  ritaNedrakning(plats,meta,a.klara.length>0);
+  ritaMedia(codex,plats);
+  ritaVaderPanel(plats);
+}
+
+/* ============ 8. Vy: en åkare ============ */
+const TILLATNA=['instagram.com','tiktok.com','youtube.com','youtu.be','facebook.com',
+  'x.com','twitter.com','strava.com','linkedin.com'];
+const TYPNAMN={instagram:['Instagram','📷'],tiktok:['TikTok','🎵'],
+  youtube:['YouTube','▶️'],facebook:['Facebook','👥'],
+  x:['X','✕'],twitter:['X','✕'],strava:['Strava','🏃'],
+  linkedin:['LinkedIn','💼'],webb:['Egen sida','🌐'],
+  sponsor:['','🤝']};
+function saker(adress,typ){
+  try{
+    const u=new URL(adress);
+    if(u.protocol!=='https:'&&u.protocol!=='http:')return false;
+    if(typ==='webb'||typ==='sponsor')return true;      // egna sidor tillåts
+    const v=u.hostname.replace(/^www\./,'');
+    return TILLATNA.some(t=>v===t||v.endsWith('.'+t));
+  }catch(e){return false;}
+}
+/* Läser ett publicerat Google-ark. idNamn är början på id-kolumnens namn,
+   t.ex. "fis" för åkarnas ark och "codex" för sändningsarket. */
+async function arkCsv(url,idNamn){
+  if(!url) return {};
+  try{
+    const txt=await (await fetch(url)).text();
+    const rader=txt.split(/\r?\n/).map(r=>r.match(/("([^"]|"")*"|[^,]*)(,|$)/g)||[]);
+    const rubrik=(rader[0]||[]).map(c=>c.replace(/[",]/g,'').trim().toLowerCase());
+    const kol=n=>rubrik.findIndex(r=>r.indexOf(n)===0);
+    const iI=kol(idNamn), iT=kol('typ'), iN=kol('namn'), iA=kol('adress'), iG=kol('godk');
+    const ut={};
+    rader.slice(1).forEach(c=>{
+      const v=j=>j<0?'':String(c[j]||'').replace(/^"|",?$|,$/g,'').replace(/""/g,'"').trim();
+      if(iG>=0 && !/^(ja|yes|x|1|sant|true)$/i.test(v(iG))) return;
+      const id=v(iI).replace(/\D/g,''); if(!id) return;
+      (ut[String(+id)]=ut[String(+id)]||[]).push(
+        {typ:v(iT).toLowerCase(),namn:v(iN),adress:v(iA)});
+    });
+    return ut;
+  }catch(e){ return {}; }
+}
+const hamtaArk=()=>arkCsv(window.FIS_PROFIL_ARK,'fis');
+let ARK=null, MEDIAARK=null;
+
+/* ---------- sändning och webbkameror ---------- */
+function inbaddning(adress){
+  try{
+    const u=new URL(adress), v=u.hostname.replace(/^www\./,'');
+    if(v==='youtube.com'||v==='m.youtube.com'){
+      const id=u.searchParams.get('v')||(u.pathname.match(/\/(?:live|embed|shorts)\/([\w-]+)/)||[])[1];
+      if(id) return 'https://www.youtube.com/embed/'+id;
+    }
+    if(v==='youtu.be'){const id=u.pathname.slice(1); if(id) return 'https://www.youtube.com/embed/'+id;}
+    if(v==='vimeo.com'){const id=(u.pathname.match(/(\d+)/)||[])[1];
+      if(id) return 'https://player.vimeo.com/video/'+id;}
+    if(v==='twitch.tv'){const kanal=u.pathname.replace(/\//g,'');
+      if(kanal) return 'https://player.twitch.tv/?channel='+kanal+'&parent='+location.hostname;}
+    if(v==='dailymotion.com'){const id=(u.pathname.match(/video\/([\w]+)/)||[])[1];
+      if(id) return 'https://www.dailymotion.com/embed/video/'+id;}
+  }catch(e){}
+  return null;
+}
+const arBild=a=>/\.(jpe?g|png|webp)(\?|$)/i.test(a||'');
+
+async function ritaMedia(codex,plats){
+  const ruta=document.getElementById('media'); if(!ruta) return;
+  if(MEDIAARK===null) MEDIAARK=await arkCsv(window.FIS_MEDIA_ARK,'codex');
+  const nyckel=String(+String(codex).replace(/\D/g,''));
+  const poster=[...((window.FIS_MEDIA||{})[nyckel]||[]),
+                ...((window.FIS_MEDIA||{})[String(codex)]||[]),
+                ...((MEDIAARK||{})[nyckel]||[])]
+    .filter(m=>m.adress&&/^https?:\/\//i.test(m.adress));
+  if(!poster.length){
+    ruta.innerHTML='<div class="card"><h3>'+esc(T('sandning'))+'</h3>'+
+      '<p class="tom">'+esc(T('ingenSandning'))+'</p>'+
+      '<div class="lankar" style="margin-top:10px">'+
+      '<a href="https://www.youtube.com/results?search_query='+
+        encodeURIComponent(plats+' ski race live')+'" target="_blank" rel="noopener">'+
+        '🔎 '+esc(T('sokSandning'))+'</a>'+
+      '<a href="https://www.google.com/search?q='+
+        encodeURIComponent(plats+' webcam')+'" target="_blank" rel="noopener">'+
+        '🎥 '+esc(T('sokKamera'))+'</a></div></div>';
+    return;
+  }
+  let h='<div class="card"><h3>'+esc(T('sandning'))+'</h3>';
+  const knappar=[];
+  poster.forEach(m=>{
+    const badd=inbaddning(m.adress);
+    if(badd){
+      h+=(m.namn?'<p class="medianamn">'+esc(m.namn)+'</p>':'')+
+         '<div class="ram"><iframe src="'+esc(badd)+'" allowfullscreen '+
+         'allow="autoplay; fullscreen; picture-in-picture" '+
+         'referrerpolicy="no-referrer-when-downgrade" loading="lazy"></iframe></div>';
+    }else if(arBild(m.adress)){
+      h+=(m.namn?'<p class="medianamn">'+esc(m.namn)+'</p>':'')+
+         '<img class="cam" data-cam="'+esc(m.adress)+'" src="'+esc(m.adress)+'" '+
+         'alt="Webbkamera '+esc(m.namn||plats)+'" loading="lazy">';
+    }else{
+      knappar.push('<a href="'+esc(m.adress)+'" target="_blank" rel="noopener nofollow">'+
+        (m.typ==='webbkamera'?'🎥 ':(m.typ==='webb'?'🌐 ':'▶️ '))+
+        esc(m.namn||T('sandning'))+'</a>');
+    }
+  });
+  if(knappar.length) h+='<div class="lankar">'+knappar.join('')+'</div>'+
+    '<p class="formel">'+esc(T('ejInbaddad'))+'</p>';
+  ruta.innerHTML=h+'</div>';
+  // webbkameror är stillbilder som byts ut – ladda om dem regelbundet
+  if(window.__camTimer) clearInterval(window.__camTimer);
+  const bilder=[...ruta.querySelectorAll('img[data-cam]')];
+  if(bilder.length) window.__camTimer=setInterval(()=>{
+    bilder.forEach(b=>{b.src=b.dataset.cam+(b.dataset.cam.indexOf('?')<0?'?':'&')+'t='+Date.now();});
+  },30000);
+}
+
+async function ritaAkare(fis,codex){
+  nollstallKlocka();
+  const app=document.getElementById('app');
+  const p=window.FIS_POINTS[String(fis)]||{};
+  const rank=(window.FIS_RANK||{})[String(fis)]||{};
+  const bio=fisLank(fis);
+  const namn=(window.__namn&&window.__namn[fis])||null;
+  const nat=(window.__nat&&window.__nat[fis])||'';
+  const GN=GRENNAMN();
+
+  let h='<a class="back" href="'+(codex?'#tavling/'+esc(codex):'#')+'">'+esc(T('tillbakaKort'))+'</a>';
+  h+='<div class="card"><div class="rhead">'+flagga(nat)+
+     '<div><h2>'+(namn?esc(namn):'FIS-kod '+esc(fis))+'</h2>'+
+     '<div class="sub">FIS-kod '+esc(fis)+(nat?' · '+esc(nat):'')+'</div></div></div></div>';
+
+  const grenar=['DH','SL','GS','SG','AC'].filter(g=>p[g]!=null);
+  if(grenar.length){
+    h+='<div class="card"><h3>'+esc(T('fisPoangRubrik'))+'</h3><div class="tblwrap"><table>'+
+       '<tr><th>'+esc(T('gren'))+'</th><th class="n">'+esc(T('poang'))+'</th>'+
+       '<th class="n">'+esc(T('placering'))+'</th></tr>';
+    grenar.forEach(g=>{
+      h+='<tr><td>'+esc(GN[g]||g)+'</td><td class="n">'+p[g].toFixed(2)+'</td>'+
+         '<td class="n muted">'+(rank[g]?esc(T('nrVarlden',{n:tusen(rank[g])})):'–')+'</td></tr>';
+    });
+    h+='</table></div><p class="formel">'+esc(T('poangForkl'))+'</p></div>';
+  }
+
+  // Förbundslänk: riktig adress om nationen finns i fis-forbund.js,
+  // annars en färdig sökning – aldrig en trasig länk.
+  const fb=(window.FIS_FORBUND||{})[nat];
+  const forbundNamn=fb?fb.namn:(nat?nat+' ski association':'');
+  const forbundLank=fb?fb.webb:('https://www.google.com/search?q='+
+    encodeURIComponent((nat||'')+' national ski association alpine'));
+
+  h+='<div class="card"><h3>'+esc(T('lankar'))+'</h3><div class="lankar" id="lankar">'+
+     (bio?'<a href="'+esc(bio)+'" target="_blank" rel="noopener">📄 '+esc(T('fisBio'))+'</a>':'')+
+     (nat?'<a href="'+esc(forbundLank)+'" target="_blank" rel="noopener">🏔 '+
+        esc(forbundNamn)+'</a>':'')+
+     '</div><p class="tom" id="egna">'+esc(T('laddar'))+'</p></div>';
+  app.innerHTML=h;
+
+  if(ARK===null) ARK=await hamtaArk();
+  const egna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])]
+    .filter(l=>l.adress&&saker(l.adress,l.typ));
+  const box=document.getElementById('lankar'), txt=document.getElementById('egna');
+  if(!egna.length){ txt.textContent=T('ingaEgna'); return; }
+  txt.remove();
+  const sociala=egna.filter(l=>l.typ!=='sponsor');
+  const sponsor=egna.filter(l=>l.typ==='sponsor');
+  sociala.forEach(l=>{
+    const t=TYPNAMN[l.typ]||['Länk','🔗'];
+    box.insertAdjacentHTML('beforeend','<a href="'+esc(l.adress)+'" target="_blank" '+
+      'rel="noopener nofollow">'+t[1]+' '+esc(l.namn||t[0])+'</a>');
+  });
+  if(sponsor.length){
+    box.insertAdjacentHTML('afterend','<h3 style="margin-top:16px">'+esc(T('sponsorer'))+'</h3>'+
+      '<div class="lankar">'+sponsor.map(l=>'<a href="'+esc(l.adress)+'" target="_blank" '+
+      'rel="noopener nofollow">🤝 '+esc(l.namn||l.adress)+'</a>').join('')+'</div>');
+  }
+}
+
+/* ============ 9. Hämtning, uppdatering och routing ============ */
+let timer=null, senaste=null, aktuell=null, aktivCodex=null;
+const mapp=c=>'al'+String(c).replace(/\D/g,'').padStart(4,'0');
+function statusText(t,live){
+  const el=document.getElementById('status');
+  if(el) el.innerHTML='<span class="dot'+(live?' on':'')+'"></span>'+esc(t);
+}
+async function laddaTavling(codex,forsta){
+  const meta=KAL.find(r=>String(+r.codex)===String(+codex));
+  if(forsta) document.getElementById('app').innerHTML=
+    '<a class="back" href="#">'+esc(T('tillbaka'))+'</a>'+
+    '<div class="card"><p class="muted">'+esc(T('hamtar'))+'</p></div>';
+  try{
+    const d=unserialize(await grab(mapp(codex),'main.xml'));
+    aktuell=d;
+    const a=analysera(d);
+    window.__namn={}; window.__nat={};
+    for(const f in a.akare||{}){
+      window.__namn[f]=a.akare[f].efter.toUpperCase()+' '+a.akare[f].forn;
+      window.__nat[f]=a.akare[f].nat;
+    }
+    ritaTavling(a,meta,codex);
+    statusText(T('uppdaterad',{t:new Date().toLocaleTimeString(LOK())}),true);
+  }catch(e){
+    document.getElementById('app').innerHTML='<a class="back" href="#">'+esc(T('tillbaka'))+'</a>'+
+      '<div class="card"><p class="err">'+esc(T('ingenLive',{c:codex}))+'</p>'+
+      '<p class="formel">'+esc(T('ingenLiveForkl'))+'</p></div>';
+  }
+}
+async function puls(){
+  if(!aktuell||!aktuell.live||!aktivCodex)return;
+  try{
+    const t=await grab(mapp(aktivCodex),'updt'+aktuell.live['1']+'.xml');
+    if(t!==senaste){senaste=t;await laddaTavling(aktivCodex,false);}
+    else statusText(T('oforandrad',{t:new Date().toLocaleTimeString(LOK())}),true);
+  }catch(e){}
+}
+function rutt(){
+  if(timer){clearInterval(timer);timer=null;}
+  const hash=location.hash||'';
+  let m=hash.match(/^#tavling\/(\d+)/);
+  if(m){
+    aktivCodex=m[1]; senaste=null; aktuell=null;
+    laddaTavling(aktivCodex,true);
+    timer=setInterval(puls,3000);
+    window.scrollTo(0,0); return;
+  }
+  m=hash.match(/^#akare\/(\d+)(?:\/(\d*))?/);
+  if(m){ ritaAkare(m[1],m[2]||''); window.scrollTo(0,0); return; }
+  aktivCodex=null; ritaValjare(); window.scrollTo(0,0);
+}
+/* ============ 10. Lägg till på hemskärmen ============
+   Android och Windows skickar ett eget installationslöfte som vi sparar och
+   utlöser när användaren trycker. iPhone har ingen sådan knapp – där visar vi
+   var man trycker i stället. Rutan syns bara i mobilen, bara när sidan inte
+   redan är installerad, och bara en gång i månaden om man tackar nej. */
+const INSTALL_NEJ='rp-install-nej';
+let installLofte=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); installLofte=e; kanskeVisaInstall();
+});
+window.addEventListener('appinstalled',()=>{ taBortInstall(); });
+
+const redanInstallerad=()=>
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
+  window.navigator.standalone===true;
+const arMobil=()=>window.matchMedia&&window.matchMedia('(max-width: 820px)').matches;
+const arIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)&&
+  !/crios|fxios|edgios/i.test(navigator.userAgent);
+function nyligenAvvisad(){
+  try{
+    const t=Number(localStorage.getItem(INSTALL_NEJ)||0);
+    return t && (Date.now()-t) < 30*24*3600*1000;
+  }catch(e){ return false; }
+}
+function taBortInstall(){
+  const r=document.getElementById('install'); if(r) r.remove();
+}
+const DELAIKON='<svg class="delaikon" width="13" height="16" viewBox="0 0 13 16" '+
+  'aria-hidden="true"><path d="M6.5 1.2 3.6 4.1M6.5 1.2 9.4 4.1M6.5 1.2v9" fill="none" '+
+  'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+  '<path d="M2.2 7.4h-.4v7.4h9.4V7.4h-.4" fill="none" stroke="currentColor" '+
+  'stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+function kanskeVisaInstall(){
+  if(document.getElementById('install')) return;
+  if(redanInstallerad()||!arMobil()||nyligenAvvisad()) return;
+  const ios=arIos();
+  if(!ios && !installLofte) return;          // annan webbläsare utan stöd
+  const t=n=>TX('SPRAK_INSTALL',n);
+  const ruta=document.createElement('div');
+  ruta.id='install'; ruta.className='install';
+  ruta.setAttribute('role','dialog');
+  ruta.innerHTML=
+    '<svg class="marke" width="34" height="34" viewBox="0 0 52 52" aria-hidden="true">'+
+    '<circle cx="26" cy="26" r="25" fill="none" stroke="var(--sigill-ring)" stroke-width="1.6"/>'+
+    '<circle cx="26" cy="26" r="21" fill="var(--sigill-disk)"/>'+
+    '<path d="M12 33l7.5-11 5 7 6-9.5L38 33z" fill="var(--sigill-berg)"/>'+
+    '<rect x="12" y="35.4" width="26" height="2" rx="1" fill="var(--sigill-dot)"/></svg>'+
+    '<div class="txt"><b>'+esc(t('rubrik'))+'</b><span>'+
+      (ios ? DELAIKON+' '+esc(t('ios')) : esc(t('android')))+
+    '</span><div class="knappar">'+
+      (ios?'':'<button class="ja" id="installJa">'+esc(t('knapp'))+'</button>')+
+      '<button id="installNej">'+esc(t('senare'))+'</button>'+
+    '</div></div>';
+  document.body.appendChild(ruta);
+  const nej=document.getElementById('installNej');
+  nej.onclick=()=>{ try{localStorage.setItem(INSTALL_NEJ,String(Date.now()));}catch(e){}
+                    taBortInstall(); };
+  const ja=document.getElementById('installJa');
+  if(ja) ja.onclick=async()=>{
+    taBortInstall();
+    if(!installLofte) return;
+    installLofte.prompt();
+    try{ await installLofte.userChoice; }catch(e){}
+    installLofte=null;
+  };
+}
+// vänta tills besökaren hunnit se vad sidan är innan vi frågar
+setTimeout(kanskeVisaInstall, 4000);
+
+window.addEventListener('hashchange',rutt);
+document.documentElement.lang=SPR;
+ritaSprakval();
+ritaFot();
+rutt();
+</script>
+</body>
+</html>
