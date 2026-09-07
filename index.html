@@ -25,6 +25,8 @@
     /* en färg per FIS-gren – alpint är den som gäller på den här sidan */
     --gren-alpint:#0a5fbf; --gren-langd:#0f8a5f; --gren-backe:#6d4bd6;
     --gren-nordisk:#c2620a; --gren-freestyle:#c62a72; --gren-snowboard:#0891a8;
+    --gren-masters:#4c5a6b; --gren-telemark:#7d6b23; --gren-speed:#b4213d;
+    --gren-freeride:#3f6212;
     --sport:var(--gren-alpint); --sport-bg:#e8f0fb;
     --guld:#9a7209; --guld-bg:#fdf4dd; --silver:#5d6672; --silver-bg:#eef1f5;
     --brons:#96521f; --brons-bg:#fbeee2;
@@ -41,6 +43,8 @@
       --sigill-berg:#ffffff; --sigill-dot:#7cc0ee;
       --gren-alpint:#63a8ff; --gren-langd:#3fc48f; --gren-backe:#a78bfa;
       --gren-nordisk:#f0a742; --gren-freestyle:#f472b6; --gren-snowboard:#38bdd8;
+      --gren-masters:#93a3b5; --gren-telemark:#cbb85a; --gren-speed:#ff6b81;
+      --gren-freeride:#a3d05a;
       --sport:var(--gren-alpint); --sport-bg:#14243a;
       --guld:#e3bc4d; --guld-bg:#2b2513; --silver:#aab4c0; --silver-bg:#20262d;
       --brons:#d59462; --brons-bg:#2b1f16;
@@ -244,16 +248,17 @@
   .medianamn{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 
   /* ---------- sponsorer på startsidan ---------- */
-  .sponsorer{margin-top:26px;padding:18px 20px 20px;border-radius:14px;
-    background:linear-gradient(140deg,#12305a 0%,#0d2245 58%,#0a1b38 100%);
-    box-shadow:0 1px 2px rgba(16,24,40,.10)}
+  /* vit panel – sponsorernas logotyper får synas i sina egna färger */
+  .sponsorer{margin-top:26px;padding:16px 20px 18px;border-radius:14px;
+    background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);
+    border-top:3px solid var(--sport)}
   .sponsorer h4{font-size:10.5px;font-weight:620;text-transform:uppercase;
-    letter-spacing:.14em;color:rgba(255,255,255,.62);margin:0 0 14px}
-  .sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 30px;align-items:center}
+    letter-spacing:.14em;color:var(--muted);margin:0 0 14px}
+  .sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 34px;align-items:center}
   .sponsorer a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
-    color:#fff;font-size:15px;font-weight:640;letter-spacing:-.01em;
-    opacity:.9;transition:opacity .15s,transform .15s}
-  .sponsorer a:hover{opacity:1;transform:translateY(-1px)}
+    color:var(--ink);font-size:15px;font-weight:640;letter-spacing:-.01em;
+    transition:transform .15s}
+  .sponsorer a:hover{transform:translateY(-1px)}
   .sponsorer img{width:auto;display:block}
   .sponsorer img.marke{height:16px}
   .sponsorer .namn{white-space:nowrap}
@@ -336,6 +341,7 @@
 <script src="fis-media.js"></script>
 <script src="fis-forbund.js"></script>
 <script src="fis-nyheter.js"></script>
+<script src="fis-arkiv.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -810,7 +816,12 @@ function ritaValjare(){
       h+='<section class="daygroup"><h2>'+esc(datumtext(dag))+'</h2><div class="races">';
     }
     const live=r.datum===idag;
-    h+='<a class="race'+(live?' nu':'')+'" href="#tavling/'+esc(r.codex)+'">'+flagga(r.nat)+
+    /* FIS tar bort livetimingen ungefär en månad efter loppet. Finns en
+       färdig resultatsida i arkivet går länken dit i stället – annars
+       hamnar man på "ingen livetiming", vilket bara ser trasigt ut. */
+    const arkiverad=(window.FIS_ARKIV||{})[r.codex+'|'+r.datum];
+    h+='<a class="race'+(live?' nu':'')+'" href="'+
+       (arkiverad?esc(arkiverad):'#tavling/'+esc(r.codex))+'">'+flagga(r.nat)+
        '<span class="rmain"><span class="l1">'+esc(r.plats)+'</span>'+
        '<span class="l2">'+esc(grenText(r.gren))+' · '+
        esc(r.kon==='M'?T('konM'):T('konW'))+
@@ -1160,6 +1171,11 @@ async function laddaTavling(codex,forsta){
     ritaTavling(a,meta,codex);
     statusText(T('uppdaterad',{t:new Date().toLocaleTimeString(LOK())}),true);
   }catch(e){
+    /* Har tävlingen en färdig resultatsida är det den man vill se, inte
+       ett felmeddelande – skicka dit direkt. */
+    const ark=(window.FIS_ARKIV||{});
+    const traff=Object.keys(ark).find(n=>n.split('|')[0]===String(codex));
+    if(traff){ location.href=ark[traff]; return; }
     document.getElementById('app').innerHTML='<a class="back" href="#">'+esc(T('tillbaka'))+'</a>'+
       '<div class="card"><p class="err">'+esc(T('ingenLive',{c:codex}))+'</p>'+
       '<p class="formel">'+esc(T('ingenLiveForkl'))+'</p></div>';

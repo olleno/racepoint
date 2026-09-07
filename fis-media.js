@@ -43,17 +43,19 @@ window.FIS_MEDIA = {
    Visas som en diskret rad längst ner, inte som reklam mitt i resultaten.
    "bild" är valfri – utan den visas bara namnet, vilket ofta ser bättre ut
    och laddar snabbare. Lägg loggor som .svg eller .png i samma mapp.        */
-/* bild = logotyp i vit version, hämtad direkt från sponsorns egen sajt.
-   Laddar den inte (sponsorn byter adress, blockerar länkning) visas namnet
-   i text i stället – exakt som förut. Inget går sönder.
-   Saknas bild helt ritas namnet som ordmärke. */
+/* bild = sponsorns logotyp i sina egna färger, hämtad direkt från deras sajt.
+   Panelen är vit, så här används de mörka versionerna – de vita varianterna
+   syns inte mot ljus botten.
+   Laddar en logotyp inte (sponsorn byter adress, blockerar länkning) visas
+   namnet i text i stället. Inget går sönder. */
 window.SIDSPONSORER = [
   {namn: "Added Vitamins",     adress: "https://addedvitamins.com",
-   bild: "https://cdn.shopify.com/oxygen-v2/36622/27650/57626/2716968/assets/logo-white-BUQcMbY3.svg",
-   hojd: 22},
+   bild: "https://cdn.shopify.com/oxygen-v2/36622/27650/57626/2716968/assets/logo-DlZdwFow.svg",
+   hojd: 21},
   {namn: "Polaris Compliance", adress: "https://www.polariscompliance.eu/",
-   bild: "https://www.polariscompliance.eu/assets/polaris-text-white.png",
-   marke: "https://www.polariscompliance.eu/assets/star-green.png",
-   hojd: 17},
-  {namn: "Kommunradar",        adress: "https://kommunradar.se/"}
+   bild: "https://www.polariscompliance.eu/assets/polaris-logo.png",
+   hojd: 19},
+  {namn: "Kommunradar",        adress: "https://kommunradar.se/",
+   bild: "https://kommunradar.se/logo.svg",
+   hojd: 21}
 ];

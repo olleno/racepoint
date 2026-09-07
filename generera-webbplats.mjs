@@ -163,8 +163,10 @@ ${jsonld ? '<script type="application/ld+json">'+JSON.stringify(jsonld)+'</scrip
 ${brodsmula ? '<nav class="brod">'+brodsmula+'</nav>' : ''}
 ${innehall}
 <footer class="foot">
+  <p>Race Point is made for the athletes and the athlete community — the people whose
+  season these numbers decide. It is an independent site and is not affiliated with FIS.</p>
   <p>Times and start lists from FIS live timing, points and rankings from the official
-  FIS points list. Race Point is not affiliated with FIS.</p>
+  FIS points list.</p>
 </footer>
 </div>
 </body>
@@ -412,6 +414,19 @@ const allaTavlingar=[...kommande.filter(k=>!avgjordaNycklar.has(k.codex+'|'+k.da
     adress:tavlingAdress(t), kommande:false}))]
   .sort((a,b)=>b.datum.localeCompare(a.datum));
 
+/* Register över avgjorda tävlingar som har en färdig resultatsida.
+   FIS tar bort livetimingen ungefär en månad efter loppet – utan det här
+   hamnar man på "ingen livetiming" i stället för på resultatet. Listan låter
+   den levande sidan länka rätt: gamla tävlingar går till resultatsidan. */
+const arkiv={};
+allaTavlingar.filter(t=>!t.kommande).forEach(t=>{ arkiv[t.codex+'|'+t.datum]=t.adress; });
+mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
+writeFileSync(join(UT,'alpine-skiing','fis-arkiv.js'),
+`/* Skapad av generera-webbplats.mjs. Nyckel: codex|datum -> resultatsida. */
+window.FIS_ARKIV = ${JSON.stringify(arkiv, null, 1)};
+`);
+console.log(`Skrev arkivregister med ${Object.keys(arkiv).length} tävlingar`);
+
 let listInneh=`<h1>Alpine skiing</h1>
 <p class="ingress">FIS points and penalty worked out while the race is still running.</p>
 <section class="kort"><h2>Live</h2><div class="lankar">
@@ -437,6 +452,8 @@ skriv('/alpine-skiing/races/index.html', sida({
 }));
 
 /* ---- startsidan för racepoints.com ---- */
+/* FIS egna grenar, hämtade ur deras kalenderval (sectorcode). Grässkidor
+   är med hos FIS men hoppas över här – det är ingen snösport. */
 const grenarPaSidan=[
   {namn:'Alpine Skiing', adress:'alpine-skiing/', klar:true, farg:'alpint',
    text:'Live penalty and FIS points, race by race.'},
@@ -444,10 +461,18 @@ const grenarPaSidan=[
   {namn:'Ski Jumping', adress:null, klar:false, farg:'backe', text:'Coming.'},
   {namn:'Nordic Combined', adress:null, klar:false, farg:'nordisk', text:'Coming.'},
   {namn:'Freestyle & Ski Cross', adress:null, klar:false, farg:'freestyle', text:'Coming.'},
-  {namn:'Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'}
+  {namn:'Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'},
+  {namn:'Para Alpine Skiing', adress:null, klar:false, farg:'alpint', text:'Coming.'},
+  {namn:'Para Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
+  {namn:'Para Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'},
+  {namn:'Masters', adress:null, klar:false, farg:'masters', text:'Coming.'},
+  {namn:'Telemark', adress:null, klar:false, farg:'telemark', text:'Coming.'},
+  {namn:'Speed Skiing', adress:null, klar:false, farg:'speed', text:'Coming.'},
+  {namn:'Freeride', adress:null, klar:false, farg:'freeride', text:'Coming.'}
 ];
 let start=`<h1>Race points, while the race is running</h1>
-<p class="ingress">FIS publishes the points days after a race. Race Point works out the
+<p class="ingress">Built for the athletes and the people around them — coaches, clubs,
+parents and fans. The official points arrive days after a race. Race Point works out the
 penalty and every athlete's new points after each finish, from the same live timing feed
 the officials use.</p>
 <div class="grenar">`;
@@ -504,14 +529,17 @@ writeFileSync(join(UT,'stil.css'), `:root{--bg:#f4f6f8;--card:#fff;--ink:#0f1419
 --muted:#6b7684;--line:#e4e8ec;--line2:#eef1f4;--accent:#0a5fbf;--accent-bg:#e8f0fb;
 --sigill:#12305a;--shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
 --gren-alpint:#0a5fbf;--gren-langd:#0f8a5f;--gren-backe:#6d4bd6;--gren-nordisk:#c2620a;
---gren-freestyle:#c62a72;--gren-snowboard:#0891a8;--sport:var(--gren-alpint);
+--gren-freestyle:#c62a72;--gren-snowboard:#0891a8;--gren-masters:#4c5a6b;
+--gren-telemark:#7d6b23;--gren-speed:#b4213d;--gren-freeride:#3f6212;
+--sport:var(--gren-alpint);
 --guld:#9a7209;--guld-bg:#fdf4dd;--silver:#5d6672;--silver-bg:#eef1f5;
 --brons:#96521f;--brons-bg:#fbeee2}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1014;--card:#161a1f;--ink:#e9edf2;--ink2:#c3cad3;
 --muted:#8e99a6;--line:#252b32;--line2:#1d2228;--accent:#63a8ff;--accent-bg:#14243a;
 --sigill:#dfe7f0;--shadow:0 1px 3px rgba(0,0,0,.4);
 --gren-alpint:#63a8ff;--gren-langd:#3fc48f;--gren-backe:#a78bfa;--gren-nordisk:#f0a742;
---gren-freestyle:#f472b6;--gren-snowboard:#38bdd8;
+--gren-freestyle:#f472b6;--gren-snowboard:#38bdd8;--gren-masters:#93a3b5;
+--gren-telemark:#cbb85a;--gren-speed:#ff6b81;--gren-freeride:#a3d05a;
 --guld:#e3bc4d;--guld-bg:#2b2513;--silver:#aab4c0;--silver-bg:#20262d;
 --brons:#d59462;--brons-bg:#2b1f16}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
@@ -572,16 +600,16 @@ font-variant-numeric:tabular-nums}
 td.pos span.m1{background:var(--guld-bg);color:var(--guld)}
 td.pos span.m2{background:var(--silver-bg);color:var(--silver)}
 td.pos span.m3{background:var(--brons-bg);color:var(--brons)}
-.sponsorer{margin-top:26px;padding:18px 20px 20px;border-radius:14px;
-background:linear-gradient(140deg,#12305a 0%,#0d2245 58%,#0a1b38 100%);
-box-shadow:0 1px 2px rgba(16,24,40,.10)}
+.sponsorer{margin-top:26px;padding:16px 20px 18px;border-radius:14px;
+background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);
+border-top:3px solid var(--sport)}
 .sponsorer h4{font-size:10.5px;font-weight:620;text-transform:uppercase;
-letter-spacing:.14em;color:rgba(255,255,255,.62);margin:0 0 14px}
-.sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 30px;align-items:center}
+letter-spacing:.14em;color:var(--muted);margin:0 0 14px}
+.sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 34px;align-items:center}
 .sponsorer a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
-color:#fff;font-size:15px;font-weight:640;letter-spacing:-.01em;opacity:.9;
-transition:opacity .15s,transform .15s}
-.sponsorer a:hover{opacity:1;transform:translateY(-1px)}
+color:var(--ink);font-size:15px;font-weight:640;letter-spacing:-.01em;
+transition:transform .15s}
+.sponsorer a:hover{transform:translateY(-1px)}
 .sponsorer img{width:auto;display:block}
 .sponsorer img.marke{height:16px}
 .sponsorer .namn{white-space:nowrap}
