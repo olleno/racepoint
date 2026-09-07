@@ -339,7 +339,8 @@ for(const t of Object.values(tavlingar)){
     const a=akare[r.fis];
     const namn=a?namnSnyggt(a.efter,a.forn):r.namn;
     const lank=a?`<a href="../athletes/${a.fis}-${slug(namnSnyggt(a.efter,a.forn))}.html">${esc(namn)}</a>`:esc(namn);
-    inneh+=`<tr><td class="n">${r.pos||'<span class="muted">'+esc(r.status||'')+'</span>'}</td>`+
+    const medalj=r.pos&&r.pos<=3?` class="m${r.pos}"`:'';
+    inneh+=`<tr><td class="n pos">${r.pos?`<span${medalj}>${r.pos}</span>`:'<span class="muted">'+esc(r.status||'')+'</span>'}</td>`+
       `<td class="n muted">${esc(r.bib||'')}</td><td>${flagga(r.nat)}</td>`+
       `<td>${lank}</td><td class="n">${tid(r.tid)}</td>`+
       `<td class="n">${r.slutpoang!=null?r.slutpoang.toFixed(2):'–'}</td></tr>`;
@@ -428,13 +429,13 @@ skriv('/alpine-skiing/races/index.html', sida({
 
 /* ---- startsidan för racepoints.com ---- */
 const grenarPaSidan=[
-  {namn:'Alpine Skiing', adress:'/alpine-skiing/', klar:true,
+  {namn:'Alpine Skiing', adress:'alpine-skiing/', klar:true, farg:'alpint',
    text:'Live penalty and FIS points, race by race.'},
-  {namn:'Cross-Country', adress:null, klar:false, text:'Coming.'},
-  {namn:'Ski Jumping', adress:null, klar:false, text:'Coming.'},
-  {namn:'Nordic Combined', adress:null, klar:false, text:'Coming.'},
-  {namn:'Freestyle & Ski Cross', adress:null, klar:false, text:'Coming.'},
-  {namn:'Snowboard', adress:null, klar:false, text:'Coming.'}
+  {namn:'Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
+  {namn:'Ski Jumping', adress:null, klar:false, farg:'backe', text:'Coming.'},
+  {namn:'Nordic Combined', adress:null, klar:false, farg:'nordisk', text:'Coming.'},
+  {namn:'Freestyle & Ski Cross', adress:null, klar:false, farg:'freestyle', text:'Coming.'},
+  {namn:'Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'}
 ];
 let start=`<h1>Race points, while the race is running</h1>
 <p class="ingress">FIS publishes the points days after a race. Race Point works out the
@@ -442,20 +443,31 @@ penalty and every athlete's new points after each finish, from the same live tim
 the officials use.</p>
 <div class="grenar">`;
 grenarPaSidan.forEach(g=>{
+  const st=`style="--sport:var(--gren-${g.farg})"`;
   start+= g.klar
-    ? `<a class="gren" href="${g.adress}"><b>${esc(g.namn)}</b><span>${esc(g.text)}</span></a>`
-    : `<div class="gren av"><b>${esc(g.namn)}</b><span>${esc(g.text)}</span></div>`;
+    ? `<a class="gren" ${st} href="${g.adress}"><b>${esc(g.namn)}</b><span>${esc(g.text)}</span></a>`
+    : `<div class="gren av" ${st}><b>${esc(g.namn)}</b><span>${esc(g.text)}</span></div>`;
 });
 start+=`</div>
 <section class="kort"><h2>How the numbers are worked out</h2>
 <p class="not">Race points follow the alpine formula, and the penalty follows FIS Points Rules
 article 4.4. The calculation has been checked against 44 official races and reproduced the
 published penalty exactly in every one.</p></section>`;
+/* Logotypen ligger hos sponsorn själv. Laddar den inte visas namnet i text
+   i stället, via onerror – då blir det aldrig en tom lucka. */
+function sponsorMarke(s){
+  const fall="this.style.display='none';"+
+             "var t=this.parentNode.querySelector('.namn');if(t)t.hidden=false;";
+  let h=`<a href="${esc(s.adress)}" rel="noopener sponsored nofollow">`;
+  if(s.marke) h+=`<img class="marke" src="${esc(s.marke)}" alt="" onerror="this.style.display='none'">`;
+  if(s.bild)  h+=`<img src="${esc(s.bild)}" alt="${esc(s.namn)}" `+
+                 `style="height:${s.hojd||20}px" onerror="${fall}">`;
+  h+=`<span class="namn"${s.bild?' hidden':''}>${esc(s.namn)}</span></a>`;
+  return h;
+}
 if(SPONSORER.length){
   start+=`<div class="sponsorer"><h4>Powered by</h4><div class="rad">`+
-    SPONSORER.map(s=>`<a href="${esc(s.adress)}" rel="noopener sponsored nofollow">`+
-      (s.bild?`<img src="${esc(s.bild)}" alt="${esc(s.namn)}">`:esc(s.namn))+`</a>`).join('')+
-    `</div></div>`;
+    SPONSORER.map(sponsorMarke).join('')+`</div></div>`;
 }
 skriv('/index.html', sida({
   titel:'Race Point – live FIS points for snow sports',
@@ -465,7 +477,7 @@ skriv('/index.html', sida({
 
 /* ---- den levande sidan och dess data ---- */
 ['index.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js','fis-media.js',
- 'fis-forbund.js','manifest.webmanifest'].forEach(f=>{
+ 'fis-forbund.js','fis-nyheter.js','manifest.webmanifest'].forEach(f=>{
   if(existsSync(join(HAR,f))) copyFileSync(join(HAR,f), join(UT,'alpine-skiing',f));
 });
 ['ikon-192.png','ikon-512.png','ikon-maskbar-512.png','apple-touch-icon.png'].forEach(f=>{
@@ -481,13 +493,23 @@ adresser.push('/alpine-skiing/');
 /* ---- stilmall ---- */
 writeFileSync(join(UT,'stil.css'), `:root{--bg:#f4f6f8;--card:#fff;--ink:#0f1419;--ink2:#3d4753;
 --muted:#6b7684;--line:#e4e8ec;--line2:#eef1f4;--accent:#0a5fbf;--accent-bg:#e8f0fb;
---sigill:#12305a;--shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06)}
+--sigill:#12305a;--shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+--gren-alpint:#0a5fbf;--gren-langd:#0f8a5f;--gren-backe:#6d4bd6;--gren-nordisk:#c2620a;
+--gren-freestyle:#c62a72;--gren-snowboard:#0891a8;--sport:var(--gren-alpint);
+--guld:#9a7209;--guld-bg:#fdf4dd;--silver:#5d6672;--silver-bg:#eef1f5;
+--brons:#96521f;--brons-bg:#fbeee2}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1014;--card:#161a1f;--ink:#e9edf2;--ink2:#c3cad3;
 --muted:#8e99a6;--line:#252b32;--line2:#1d2228;--accent:#63a8ff;--accent-bg:#14243a;
---sigill:#dfe7f0;--shadow:0 1px 3px rgba(0,0,0,.4)}}
+--sigill:#dfe7f0;--shadow:0 1px 3px rgba(0,0,0,.4);
+--gren-alpint:#63a8ff;--gren-langd:#3fc48f;--gren-backe:#a78bfa;--gren-nordisk:#f0a742;
+--gren-freestyle:#f472b6;--gren-snowboard:#38bdd8;
+--guld:#e3bc4d;--guld-bg:#2b2513;--silver:#aab4c0;--silver-bg:#20262d;
+--brons:#d59462;--brons-bg:#2b1f16}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
 font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 -webkit-font-smoothing:antialiased}
+body::before{content:"";display:block;height:4px;
+background:linear-gradient(90deg,var(--sport) 0%,var(--sport) 55%,#d92d20 55%,#d92d20 100%)}
 .wrap{max-width:840px;margin:0 auto;padding:20px 16px 70px}
 .topprad{margin-bottom:18px}
 .brand{display:inline-flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
@@ -495,8 +517,8 @@ font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial
 .brand .wm b{display:block;font-size:17px;font-weight:700;letter-spacing:.135em;
 text-transform:uppercase;color:var(--sigill)}
 .brand .wm .rule{display:block;height:1px;margin:6px 0 5px;background:var(--sigill);opacity:.35}
-.brand .wm span{display:block;font-size:8px;font-weight:620;letter-spacing:.34em;
-text-transform:uppercase;color:var(--muted)}
+.brand .wm span{display:block;font-size:8px;font-weight:700;letter-spacing:.34em;
+text-transform:uppercase;color:var(--sport)}
 .brod{font-size:12.5px;color:var(--muted);margin-bottom:16px}
 .brod a{color:var(--muted)}
 h1{font-size:23px;font-weight:660;letter-spacing:-.01em;margin:0 0 6px;line-height:1.25}
@@ -527,18 +549,33 @@ background:var(--line2);border-radius:8px;padding:7px 12px}
 .lankar a:hover{background:var(--accent-bg);color:var(--accent)}
 .grenar{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:22px}
 .gren{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;
-padding:15px 17px;text-decoration:none;color:inherit;box-shadow:var(--shadow)}
-.gren b{display:block;font-size:15px;font-weight:620;margin-bottom:3px}
+padding:15px 17px 15px 19px;text-decoration:none;color:inherit;box-shadow:var(--shadow);
+border-left:4px solid var(--sport);transition:transform .12s ease}
+.gren:hover{transform:translateY(-2px)}
+.gren b{display:block;font-size:15px;font-weight:660;margin-bottom:3px;color:var(--sport)}
 .gren span{font-size:12.5px;color:var(--muted)}
-.gren.av{opacity:.5}
-.sponsorer{border-top:1px solid var(--line);margin-top:26px;padding-top:16px}
+.gren.av{opacity:.45}
+.gren.av b{color:var(--ink2)}
+.kort h2{color:var(--sport)}
+td.pos span{display:inline-flex;min-width:23px;height:23px;align-items:center;
+justify-content:center;border-radius:7px;font-size:12.5px;font-weight:700;
+font-variant-numeric:tabular-nums}
+td.pos span.m1{background:var(--guld-bg);color:var(--guld)}
+td.pos span.m2{background:var(--silver-bg);color:var(--silver)}
+td.pos span.m3{background:var(--brons-bg);color:var(--brons)}
+.sponsorer{margin-top:26px;padding:18px 20px 20px;border-radius:14px;
+background:linear-gradient(140deg,#12305a 0%,#0d2245 58%,#0a1b38 100%);
+box-shadow:0 1px 2px rgba(16,24,40,.10)}
 .sponsorer h4{font-size:10.5px;font-weight:620;text-transform:uppercase;
-letter-spacing:.14em;color:var(--muted);margin:0 0 12px}
-.sponsorer .rad{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center}
-.sponsorer a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
-color:var(--ink2);font-size:14px;font-weight:560;opacity:.85}
-.sponsorer a:hover{opacity:1;color:var(--accent)}
-.sponsorer img{max-height:26px;width:auto;display:block}
+letter-spacing:.14em;color:rgba(255,255,255,.62);margin:0 0 14px}
+.sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 30px;align-items:center}
+.sponsorer a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+color:#fff;font-size:15px;font-weight:640;letter-spacing:-.01em;opacity:.9;
+transition:opacity .15s,transform .15s}
+.sponsorer a:hover{opacity:1;transform:translateY(-1px)}
+.sponsorer img{width:auto;display:block}
+.sponsorer img.marke{height:16px}
+.sponsorer .namn{white-space:nowrap}
 .foot{font-size:12px;color:var(--muted);margin-top:30px;line-height:1.7;
 border-top:1px solid var(--line);padding-top:16px}
 @media(max-width:640px){.wrap{padding:14px 12px 60px}h1{font-size:20px}

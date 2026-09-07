@@ -1,10 +1,8 @@
 /* Språk för Race Point.
 
-   Så fungerar det: sidan tittar först efter ett sparat val, annars på vilka
-   språk besökarens webbläsare är inställd på. En italienare får italienska
-   direkt, oavsett var i världen hen befinner sig – det är ett bättre mått än
-   var IP-adressen ligger, och det kräver ingen tjänst som kostar pengar.
-   Saknas en översättning används engelska, och saknas den används svenska.
+   Så fungerar det: engelska är alltid utgångsläget, precis som på FIS egna
+   sidor. Väljer besökaren ett annat språk i väljaren uppe till höger kommer
+   valet ihåg till nästa besök. Saknas en översättning används engelska.
 
    Vill du lägga till ett språk: kopiera hela en:{...}-blocket, byt kod och
    översätt värdena. Nycklarna till vänster ska stå kvar oförändrade.
@@ -45,6 +43,17 @@ window.SPRAK_SPONSOR = {
   en:{rubrik:'Powered by'},   sv:{rubrik:'Drivs av'},
   de:{rubrik:'Ermöglicht von'}, it:{rubrik:'Con il sostegno di'},
   fr:{rubrik:'Avec le soutien de'}, es:{rubrik:'Con el apoyo de'}
+};
+
+/* Nyhetsrutan. Vi visar rubrik, källa och datum – texten står kvar hos den
+   som skrivit den, och läsaren klickar vidare dit. */
+window.SPRAK_NYHETER = {
+  en:{rubrik:'Alpine news', fot:'Headlines from open feeds. Tap one to read it at the source.'},
+  sv:{rubrik:'Alpina nyheter', fot:'Rubriker från öppna flöden. Klicka för att läsa hos källan.'},
+  de:{rubrik:'Alpin-Nachrichten', fot:'Schlagzeilen aus offenen Feeds. Zum Lesen auf die Quelle tippen.'},
+  it:{rubrik:'Notizie alpine', fot:'Titoli da feed aperti. Tocca per leggere sulla fonte.'},
+  fr:{rubrik:'Actualités alpines', fot:'Titres issus de flux ouverts. Touchez pour lire à la source.'},
+  es:{rubrik:'Noticias alpinas', fot:'Titulares de fuentes abiertas. Toca para leer en el origen.'}
 };
 
 /* Rubriker som delar tävlingslistan i två delar. */

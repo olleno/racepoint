@@ -22,7 +22,14 @@
     --brand1:#0a4fa0; --brand2:#2fb8ef;
     --sigill:#12305a; --sigill-disk:#12305a; --sigill-ring:#12305a;
     --sigill-berg:#ffffff; --sigill-dot:#2f7fb8;
+    /* en färg per FIS-gren – alpint är den som gäller på den här sidan */
+    --gren-alpint:#0a5fbf; --gren-langd:#0f8a5f; --gren-backe:#6d4bd6;
+    --gren-nordisk:#c2620a; --gren-freestyle:#c62a72; --gren-snowboard:#0891a8;
+    --sport:var(--gren-alpint); --sport-bg:#e8f0fb;
+    --guld:#9a7209; --guld-bg:#fdf4dd; --silver:#5d6672; --silver-bg:#eef1f5;
+    --brons:#96521f; --brons-bg:#fbeee2;
     --ok:#0a7a41; --ok-bg:#e6f4ec; --bad:#b03a2c; --live:#d92d20; --warn-bg:#fdf3e3;
+    --live-bg:#fef4f2; --live-bg2:#fde9e6; --live-ink:#8f2018;
     --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
   }
   @media (prefers-color-scheme:dark){
@@ -32,7 +39,13 @@
       --brand1:#2f7fd8; --brand2:#4fd0ff;
       --sigill:#dfe7f0; --sigill-disk:#1c4a86; --sigill-ring:#5b86b8;
       --sigill-berg:#ffffff; --sigill-dot:#7cc0ee;
+      --gren-alpint:#63a8ff; --gren-langd:#3fc48f; --gren-backe:#a78bfa;
+      --gren-nordisk:#f0a742; --gren-freestyle:#f472b6; --gren-snowboard:#38bdd8;
+      --sport:var(--gren-alpint); --sport-bg:#14243a;
+      --guld:#e3bc4d; --guld-bg:#2b2513; --silver:#aab4c0; --silver-bg:#20262d;
+      --brons:#d59462; --brons-bg:#2b1f16;
       --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --live:#ff5c4d; --warn-bg:#2a2213;
+      --live-bg:#2a1512; --live-bg2:#361a16; --live-ink:#ff9d92;
       --shadow:0 1px 3px rgba(0,0,0,.4);
     }
   }
@@ -41,6 +54,10 @@
   body{margin:0;background:var(--bg);color:var(--ink);
     font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased}
+  /* färgremsa högst upp – byter färg med grenen, så alpint, längd och
+     backhoppning känns igen direkt utan att man läser rubriken */
+  body::before{content:"";display:block;height:4px;
+    background:linear-gradient(90deg,var(--sport) 0%,var(--sport) 55%,var(--live) 55%,var(--live) 100%)}
   .wrap{max-width:960px;margin:0 auto;padding:20px 16px 72px}
 
   /* ---------- logotyp ---------- */
@@ -57,8 +74,8 @@
     text-transform:uppercase;color:var(--sigill)}
   .brand .wm .rule{display:block;height:1px;margin:7px 0 6px;
     background:var(--sigill);opacity:.35}
-  .brand .wm span{display:block;font-size:8.5px;font-weight:620;letter-spacing:.34em;
-    text-transform:uppercase;color:var(--muted)}
+  .brand .wm span{display:block;font-size:8.5px;font-weight:700;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--sport)}
 
   /* ---------- nedräkning till start ---------- */
   .klocka{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -74,8 +91,29 @@
     border-radius:9px;padding:2px;box-shadow:var(--shadow)}
   .seg button{border:0;background:none;color:var(--ink2);font:inherit;font-size:13px;
     padding:5px 11px;border-radius:7px;cursor:pointer}
-  .seg button[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent);font-weight:560}
+  .seg button[aria-pressed="true"]{background:var(--sport);color:#fff;font-weight:600}
   .spacer{flex:1}
+
+  /* ---------- nyheter ---------- */
+  .nyheter{margin:26px 0 6px}
+  .nyheter h2{font-size:12px;font-weight:620;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--sport);margin:0 0 10px 2px}
+  .nylista{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;box-shadow:var(--shadow)}
+  a.nyhet{display:block;padding:11px 14px;text-decoration:none;color:inherit;
+    border-bottom:1px solid var(--line2);border-left:3px solid transparent}
+  a.nyhet:last-child{border-bottom:0}
+  a.nyhet:hover{background:var(--sport-bg);border-left-color:var(--sport)}
+  a.nyhet .rub{display:block;font-weight:560;line-height:1.4}
+  a.nyhet .meta{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* ---------- pallplatser ---------- */
+  td.pos span{display:inline-flex;min-width:23px;height:23px;align-items:center;
+    justify-content:center;border-radius:7px;font-size:12.5px;font-weight:700;
+    font-variant-numeric:tabular-nums}
+  td.pos span.m1{background:var(--guld-bg);color:var(--guld)}
+  td.pos span.m2{background:var(--silver-bg);color:var(--silver)}
+  td.pos span.m3{background:var(--brons-bg);color:var(--brons)}
 
   /* skiljelinje mellan kommande och avgjorda tävlingar */
   .avdelare{display:flex;align-items:center;gap:12px;margin:30px 0 14px;
@@ -85,25 +123,34 @@
   .avdelare::after{content:"";flex:1;height:1px;background:var(--line)}
   .daygroup{margin-bottom:22px}
   .daygroup h2{font-size:12px;font-weight:620;text-transform:uppercase;letter-spacing:.07em;
-    color:var(--muted);margin:0 0 8px 2px}
+    color:var(--sport);margin:0 0 8px 0;padding-left:9px;
+    border-left:3px solid var(--sport)}
   .races{background:var(--card);border:1px solid var(--line);border-radius:12px;
     overflow:hidden;box-shadow:var(--shadow)}
   a.race{display:flex;align-items:center;gap:12px;padding:11px 14px;text-decoration:none;
-    color:inherit;border-bottom:1px solid var(--line2)}
+    color:inherit;border-bottom:1px solid var(--line2);
+    border-left:3px solid transparent;transition:background .12s,border-color .12s}
   a.race:last-child{border-bottom:0}
-  a.race:hover{background:var(--accent-bg)}
+  a.race:hover{background:var(--sport-bg);border-left-color:var(--sport)}
+  /* en tävling som går i dag markeras i rött hela vägen ut i kanten */
+  a.race.nu{border-left-color:var(--live);background:var(--live-bg)}
+  a.race.nu:hover{background:var(--live-bg2)}
+  a.race.nu .l1{color:var(--live-ink)}
   .flag{font-size:20px;line-height:1;width:26px;text-align:center;flex:none;
     font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
   .flag.txt{font-size:10.5px;font-weight:700;color:var(--muted)}
-  .rmain{min-width:0;flex:1}
-  .rmain .l1{font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rmain .l2{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;
-    text-overflow:ellipsis}
+  /* två rader under varandra – utan detta klistrades ort och gren ihop */
+  .rmain{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
+  .rmain .l1{display:block;font-weight:600;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rmain .l2{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
   .rside{display:flex;align-items:center;gap:7px;flex:none}
   .chip{font-size:11px;font-weight:560;padding:2px 7px;border-radius:6px;
     background:var(--line2);color:var(--muted);white-space:nowrap}
-  .chip.k{background:var(--accent-bg);color:var(--accent)}
-  .chip.live{background:var(--live);color:#fff}
+  .chip.k{background:var(--sport-bg);color:var(--sport)}
+  .chip.live{background:var(--live);color:#fff;letter-spacing:.04em;
+    box-shadow:0 0 0 3px var(--live-bg2)}
   .chip.ok{background:var(--ok-bg);color:var(--ok)}
   .arrow{color:var(--muted);font-size:15px}
 
@@ -111,8 +158,10 @@
     text-decoration:none;margin-bottom:14px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:15px 17px;margin-bottom:14px;box-shadow:var(--shadow)}
-  .card h3{font-size:11.5px;font-weight:620;text-transform:uppercase;letter-spacing:.07em;
-    color:var(--muted);margin:0 0 12px}
+  .card h3{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--sport);margin:0 0 12px;display:flex;align-items:center;gap:9px}
+  .card h3::after{content:"";flex:1;height:1px;background:var(--line2)}
+  .nums .n.stor{color:var(--sport)}
   .rhead{display:flex;align-items:center;gap:13px}
   .rhead .flag{font-size:26px;width:32px}
   .rhead h2{font-size:18px;font-weight:640;margin:0;letter-spacing:-.01em}
@@ -195,14 +244,19 @@
   .medianamn{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 
   /* ---------- sponsorer på startsidan ---------- */
-  .sponsorer{border-top:1px solid var(--line);margin-top:26px;padding-top:16px}
+  .sponsorer{margin-top:26px;padding:18px 20px 20px;border-radius:14px;
+    background:linear-gradient(140deg,#12305a 0%,#0d2245 58%,#0a1b38 100%);
+    box-shadow:0 1px 2px rgba(16,24,40,.10)}
   .sponsorer h4{font-size:10.5px;font-weight:620;text-transform:uppercase;
-    letter-spacing:.14em;color:var(--muted);margin:0 0 12px}
-  .sponsorer .rad{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center}
-  .sponsorer a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
-    color:var(--ink2);font-size:14px;font-weight:560;opacity:.85}
-  .sponsorer a:hover{opacity:1;color:var(--accent)}
-  .sponsorer img{max-height:26px;width:auto;display:block}
+    letter-spacing:.14em;color:rgba(255,255,255,.62);margin:0 0 14px}
+  .sponsorer .rad{display:flex;flex-wrap:wrap;gap:16px 30px;align-items:center}
+  .sponsorer a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+    color:#fff;font-size:15px;font-weight:640;letter-spacing:-.01em;
+    opacity:.9;transition:opacity .15s,transform .15s}
+  .sponsorer a:hover{opacity:1;transform:translateY(-1px)}
+  .sponsorer img{width:auto;display:block}
+  .sponsorer img.marke{height:16px}
+  .sponsorer .namn{white-space:nowrap}
 
   /* ---------- lägg till på hemskärmen ---------- */
   .install{position:fixed;left:12px;right:12px;z-index:60;
@@ -281,22 +335,18 @@
 <script src="fis-profiler.js"></script>
 <script src="fis-media.js"></script>
 <script src="fis-forbund.js"></script>
+<script src="fis-nyheter.js"></script>
 <script>
 /* ============ 0. Språk ============
-   Ordningen är: sparat val → webbläsarens språk → engelska. Ingen tjänst
-   behöver frågas om var besökaren finns; webbläsarens inställning är både
-   gratis och ett bättre svar (en italienare i Åre vill ha italienska). */
+   Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
+   språk, oavsett var i världen hen sitter. Först när någon själv väljer ett
+   annat språk i väljaren byts det, och då kommer valet ihåg. */
 const SPARAT='rp-sprak';
 function valjSprak(){
-  let v=null;
-  try{ v=localStorage.getItem(SPARAT); }catch(e){}
-  if(v&&window.SPRAK[v]) return v;
-  const onskade=(navigator.languages&&navigator.languages.length)
-    ? navigator.languages : [navigator.language||'en'];
-  for(const o of onskade){
-    const kod=String(o).toLowerCase().split('-')[0];
-    if(window.SPRAK[kod]) return kod;
-  }
+  try{
+    const v=localStorage.getItem(SPARAT);
+    if(v&&window.SPRAK[v]) return v;
+  }catch(e){}
   return 'en';
 }
 let SPR=valjSprak();
@@ -709,6 +759,20 @@ const KAL=(window.FIS_KALENDER||'').split('\n').filter(Boolean).map(r=>{
 });
 let filterKon='', filterGren='';
 
+/* Ritar en sponsor. Logotypen hämtas från sponsorns egen sajt; om den inte
+   laddar döljs bilden och namnet i text visas i stället. Ingen tom lucka. */
+function sponsorMarke(s){
+  const fall="this.style.display='none';"+
+             "var t=this.parentNode.querySelector('.namn');if(t)t.hidden=false;";
+  let h='<a href="'+esc(s.adress)+'" target="_blank" rel="noopener sponsored nofollow">';
+  if(s.marke) h+='<img class="marke" src="'+esc(s.marke)+'" alt="" '+
+                 'onerror="this.style.display=\'none\'">';
+  if(s.bild)  h+='<img src="'+esc(s.bild)+'" alt="'+esc(s.namn)+'" '+
+                 'style="height:'+(s.hojd||20)+'px" onerror="'+fall+'">';
+  h+='<span class="namn"'+(s.bild?' hidden':'')+'>'+esc(s.namn)+'</span></a>';
+  return h;
+}
+
 function ritaValjare(){
   const idag=new Date().toISOString().slice(0,10);
   let lopp=KAL.filter(r=>(!filterKon||r.kon===filterKon)&&(!filterGren||r.gren===filterGren));
@@ -746,7 +810,7 @@ function ritaValjare(){
       h+='<section class="daygroup"><h2>'+esc(datumtext(dag))+'</h2><div class="races">';
     }
     const live=r.datum===idag;
-    h+='<a class="race" href="#tavling/'+esc(r.codex)+'">'+flagga(r.nat)+
+    h+='<a class="race'+(live?' nu':'')+'" href="#tavling/'+esc(r.codex)+'">'+flagga(r.nat)+
        '<span class="rmain"><span class="l1">'+esc(r.plats)+'</span>'+
        '<span class="l2">'+esc(grenText(r.gren))+' · '+
        esc(r.kon==='M'?T('konM'):T('konW'))+
@@ -758,13 +822,24 @@ function ritaValjare(){
   });
   if(dag!==null) h+='</div></section>';
 
+  // nyheterna hämtas av nattjobbet; saknas filen visas ingenting alls
+  const ny=(window.FIS_NYHETER||[]).slice(0,8);
+  if(ny.length){
+    h+='<section class="nyheter"><h2>'+esc(TX('SPRAK_NYHETER','rubrik'))+'</h2><div class="nylista">';
+    ny.forEach(n=>{
+      h+='<a class="nyhet" href="'+esc(n.lank)+'" target="_blank" rel="noopener">'+
+         '<span class="rub">'+esc(n.rubrik)+'</span>'+
+         '<span class="meta">'+esc(n.kalla)+(n.datum?' · '+esc(n.datum):'')+'</span></a>';
+    });
+    h+='</div><p class="lead" style="margin:10px 0 0">'+
+       esc(TX('SPRAK_NYHETER','fot'))+'</p></section>';
+  }
+
   const sp=window.SIDSPONSORER||[];
   if(sp.length){
     h+='<div class="sponsorer"><h4>'+esc(TX('SPRAK_SPONSOR','rubrik'))+'</h4><div class="rad">'+
-       sp.filter(s=>s.adress&&/^https?:\/\//i.test(s.adress)).map(s=>
-         '<a href="'+esc(s.adress)+'" target="_blank" rel="noopener sponsored nofollow">'+
-         (s.bild?'<img src="'+esc(s.bild)+'" alt="'+esc(s.namn)+'">':esc(s.namn))+'</a>'
-       ).join('')+'</div></div>';
+       sp.filter(s=>s.adress&&/^https?:\/\//i.test(s.adress)).map(sponsorMarke).join('')+
+       '</div></div>';
   }
   document.getElementById('app').innerHTML=h;
   document.querySelectorAll('[data-kon]').forEach(b=>b.onclick=()=>{filterKon=b.dataset.kon;ritaValjare();});
@@ -804,7 +879,7 @@ function ritaTavling(a,meta,codex){
   if(a.penalty && !svagt){
     const p=a.penalty;
     h+='<div class="card"><h3>'+esc(T('penaltyNu'))+'</h3><div class="nums">'+
-       '<div><div class="n">'+p.till.toFixed(2)+'</div><small>'+esc(T('tillampad'))+'</small></div>'+
+       '<div><div class="n stor">'+p.till.toFixed(2)+'</div><small>'+esc(T('tillampad'))+'</small></div>'+
        '<div><div class="n">'+p.ber.toFixed(2)+'</div><small>'+esc(T('beraknad'))+'</small></div>'+
        '<div><div class="n">'+a.klara.length+'</div><small>'+esc(T('iMal'))+'</small></div>'+
        '<div><div class="n">'+a.kvar.length+'</div><small>'+esc(T('kvar'))+'</small></div></div>'+
@@ -842,7 +917,8 @@ function ritaTavling(a,meta,codex){
        '<th class="n">'+esc(TX('SPRAK_POANG','battre'))+'</th>':'')+'</tr>';
     a.klara.forEach(x=>{
       const nat=(a.akare[x.fis]||{}).nat||'';
-      h+='<tr><td class="n pos">'+x.pos+'</td>'+
+      const medalj=x.pos<=3?' class="m'+x.pos+'"':'';
+      h+='<tr><td class="n pos"><span'+medalj+'>'+x.pos+'</span></td>'+
          '<td class="n muted doljsmal">'+esc(x.bib)+'</td>'+
          '<td>'+flagga(nat)+'</td><td class="name">'+namnHtml(a,x.fis,codex)+'</td>'+
          '<td class="n">'+klocka(x.t)+'</td>'+
