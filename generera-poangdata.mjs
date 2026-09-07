@@ -167,4 +167,113 @@ ${kalender.join('\n')}
 \`.trim();
 `);
 
-console.log(`Klart. ${cfg.lista}: ${poangrader.length} åkare, ${kalender.length} tävlingar.`);
+/* ---------- 3. hela säsongens evenemangskalender ----------
+
+   Kalendern ovan har bara två sorters lopp: de som redan är körda (ur
+   punktlistan) och de som ligger inom en dryg vecka (ur livetimingsidan).
+   Resten av vintern syntes inte alls — inga störtlopp i Gardena, inga
+   sydamerikanska lopp i oktober.
+
+   FIS egen kalenderfeed (icalendar-feed-fis-events.html) är trasig, den
+   svarar 404 på samtliga varianter. Enda vägen är att läsa månadssidorna.
+   Det gör den här delen till den sköraste i hela bygget: ändrar FIS
+   utseendet slutar avläsningen fungera. Därför är den inbakad i try/catch
+   — går den sönder byggs sidan ändå, den blir bara utan säsongsöversikt.
+
+   Evenemangen har inget codex, så de går INTE in i tävlingskalendern. De
+   skrivs till en egen fil och visas som en egen lista, utan klickbarhet. */
+
+const SLUTAR = SASONG + 2000;                       // 2027
+const MANADER = ['Jan','Feb','Mar','Apr','May','Jun',
+                 'Jul','Aug','Sep','Oct','Nov','Dec']
+                 .reduce((o, n, i) => (o[n] = i + 1, o), {});
+const GRENKOD = '(DH|SL|GS|SG|AC|PSL|PGS|KB|TE|SX|AT|PAR|TP|TC)';
+const ARGREN  = new RegExp(`^(\\d+x)?${GRENKOD}(\\s+(\\d+x)?${GRENKOD})*$`);
+
+function lasKalendersida(html, sasongsar) {
+  const ut = [];
+  for (const rad of html.split('class="table-row').slice(1)) {
+    const bit = rad.slice(0, 5000);
+    const id = (bit.match(/ id="(\d+)"/) || [])[1];
+    if (!id) continue;
+    // strippa taggarna och behåll bara det som ser ut som riktiga fält
+    const d = bit.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ')
+      .split('\n').map(s => s.trim())
+      .filter(s => s && s.toLowerCase() !== 'live'
+                     && !/[=?&<>]/.test(s) && !/^https?:/.test(s) && s.length < 80);
+
+    // nationen är den enda trebokstavskoden som följs av "AL"
+    let k = -1;
+    for (let i = 1; i < d.length; i++)
+      if (/^[A-Z]{3}$/.test(d[i]) && d[i + 1] === 'AL') { k = i; break; }
+    if (k < 6) continue;
+
+    // datumet står på plats 4, och tar två rutor när det korsar månadsskifte
+    let dSlut = 5, datTxt = d[4];
+    if (/-$/.test(d[4])) { datTxt = d[4] + ' ' + d[5]; dSlut = 6; }
+
+    // grenkolumnen är första rutan efter datumet som bara innehåller grenkoder
+    let p = -1;
+    for (let i = dSlut; i < k; i++) if (ARGREN.test(d[i])) { p = i; break; }
+    if (p < 0) continue;
+
+    const grenTxt = d[p];
+    const kat   = (d[p - 1] || '').replace(/\s*•\s*/g, '/');
+    const plats = (p - 2 >= dSlut ? d[p - 2] : d[k - 1]) || '';
+    const nat   = d[k];
+
+    const ar  = m => (m >= 7 ? sasongsar - 1 : sasongsar);
+    const iso = (dag, man) => `${ar(man)}-${String(man).padStart(2, '0')}-${String(dag).padStart(2, '0')}`;
+    let start = null, slut = null, m;
+    if ((m = datTxt.match(/^(\d{1,2})\s+([A-Z][a-z]{2})-\s*(\d{1,2})\s+([A-Z][a-z]{2})$/)))
+      { start = iso(m[1], MANADER[m[2]]); slut = iso(m[3], MANADER[m[4]]); }
+    else if ((m = datTxt.match(/^(\d{1,2})-(\d{1,2})\s+([A-Z][a-z]{2})$/)))
+      { start = iso(m[1], MANADER[m[3]]); slut = iso(m[2], MANADER[m[3]]); }
+    else if ((m = datTxt.match(/^(\d{1,2})\s+([A-Z][a-z]{2})$/)))
+      { start = iso(m[1], MANADER[m[2]]); slut = start; }
+    if (!start) continue;
+
+    const grenar = [...new Set(grenTxt.match(new RegExp(GRENKOD, 'g')) || [])];
+    ut.push([id, start, slut, plats, nat, kat, grenar.join(',')].join('|'));
+  }
+  return ut;
+}
+
+let evenemang = [];
+try {
+  const manader = [];
+  for (let m = 7; m <= 12; m++) manader.push(`${String(m).padStart(2, '0')}-${SLUTAR - 1}`);
+  for (let m = 1; m <= 6; m++)  manader.push(`${String(m).padStart(2, '0')}-${SLUTAR}`);
+
+  for (const mm of manader) {
+    const url = 'https://www.fis-ski.com/DB/alpine-skiing/calendar-results.html'
+              + `?sectorcode=AL&seasoncode=${SLUTAR}&seasonmonth=${mm}`
+              + '&eventselection=&saveselection=-1';
+    const html = await (await fetch(url)).text();
+    const rader = lasKalendersida(html, SLUTAR);
+    const av = html.split('class="table-row').length - 1;
+    console.log(`  kalender ${mm}: ${rader.length}/${av} rader`);
+    evenemang.push(...rader);
+  }
+  // samma evenemang dyker upp i två månader när det korsar månadsskifte
+  evenemang = [...new Map(evenemang.map(r => [r.split('|')[0], r])).values()]
+                .sort((a, b) => a.split('|')[1].localeCompare(b.split('|')[1]));
+} catch (e) {
+  console.warn('Säsongskalendern gick inte att läsa:', e.message);
+  evenemang = [];
+}
+
+if (evenemang.length) {
+  writeFileSync(new URL('./fis-evenemang.js', import.meta.url),
+`/* Skapad av generera-poangdata.mjs ${new Date().toISOString().slice(0, 10)}
+   Hela säsongens evenemang, lästa ur FIS månadssidor. Har inget codex och
+   är därför inte klickbara — de visar bara vad som är på gång i vinter.
+   Fält: id | start | slut | plats | nation | kategori | grenar */
+
+window.FIS_EVENEMANG = \`
+${evenemang.join('\n')}
+\`.trim();
+`);
+}
+
+console.log(`Klart. ${cfg.lista}: ${poangrader.length} åkare, ${kalender.length} tävlingar, ${evenemang.length} evenemang.`);

@@ -117,6 +117,24 @@
   .spacer{flex:1}
 
   /* ---------- nyheter ---------- */
+  /* Resten av säsongen: hopfälld som standard, annars blir förstasidan
+     sjuhundra rader lång. Raderna är avsiktligt oklickbara. */
+  .sasong{margin:26px 0 6px;border:1px solid var(--rand);border-radius:14px;
+          background:var(--kort);padding:14px 16px}
+  .sasong summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+                  gap:12px;justify-content:space-between}
+  .sasong summary::-webkit-details-marker{display:none}
+  .sasong summary>span:first-child{min-width:0;flex:1}
+  .sasong summary b{display:block;font-size:15px;font-weight:600}
+  .sasong summary .muted{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+  .sasong summary .pil{flex:none;font-size:0;font-weight:620;color:var(--sport)}
+  .sasong summary .pil::after{content:"▾";font-size:11px}
+  .sasong[open] summary .pil::after{content:"▴"}
+  .sasong[open] summary{margin-bottom:6px;padding-bottom:12px;
+                        border-bottom:1px solid var(--rand)}
+  .sasong[open] summary .muted{display:none}
+  .sasong h3.manad{font-size:12px;font-weight:700;letter-spacing:.06em;
+                   text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
   .nyheter{margin:26px 0 6px}
   .nyheter h2{font-size:12px;font-weight:620;text-transform:uppercase;
     letter-spacing:.07em;color:var(--sport);margin:0 0 10px 2px}
@@ -372,6 +390,7 @@
 <script src="fis-nyheter.js"></script>
 <script src="fis-affiliate.js"></script>
 <script src="fis-arkiv.js"></script>
+<script src="fis-evenemang.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -512,44 +531,95 @@ function analysera(d){
     startande.push(e['0']);}
 
   /* ── Tider och åk ──────────────────────────────────────────────────────
-     Varje åkare har en rad med mellantider och sist måltiden för det åket:
-     {0: 30280, 1: 52960, 2: 78160}. Måltiden ligger på den högsta platsen,
-     och antalet mellantider varierar med banan – därför räknas platsen fram
-     ur dem som faktiskt gått i mål.
+     Varje åkare har en rad med mellantider och måltiden för åket:
+     {0: 30280, 1: 52960, 2: 78160}. Vilken plats som är målet står i
+     racedef; saknas den tas den högsta ifyllda platsen.
 
-     I ett tvåmansåk gäller dessutom två saker:
-       · Startlistan för åk 2 dyker upp så fort den är lottad, långt innan
-         någon åkt. Utgår vi från sista åket i startlistan tömmer sig hela
-         resultattabellen i pausen – åk 1 försvinner. Vi utgår därför från
-         det SENASTE ÅK SOM HAR RESULTAT.
-       · Poängen ska räknas på totaltiden, inte på ett enskilt åk. Vi
-         summerar därför åkarens måltider över alla åk som har resultat. */
+     Tre fällor, alla tre påträffade i verkliga lopp:
+
+       · STARTLISTAN FÖR ÅK 2 LOTTAS INNAN NÅGON ÅKT. Utgår vi från sista
+         åket i startlistan töms hela tabellen i pausen mellan åken – åk 1
+         försvinner. Vi utgår därför från det senaste åk som HAR resultat.
+
+       · PLATSNUMRET I STARTLISTAN ÄR INTE ÅKAREN. Åk 2 körs i omvänd
+         ordning, så plats 29 i åk 1 och plats 29 i åk 2 är två olika
+         personer. I Chapelco 7 sep 2026 var plats 29 i åk 1 Nina Lehmann
+         och i åk 2 Francesca Baruzzi Farriol. Åken måste därför slås ihop
+         på FIS-koden, aldrig på platsnumret.
+
+       · ÅK 2 INNEHÅLLER OFTA REDAN TOTALTIDEN. I samma lopp stod 2:36.06 i
+         åk 2 för Baruzzi Farriol – det är hennes 1:17.39 plus 1:18.67, inte
+         andra åket för sig. Summerar vi då blir tiden nästan dubbel.
+         Vi avgör per tävling: är sista åkets tid större än summan av de
+         tidigare åken för de flesta åkare, är den redan en totaltid. */
   const akMedRes=Object.keys(res||{}).map(Number)
     .filter(r=>res[r]&&Object.keys(res[r]).length).sort((a,b)=>a-b);
   const basAk=akMedRes.length?akMedRes[akMedRes.length-1]:sista;
 
   const malPlatsFor={};
   akMedRes.forEach(r=>{
-    let m=0;
-    for(const i in (sl[r]||sl[basAk]||{})){
-      const rad=res[r]?res[r][i]:null;
-      if(!rad) continue;
-      for(const k in rad) if(rad[k]!=null && +k>m) m=+k;
+    const def=d.racedef&&d.racedef['0']?d.racedef['0'][r]:null;
+    let m=null;
+    if(def) for(const k in def) if(def[k]&&def[k]['0']==='finish') m=+k;
+    if(m==null){ m=0;
+      for(const i in (res[r]||{})){
+        const rad=res[r][i]; if(!rad) continue;
+        for(const k in rad) if(rad[k]!=null && +k>m) m=+k;
+      }
     }
     malPlatsFor[r]=m;
   });
-  const tidIAk=(r,i)=>{
-    const rad=res&&res[r]?res[r][i]:null;
-    return TID(rad?rad[String(malPlatsFor[r])]:null);
+
+  // måltid per åk, uppslagen på FIS-kod i stället för på platsnummer
+  const tidPerAk={};
+  akMedRes.forEach(r=>{
+    const karta={};
+    for(const i in (sl[r]||{})){
+      const e=sl[r][i]; if(!e) continue;
+      const rad=res[r]?res[r][i]:null;
+      const t=TID(rad?rad[String(malPlatsFor[r])]:null);
+      if(t) karta[e['0']]=t;
+    }
+    tidPerAk[r]=karta;
+  });
+
+  const tidigareAk=akMedRes.slice(0,-1);
+  const summaTidigare=f=>{
+    let s=0;
+    for(const r of tidigareAk){ const v=tidPerAk[r][f]; if(!v) return null; s+=v; }
+    return s;
+  };
+  let ackumulerad=false;
+  if(tidigareAk.length){
+    let ja=0, nej=0;
+    for(const f in tidPerAk[basAk]){
+      const s=summaTidigare(f); if(s==null) continue;
+      if(tidPerAk[basAk][f]>s) ja++; else nej++;
+    }
+    ackumulerad = ja>nej;
+  }
+  const totaltid=f=>{
+    const sist=tidPerAk[basAk][f]; if(!sist) return null;
+    if(!tidigareAk.length) return sist;
+    const s=summaTidigare(f); if(s==null) return null;
+    return ackumulerad ? sist : s+sist;
   };
 
   const klara=[], kvar=[];
   for(const i in sl[basAk]){
     const e=sl[basAk][i];if(!e)continue;
-    const tider=akMedRes.map(r=>tidIAk(r,i));
-    const allaKlara=tider.length>0 && tider.every(t=>t);
-    if(e['2']==='finish' && allaKlara)
-      klara.push({fis:e['0'],bib:e['1'],t:tider.reduce((a,b)=>a+b,0),ak:tider});
+    const t=(e['2']==='finish')?totaltid(e['0']):null;
+    if(t){
+      // åktiderna var för sig, även när flödet lämnar dem hopräknade
+      let fore=0;
+      const ak=akMedRes.map(r=>{
+        const v=tidPerAk[r][e['0']]||null;
+        if(v==null) return null;
+        const leg=(ackumulerad&&r===basAk)?v-fore:v;
+        fore+=leg; return leg;
+      });
+      klara.push({fis:e['0'],bib:e['1'],t,ak});
+    }
     else kvar.push({fis:e['0'],bib:e['1'],status:e['2']||''});
   }
   klara.sort((a,b)=>a.t-b.t);
@@ -829,6 +899,30 @@ const KAL=(window.FIS_KALENDER||'').split('\n').filter(Boolean).map(r=>{
 });
 let filterKon='', filterGren='';
 
+/* Hela säsongens evenemang. Fil saknas första gången bygget körs, och om
+   FIS gör om sina kalendersidor slutar den fyllas på – båda fallen ska bara
+   betyda att avsnittet inte visas, inte att sidan går sönder. */
+const EVE=(window.FIS_EVENEMANG||'').split('\n').filter(Boolean).map(r=>{
+  const [id,start,slut,plats,nat,kat,grenar]=r.split('|');
+  return {id,start,slut,plats,nat,kat,grenar:(grenar||'').split(',').filter(Boolean)};
+});
+
+/* "december 2026" på besökarens språk. */
+const manadstext=ym=>{
+  const d=new Date(ym+'-01T12:00:00Z');
+  const s=d.toLocaleDateString(SPR,{month:'long',year:'numeric'});
+  return s.charAt(0).toUpperCase()+s.slice(1);
+};
+/* "15–21 dec" eller "28 nov – 1 dec". Ett endagsevenemang blir bara "2 okt". */
+const datumspann=(a,b)=>{
+  const f=s=>new Date(s+'T12:00:00Z');
+  const kort=d=>d.toLocaleDateString(SPR,{day:'numeric',month:'short'});
+  if(a===b) return kort(f(a));
+  if(a.slice(0,7)===b.slice(0,7))
+    return f(a).toLocaleDateString(SPR,{day:'numeric'})+'–'+kort(f(b));
+  return kort(f(a))+' – '+kort(f(b));
+};
+
 /* Ritar en sponsor. Logotypen hämtas från sponsorns egen sajt; om den inte
    laddar döljs bilden och namnet i text visas i stället. Ingen tom lucka. */
 function sponsorMarke(s){
@@ -952,6 +1046,35 @@ function ritaValjare(){
        (dodrad?'':'<span class="arrow">›</span>')+'</span>'+(dodrad?'</div>':'</a>');
   });
   if(dag!==null) h+='</div></section>';
+
+  /* Resten av säsongen. FIS kalendersidor listar hela vintern, men bara som
+     evenemang – ett evenemang kan vara fem lopp under fyra dagar och har
+     inget codex. Därför är de här raderna inte klickbara. De enskilda loppen
+     dyker upp i listan ovanför när FIS lägger ut livetimingen. */
+  const kvarSasong=EVE.filter(e=>e.slut>=idag &&
+    (!filterGren || e.grenar.includes(GRENKOD[filterGren]||filterGren)));
+  if(kvarSasong.length){
+    h+='<section class="sasong"><details><summary>'+
+       '<span><b>'+esc(TX('SPRAK_SASONG','rubrik'))+'</b>'+
+       '<span class="muted">'+esc(TX('SPRAK_SASONG','antal').replace('{n}',kvarSasong.length))+
+       '</span></span><span class="pil">'+esc(TX('SPRAK_SASONG','rubrik'))+'</span></summary>';
+    let man=null;
+    kvarSasong.forEach(e=>{
+      const nyMan=e.start.slice(0,7);
+      if(nyMan!==man){
+        if(man!==null) h+='</div>';
+        man=nyMan;
+        h+='<h3 class="manad">'+esc(manadstext(nyMan))+'</h3><div class="races">';
+      }
+      h+='<div class="race tom">'+flagga(e.nat)+
+         '<span class="rmain"><span class="l1">'+esc(e.plats)+'</span>'+
+         '<span class="l2">'+esc(datumspann(e.start,e.slut))+' · '+
+         esc(e.grenar.map(g=>GRENNAMN()[g]||g).join(', '))+'</span></span>'+
+         '<span class="rside"><span class="chip k">'+esc(e.kat)+'</span></span></div>';
+    });
+    if(man!==null) h+='</div>';
+    h+='<p class="formel">'+esc(TX('SPRAK_SASONG','fot'))+'</p></details></section>';
+  }
 
   // nyheterna hämtas av nattjobbet; saknas filen visas ingenting alls
   const ny=(window.FIS_NYHETER||[]).slice(0,8);

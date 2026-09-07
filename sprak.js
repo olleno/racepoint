@@ -66,6 +66,24 @@ window.SPRAK_AVDELARE = {
   es:{kommande:'Próximas', tidigare:'Carreras anteriores'}
 };
 
+/* Resten av säsongen. Evenemangen kommer ur FIS kalendersidor och har inget
+   codex, alltså ingen resultatsida att länka till. De visas som en översikt
+   över vad som är på gång, inte som klickbara tävlingar. */
+window.SPRAK_SASONG = {
+  en:{rubrik:'Rest of the season', antal:'{n} events left this season',
+      fot:'Full FIS calendar. Individual races appear above with live timing about a week before the start.'},
+  sv:{rubrik:'Resten av säsongen', antal:'{n} evenemang kvar i vinter',
+      fot:'Hela FIS-kalendern. De enskilda loppen dyker upp ovanför med livetiming ungefär en vecka före start.'},
+  de:{rubrik:'Rest der Saison', antal:'{n} Veranstaltungen in diesem Winter',
+      fot:'Der vollständige FIS-Kalender. Einzelne Rennen erscheinen oben mit Livetiming etwa eine Woche vor dem Start.'},
+  it:{rubrik:'Resto della stagione', antal:'{n} eventi rimasti quest\'inverno',
+      fot:'Calendario FIS completo. Le singole gare compaiono sopra con il live timing circa una settimana prima della partenza.'},
+  fr:{rubrik:'Reste de la saison', antal:'{n} événements restants cet hiver',
+      fot:'Calendrier FIS complet. Les courses apparaissent ci-dessus avec le chronométrage en direct environ une semaine avant le départ.'},
+  es:{rubrik:'Resto de la temporada', antal:'{n} eventos restantes este invierno',
+      fot:'Calendario FIS completo. Las carreras aparecen arriba con cronometraje en directo aproximadamente una semana antes de la salida.'}
+};
+
 /* Kolumnerna kring poängen, och förklaringen till att ett svagt lopp inte
    försämrar någons poäng. */
 window.SPRAK_POANG = {

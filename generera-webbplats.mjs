@@ -667,7 +667,8 @@ skriv('/index.html', sida({
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 ['index.html','lagg-till.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
- 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','manifest.webmanifest'].forEach(f=>{
+ 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js',
+ 'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
   if(f.endsWith('.html')){
     const html=readFileSync(join(HAR,f),'utf8')
