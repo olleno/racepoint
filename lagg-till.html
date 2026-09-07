@@ -42,6 +42,10 @@ body::before{content:"";display:block;height:4px;
 
 .topprad{display:flex;align-items:center;gap:12px;margin-bottom:22px}
 .topprad svg{flex:none;width:42px;height:42px;display:block}
+.topprad .wm{flex:1;min-width:0}
+/* Språkväljaren ser likadan ut som på resten av sajten och delar samma val. */
+.sprakval select{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--card);
+  border:1px solid var(--line);border-radius:8px;padding:5px 8px;cursor:pointer}
 .wm b{display:block;font-size:17px;font-weight:700;letter-spacing:.135em;
   text-transform:uppercase;color:var(--sigill);line-height:1;white-space:nowrap}
 .wm .rule{display:block;height:1px;margin:6px 0 5px;background:var(--sigill);opacity:.35}
@@ -111,86 +115,74 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <rect x="31.6" y="16" width="4.4" height="15.6" fill="var(--sigill-txt)"/>
     </svg>
     <div class="wm"><b>Race Point</b><span class="rule"></span><span>Alpine skiing</span></div>
+    <div id="sprakval" class="sprakval"></div>
   </div>
 
-  <h1>Add your links</h1>
-  <p class="lead">Your page on Race Point already exists — it is built from the official FIS
-    points list. Here you add what is yours: social media, your own site and your sponsors.
-    It costs nothing.</p>
+  <h1 data-t="h1">Add your links</h1>
+  <p class="lead" data-t="lead">Your page on Race Point already exists — it is built from the
+    official FIS points list. Here you add what is yours: social media, your own site and your
+    sponsors. It costs nothing.</p>
 
   <section class="varfor">
-    <h2>Why it is worth a quarter of an hour</h2>
+    <h2 data-t="varforRubrik">Why it is worth a quarter of an hour</h2>
     <ol>
-      <li><b>Your sponsors are seen where people actually look.</b> Your page is found by
-        everyone who searches your name or follows your results. A sponsor logo there is
-        worth more than one in an Instagram story that is gone the next day.</li>
-      <li><b>You become searchable as yourself.</b> Today FIS has you as a number and a
-        list of points. Here you exist with your own channels and your own story.</li>
-      <li><b>You get your own link to share.</b> If you share it and someone buys something
-        through it, <b>80 per cent goes to you</b> — paid to your club and earmarked for
-        you. 10 per cent goes to the Race Point Foundation, which awards grants, and
-        10 per cent to running the site.</li>
-      <li><b>We are negotiating with larger partners.</b> The aim is our own agreements with
-        services ski racers actually use — currency cards, travel insurance, eSIM — where
-        you earn when someone signs up through your link.</li>
+      <li><b data-t="varfor1b"></b> <span data-t="varfor1"></span></li>
+      <li><b data-t="varfor2b"></b> <span data-t="varfor2"></span></li>
+      <li><b data-t="varfor3b"></b> <span data-t="varfor3"></span></li>
+      <li><b data-t="varfor4b"></b> <span data-t="varfor4"></span></li>
     </ol>
-    <p class="obs"><b>Honestly, where this stands:</b> the links and the sponsors work today.
-      The affiliate programme and the support button are still being built and open during
-      the season. Tick the boxes below and we will let you know when they do — you are not
-      committing to anything.</p>
+    <p class="obs"><b data-t="obsB"></b> <span data-t="obs"></span></p>
   </section>
 
   <form id="f" novalidate>
 
     <fieldset>
-      <legend>Who you are</legend>
-      <p class="hint">Your FIS code is on your page at racepoint.net, and in your FIS biography.</p>
+      <legend data-t="gruppDu">Who you are</legend>
+      <p class="hint" data-t="hjalpFis"></p>
       <div class="rad">
         <div class="falt">
-          <label for="fis">FIS code</label>
-          <input id="fis" name="fis" inputmode="numeric" placeholder="507358" inputmode="numeric" required>
+          <label for="fis" data-t="fis">FIS code</label>
+          <input id="fis" name="fis" inputmode="numeric" placeholder="507358" required>
         </div>
         <div class="falt">
-          <label for="namn">Name</label>
-          <input id="namn" name="namn" placeholder="First name Last name" required>
+          <label for="namn" data-t="namn">Name</label>
+          <input id="namn" name="namn" data-p="namnPlats" required>
         </div>
       </div>
       <div class="falt">
-        <label for="klubb">Club</label>
-        <input id="klubb" name="klubb" placeholder="Your ski club">
+        <label for="klubb" data-t="klubb">Club</label>
+        <input id="klubb" name="klubb" data-p="klubbPlats">
       </div>
       <div class="falt">
-        <label for="epost">Your email</label>
-        <p class="hint" style="margin:-1px 0 5px">Used only to contact you about your page, and
-          for occasional Race Point news you can opt out of. Never for advertising, never
-          passed on to anyone else.</p>
+        <label for="epost" data-t="epost">Your email</label>
+        <p class="hint" style="margin:-1px 0 5px" data-t="hjalpEpost"></p>
         <input id="epost" name="epost" type="email" placeholder="namn@exempel.se" required>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Social media</legend>
-      <p class="hint">Fill in only what you have. The full address, or just the username.</p>
+      <legend data-t="gruppSocial">Social media</legend>
+      <p class="hint" data-t="hjalpSocial"></p>
       <div class="rad">
         <div class="falt">
           <label for="instagram">Instagram</label>
-          <input id="instagram" name="instagram" placeholder="@yourname">
+          <input id="instagram" name="instagram" data-p="dittNamn">
         </div>
         <div class="falt">
           <label for="tiktok">TikTok</label>
-          <input id="tiktok" name="tiktok" placeholder="@yourname">
+          <input id="tiktok" name="tiktok" data-p="dittNamn">
         </div>
         <div class="falt">
           <label for="youtube">YouTube</label>
-          <input id="youtube" name="youtube" placeholder="youtube.com/@yourname">
+          <input id="youtube" name="youtube" placeholder="youtube.com/@…">
         </div>
         <div class="falt">
           <label for="facebook">Facebook</label>
-          <input id="facebook" name="facebook" placeholder="facebook.com/yourname">
+          <input id="facebook" name="facebook" placeholder="facebook.com/…">
         </div>
         <div class="falt">
           <label for="linkedin">LinkedIn</label>
-          <input id="linkedin" name="linkedin" placeholder="linkedin.com/in/yourname">
+          <input id="linkedin" name="linkedin" placeholder="linkedin.com/in/…">
         </div>
         <div class="falt">
           <label for="strava">Strava</label>
@@ -198,71 +190,115 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
         </div>
       </div>
       <div class="falt">
-        <label for="webb">Own website</label>
+        <label for="webb" data-t="webb">Own website</label>
         <input id="webb" name="webb" placeholder="https://">
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Your sponsors</legend>
-      <p class="hint">Name and address. If you have more than three, put them in the last field.</p>
+      <legend data-t="gruppSponsor">Your sponsors</legend>
+      <p class="hint" data-t="hjalpSponsor"></p>
       <div class="falt">
-        <label for="sponsor1">Sponsor 1</label>
-        <input id="sponsor1" name="sponsor1" placeholder="Name – https://">
+        <label for="sponsor1" data-t="sponsor1">Sponsor 1</label>
+        <input id="sponsor1" name="sponsor1" data-p="sponsorPlats">
       </div>
       <div class="falt">
-        <label for="sponsor2">Sponsor 2</label>
-        <input id="sponsor2" name="sponsor2" placeholder="Name – https://">
+        <label for="sponsor2" data-t="sponsor2">Sponsor 2</label>
+        <input id="sponsor2" name="sponsor2" data-p="sponsorPlats">
       </div>
       <div class="falt">
-        <label for="sponsor3">Sponsor 3 and anything else</label>
-        <input id="sponsor3" name="sponsor3" placeholder="Name – https://">
+        <label for="sponsor3" data-t="sponsor3">Sponsor 3 and anything else</label>
+        <input id="sponsor3" name="sponsor3" data-p="sponsorPlats">
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Want in when the money side opens?</legend>
-      <p class="hint">None of this costs anything, and you are not committing. We will contact
-        you before anything is switched on for your page.</p>
+      <legend data-t="gruppPengar">Want in when the money side opens?</legend>
+      <p class="hint" data-t="hjalpPengar"></p>
       <div class="kryss">
         <label><input type="checkbox" id="affiliate" name="affiliate" value="ja">
-          <span>Affiliate — I want my own link and 80 per cent of what it earns, paid to my
-            club.</span></label>
+          <span data-t="kryssAffiliate"></span></label>
         <label><input type="checkbox" id="stod" name="stod" value="ja">
-          <span>Support button — I want to be able to receive gifts towards my season.</span></label>
+          <span data-t="kryssStod"></span></label>
       </div>
       <div class="rad" style="margin-top:13px">
         <div class="falt">
-          <label for="fodd">Year of birth</label>
+          <label for="fodd" data-t="fodd">Year of birth</label>
           <input id="fodd" name="fodd" inputmode="numeric" placeholder="2005">
         </div>
         <div class="falt">
-          <label for="malsman">Guardian, if you are under 18</label>
-          <input id="malsman" name="malsman" placeholder="Name and email">
+          <label for="malsman" data-t="malsman">Guardian, if you are under 18</label>
+          <input id="malsman" name="malsman" data-p="malsmanPlats">
         </div>
       </div>
     </fieldset>
 
-    <button type="submit" id="skicka">Send</button>
+    <button type="submit" id="skicka" data-t="skicka">Send</button>
     <div id="svar" hidden></div>
   </form>
 
   <p class="villkor">
-    <b>What happens next.</b> We check the links before anything is shown, so that nobody
-    can post something in someone else's name. It normally takes a day. We publish only
-    links to known services and to real websites — anything else is removed. If you want
-    something taken down later, just get in touch at the same address.
+    <b data-t="villkorB1"></b> <span data-t="villkor1"></span>
     <br><br>
-    <b>Your email address.</b> We use it for two things: to contact you if something about
-    your page needs sorting out, and to send the occasional note when Race Point gets new
-    features. You can opt out of the second at any time. The address is never sold or
-    passed on, and it is never shown on your page.
+    <b data-t="villkorB2"></b> <span data-t="villkor2"></span>
   </p>
 
 </div>
 
+<script src="sprak.js"></script>
 <script>
 (function(){
+  /* ── Språk ────────────────────────────────────────────────────────────
+     Sidan låg fast på engelska medan resten av sajten bytte språk. Den
+     läser nu SPRAK_FORMULAR ur sprak.js och delar valet med startsidan
+     genom samma nyckel i webbläsarens minne, så en tysk åkare som valt
+     tyska möts av tyska också här. */
+  var SPARAT='rp-sprak';
+  var BORD=(window.SPRAK_FORMULAR||{});
+  function valt(){
+    try{ var v=localStorage.getItem(SPARAT); if(v&&BORD[v]) return v; }catch(e){}
+    return 'en';
+  }
+  var SPR=valt();
+  function O(nyckel){
+    var b=BORD[SPR]||{}, res=BORD.en||{};
+    return (b[nyckel]!=null?b[nyckel]:(res[nyckel]!=null?res[nyckel]:''));
+  }
+
+  function skrivTexter(){
+    document.documentElement.lang=SPR;
+    document.title=O('titel');
+    var d=document.querySelector('meta[name="description"]');
+    if(d) d.setAttribute('content', O('lead'));
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function(el){
+      var t=O(el.getAttribute('data-t')); if(t) el.textContent=t;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function(el){
+      var t=O(el.getAttribute('data-p')); if(t) el.setAttribute('placeholder', t);
+    });
+  }
+
+  function ritaSprakval(){
+    var v=document.getElementById('sprakval');
+    if(!v || !window.SPRAK_NAMN) return;
+    var h='<select aria-label="Language">';
+    Object.keys(window.SPRAK_NAMN).forEach(function(k){
+      if(!BORD[k]) return;
+      h+='<option value="'+k+'"'+(k===SPR?' selected':'')+'>'+window.SPRAK_NAMN[k]+'</option>';
+    });
+    v.innerHTML=h+'</select>';
+    v.querySelector('select').addEventListener('change', function(e){
+      SPR=e.target.value;
+      try{ localStorage.setItem(SPARAT, SPR); }catch(err){}
+      skrivTexter(); ritaSprakval();
+      var svar=document.getElementById('svar'); if(svar) svar.hidden=true;
+      var k=document.getElementById('skicka');
+      if(k && !k.disabled) k.textContent=O('skicka');
+    });
+  }
+
+  skrivTexter(); ritaSprakval();
+
   var ADRESS='https://docs.google.com/forms/d/e/1FAIpQLScixFAi5Np-OWuCZO9oPLicBZggXI1-vVmLMw2uc7ppplLnkA/formResponse';
   var FALT={
     fis:'entry.867134889', namn:'entry.1329541619', klubb:'entry.1958046432',
@@ -297,8 +333,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     });
 
     if(!d.fis || !d.namn || !d.epost){
-      visa('fel','Fill in FIS code, name and email.',
-        'We need those three to connect the links to the right person.');
+      visa('fel', O('felTomB'), O('felTom'));
       return;
     }
     var lankfalt=['instagram','tiktok','youtube','facebook','linkedin','strava','webb',
@@ -306,8 +341,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     var antal=0;
     lankfalt.forEach(function(k){ if(d[k]) antal++; });
     if(!antal){
-      visa('fel','You have not filled in any links.',
-        'Add at least one — otherwise there is nothing to show on your page.');
+      visa('fel', O('felIngaB'), O('felInga'));
       return;
     }
 
@@ -319,7 +353,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     });
 
     knapp.disabled=true;
-    knapp.textContent='Sending …';
+    knapp.textContent=O('skickar');
 
     fetch(ADRESS,{method:'POST',mode:'no-cors',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
@@ -328,16 +362,13 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
         form.querySelectorAll('input').forEach(function(i){
           if(i.type==='checkbox') i.checked=false; else i.value='';
         });
-        knapp.textContent='Sent';
-        visa('ok','Thank you — we have your links.',
-          'We will check them and put them on your page, normally within a day. '+
-          'If we have a question we will use the address you gave.');
+        knapp.textContent=O('skickat');
+        visa('ok', O('tackB'), O('tack'));
       })
       .catch(function(){
         knapp.disabled=false;
-        knapp.textContent='Send';
-        visa('fel','That could not be sent right now.',
-          'Check that you are online and try again in a moment.');
+        knapp.textContent=O('skicka');
+        visa('fel', O('felSandB'), O('felSand'));
       });
   });
 })();
