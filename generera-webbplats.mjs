@@ -408,8 +408,13 @@ for(const a of Object.values(akare)){
     grenar.map(g=>`${GRENNAMN[g]} ${a.poang[g].toFixed(2)}`).join(', ')+
     `. Ranking, results and live race points.`;
 
+  /* Klubben slås upp här uppe, för namnet ska stå riktigt även i ingressen
+     och inte bara på knappen längre ner. */
+  const kl=klubbLank(a.klubb,a.nat);
+  const klubbVisa=kl?kl.namn:a.klubb;
+
   let inneh=`<h1>${flagga(a.nat)} ${esc(visa)}</h1>
-<p class="ingress">FIS code ${esc(a.fis)} · ${esc(a.nat)}${a.fodd?' · born '+esc(a.fodd):''}${a.klubb?' · '+esc(a.klubb):''}</p>
+<p class="ingress">FIS code ${esc(a.fis)} · ${esc(a.nat)}${a.fodd?' · born '+esc(a.fodd):''}${klubbVisa?' · '+esc(klubbVisa):''}</p>
 <section class="kort"><h2>FIS points</h2>
 <div class="tblwrap"><table><tr><th>Event</th><th class="n">Points</th><th class="n">World ranking</th></tr>`;
   grenar.forEach(g=>{
@@ -431,7 +436,7 @@ for(const a of Object.values(akare)){
     inneh+=`</table></div></section>`;
   }
 
-  const fb=forbundLank(a.nat), kl=klubbLank(a.klubb,a.nat);
+  const fb=forbundLank(a.nat);
   const egna=PROFIL[String(+a.fis)]||null;
 
   /* Åkarens egna kanaler först, under hennes eget namn. En besökare ska se
