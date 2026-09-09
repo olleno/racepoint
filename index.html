@@ -428,7 +428,6 @@
 <script src="fis-arkiv.js"></script>
 <script src="fis-evenemang.js"></script>
 <script src="fis-ikoner.js"></script>
-<script src="fis-sponsormarken.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -1480,6 +1479,25 @@ function morktLage(){
   if(r==='light') return false;
   try{ return matchMedia('(prefers-color-scheme: dark)').matches; }catch(e){ return false; }
 }
+/* Sponsorernas märken ligger i en egen fil eftersom de är bilder och tar
+   plats. Den hämtas först när någon öppnar ett åkarkort – den som bara
+   följer resultat ska inte betala för dem. */
+let MARKEN=null, markeHamtning=null;
+function hamtaMarken(){
+  if(MARKEN) return Promise.resolve(MARKEN);
+  if(markeHamtning) return markeHamtning;
+  markeHamtning=fetch('fis-sponsormarken.js?v='+
+      (window.FIS_CFG&&FIS_CFG.giltig||'1').replace(/\W/g,''))
+    .then(r=>r.ok?r.text():'')
+    .then(t=>{
+      const m=t.match(/window\.FIS_SPONSORMARKEN\s*=\s*(\{[\s\S]*?\});/);
+      try{ MARKEN=m?JSON.parse(m[1]):{}; }catch(e){ MARKEN={}; }
+      window.FIS_SPONSORMARKEN=MARKEN;
+      return MARKEN;
+    }).catch(()=>{ MARKEN={}; window.FIS_SPONSORMARKEN=MARKEN; return MARKEN; });
+  return markeHamtning;
+}
+
 /* Sponsorns egen sidikon, inbakad av bygget. Finns ingen blir det den
    ritade standardikonen i stället – aldrig en tom ruta. */
 function egetMarke(typ,adress){
@@ -1616,6 +1634,7 @@ async function ritaAkare(fis,codex){
   });
 
   if(ARK===null) ARK=await hamtaArk();
+  await hamtaMarken();          // sponsorernas logotyper, hämtas först här
   const allaEgna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])];
   const villKontakt=allaEgna.some(l=>l.typ==='kontakt');
   const egna=allaEgna.filter(l=>l.adress&&saker(l.adress,l.typ));

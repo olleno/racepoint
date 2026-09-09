@@ -275,7 +275,13 @@ async function hamtaMarke(bas){
       const typ=(b.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
       if(!/^image\/(png|jpeg|svg\+xml|x-icon|vnd\.microsoft\.icon|webp|gif)$/.test(typ)) continue;
       const buf=Buffer.from(await b.arrayBuffer());
-      if(!buf.length || buf.length>40000) continue;   // för stor att baka in
+      /* Gränsen. Rossignol serverar samma 75 kB-fil för alla storlekar,
+         även den som utger sig för att vara 16×16 – en dåligt gjord ikon,
+         men deras åkare ska inte straffas för det. 120 kB släpper in sådana
+         och stoppar fortfarande det som är orimligt. Filen med märken
+         hämtas bara när någon öppnar ett åkarkort, inte på varje besök,
+         så den kostar ingenting för den som bara läser resultat. */
+      if(!buf.length || buf.length>120000) continue;
       return `data:${typ};base64,${buf.toString('base64')}`;
     }catch(e){ /* nästa kandidat */ }
   }
