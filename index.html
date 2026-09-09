@@ -267,6 +267,9 @@
     box-shadow:0 2px 8px rgba(16,24,40,.09)}
   .kanal svg{flex:none;width:20px;height:20px;display:block}
   .kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Klubb- och förbundsnamn är långa. Hellre två rader än "Maelaroearnas …" */
+  .kanaler.bred{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .kanal.off .txt{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
   .kanal .chev{flex:none;font-size:15px;color:var(--muted);line-height:1}
   /* De officiella länkarna: samma form, lugnare färg. */
   .kanal.off{color:var(--ink2);font-weight:500}
@@ -1577,7 +1580,7 @@ async function ritaAkare(fis,codex){
       OFF[nyckel]+'"/></svg>':'')+
     '<span class="txt">'+esc(text)+'</span></span>';
 
-  h+='<div class="card"><h3>'+esc(T('offRubrik'))+'</h3><div class="kanaler" id="lankar">'+
+  h+='<div class="card"><h3>'+esc(T('offRubrik'))+'</h3><div class="kanaler bred" id="lankar">'+
      offKnapp('live','#',T('tillLive'),false)+
      (bio?offKnapp('bio',bio,T('fisBio'),true):offTom('bio',T('ingenBio')))+
      (nat?offKnapp('forbund',forbundLank,forbundNamn,true)

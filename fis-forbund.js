@@ -99,5 +99,20 @@ window.FIS_FORBUND = {
 /* Klubbar skrivs exakt som FIS stavar dem i punktlistan, annars hittar
    inte sidan dem. Fyll på efter hand – utan rad blir det en sökning. */
 window.FIS_KLUBBAR = {
-  // 'Stabaek If': 'https://exempel.no',
+  /* FIS exporterar svenska klubbnamn utan å, ä och ö. Nyckeln måste därför
+     stavas precis som FIS gör – "Maelaroearnas", inte "Mälaröarnas" –
+     annars hittas den inte och det blir en sökning i stället.
+
+     Och samma klubb kan vara stavad på flera sätt i FIS register: MASK
+     förekommer i tre varianter. Alla måste stå med, annars får somliga av
+     klubbens tio åkare länken och andra inte.
+
+     Skriv {namn, webb} när klubben ska visas med sitt riktiga namn i
+     stället för FIS stympade stavning. Bara en adress går också bra. */
+  'Maelaroearnas Alpina Skidklubb':
+    {namn:'Mälaröarnas Alpina Skidklubb', webb:'https://www.maskalpin.se/start/?ID=52408'},
+  'Maelaroearnas Alpina SK':
+    {namn:'Mälaröarnas Alpina Skidklubb', webb:'https://www.maskalpin.se/start/?ID=52408'},
+  'Maelaroearnas Alpina Mask':
+    {namn:'Mälaröarnas Alpina Skidklubb', webb:'https://www.maskalpin.se/start/?ID=52408'},
 };

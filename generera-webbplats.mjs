@@ -228,9 +228,15 @@ function forbundLank(nat){
           webb: f?f.webb:sok(`${nat} national ski association alpine skiing`),
           akta: !!f};
 }
+/* FIS exporterar svenska klubbnamn utan å, ä och ö – "Maelaroearnas
+   Alpina Skidklubb". Står klubben i registret med både namn och adress
+   visar vi det riktiga namnet i stället; annars FIS stavning och en
+   sökning, som åtminstone aldrig blir en trasig länk. */
 function klubbLank(klubb,nat){
   if(!klubb) return null;
   const k=KLUBBAR[klubb];
+  if(k && typeof k==='object')
+    return {namn:k.namn||klubb, webb:k.webb||sok(`${klubb} ${nat} ski club`), akta:!!k.webb};
   return {namn:klubb, webb:k||sok(`${klubb} ${nat} ski club`), akta:!!k};
 }
 
@@ -446,7 +452,7 @@ for(const a of Object.values(akare)){
     inneh+=`</section>`;
   }
 
-  inneh+=`<section class="kort"><h2>FIS and club</h2><div class="kanaler">`+
+  inneh+=`<section class="kort"><h2>FIS and club</h2><div class="kanaler bred">`+
     offKnapp('live','/alpine-skiing/','Live race points')+
     offKnapp('bio','https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid='+esc(a.id)+'&type=result','FIS biography')+
     offKnapp('forbund',fb.webb,fb.namn,fb.akta)+
@@ -852,6 +858,9 @@ transition:border-color .12s, transform .12s, box-shadow .12s}
 box-shadow:0 2px 8px rgba(16,24,40,.09)}
 .kanal svg{flex:none;width:20px;height:20px;display:block}
 .kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Klubb- och förbundsnamn är långa. Hellre två rader än "Maelaroearnas …" */
+.kanaler.bred{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.kanal.off .txt{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
 .kanal .chev{flex:none;font-size:15px;color:var(--muted);line-height:1}
 .kanal.off{color:var(--ink2);font-weight:500}
 .kanal.off svg{color:var(--muted)}
