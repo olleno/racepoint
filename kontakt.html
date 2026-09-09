@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<meta name="description" content="Contact a ski racer about sponsorship. Your message goes straight to the athlete.">
+<link rel="icon" href="ikoner/ikon-192.png" sizes="192x192">
+<meta name="theme-color" content="#12305a">
+<title>Sponsorship enquiry</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --ink:#0f1419; --ink2:#3d4753; --muted:#6b7684;
+  --line:#e4e8ec; --line2:#eef1f4; --falt:#fff;
+  --sport:#0a5fbf; --sport-bg:#e8f0fb; --sigill:#12305a; --sigill-txt:#fff;
+  --ok:#0a7a41; --ok-bg:#e6f4ec; --bad:#b03a2c; --bad-bg:#fdf1ef;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+    --line:#252b32; --line2:#1d2228; --falt:#11151a;
+    --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+    --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --bad-bg:#2a1512;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1014; --card:#161a1f; --ink:#e9edf2; --ink2:#c3cad3; --muted:#8e99a6;
+  --line:#252b32; --line2:#1d2228; --falt:#11151a;
+  --sport:#63a8ff; --sport-bg:#14243a; --sigill:#dfe7f0; --sigill-txt:#12305a;
+  --ok:#4ec281; --ok-bg:#12281c; --bad:#f0857a; --bad-bg:#2a1512;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";display:block;height:4px;
+  background:linear-gradient(90deg,var(--sport) 0%,var(--sport) 55%,#d92d20 55%,#d92d20 100%)}
+.wrap{max-width:580px;margin:0 auto;padding:22px 16px 70px}
+
+.topprad{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.topprad svg{flex:none;width:42px;height:42px;display:block}
+.topprad .wm{flex:1;min-width:0}
+.wm b{display:block;font-size:17px;font-weight:700;letter-spacing:.135em;
+  text-transform:uppercase;color:var(--sigill);line-height:1;white-space:nowrap}
+.wm .rule{display:block;height:1px;margin:6px 0 5px;background:var(--sigill);opacity:.35}
+.wm span{display:block;font-size:8px;font-weight:700;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--sport)}
+.sprakval select{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--card);
+  border:1px solid var(--line);border-radius:8px;padding:5px 8px;cursor:pointer}
+
+h1{font-size:26px;font-weight:680;letter-spacing:-.02em;margin:0 0 6px;line-height:1.2;
+  text-wrap:balance}
+.lead{color:var(--muted);font-size:14px;margin:0 0 18px;max-width:52ch}
+.till{background:var(--sport-bg);border-radius:10px;padding:11px 14px;font-size:14px;
+  color:var(--ink2);margin:0 0 20px;font-weight:560}
+
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  border-top:3px solid var(--sport);padding:20px 22px 22px;box-shadow:var(--shadow)}
+.falt{margin-bottom:14px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:4px}
+input,textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--falt);
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+textarea{min-height:130px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus{outline:none;border-color:var(--sport);
+  box-shadow:0 0 0 3px var(--sport-bg)}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.55}
+button{width:100%;font:inherit;font-size:15px;font-weight:620;color:#fff;background:var(--sport);
+  border:0;border-radius:10px;padding:12px;cursor:pointer;margin-top:4px}
+button:disabled{opacity:.55;cursor:default}
+.svar{margin-top:14px;border-radius:10px;padding:12px 14px;font-size:14px}
+.svar b{display:block;margin-bottom:3px}
+.svar.ok{background:var(--ok-bg);color:var(--ok)}
+.svar.fel{background:var(--bad-bg);color:var(--bad)}
+.villkor{font-size:12.5px;color:var(--muted);line-height:1.65;margin:20px 2px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topprad">
+    <svg viewBox="0 0 52 52" aria-hidden="true">
+      <circle cx="26" cy="26" r="25" fill="var(--sigill)"/>
+      <circle cx="26" cy="26" r="21.5" fill="none" stroke="var(--sigill-txt)" stroke-opacity=".28" stroke-width="1.2"/>
+      <rect x="14" y="33" width="24" height="2.4" fill="var(--sigill-txt)"/>
+      <rect x="16" y="26" width="4.4" height="5.6" fill="var(--sigill-txt)"/>
+      <rect x="23.8" y="21" width="4.4" height="10.6" fill="var(--sigill-txt)"/>
+      <rect x="31.6" y="16" width="4.4" height="15.6" fill="var(--sigill-txt)"/>
+    </svg>
+    <div class="wm"><b>Race Point</b><span class="rule"></span><span>Alpine skiing</span></div>
+    <div id="sprakval" class="sprakval"></div>
+  </div>
+
+  <h1 data-t="h1">Get in touch about sponsorship</h1>
+  <p class="lead" data-t="lead"></p>
+  <p class="till" id="till"></p>
+
+  <form id="f" novalidate>
+    <div class="falt">
+      <label for="namn" data-t="namn">Your name</label>
+      <input id="namn" name="namn" data-p="namnPlats" required>
+    </div>
+    <div class="falt">
+      <label for="foretag" data-t="foretag">Company</label>
+      <input id="foretag" name="foretag" data-p="foretagPlats">
+    </div>
+    <div class="falt">
+      <label for="epost" data-t="epost">Your email</label>
+      <p class="hint" data-t="hjalpEpost"></p>
+      <input id="epost" name="epost" type="email" required>
+    </div>
+    <div class="falt">
+      <label for="medd" data-t="medd">Your message</label>
+      <textarea id="medd" name="medd" data-p="meddPlats" required></textarea>
+    </div>
+    <button type="submit" id="skicka" data-t="skicka">Send</button>
+    <div id="svar" hidden></div>
+  </form>
+
+  <p class="villkor"><b data-t="villkorB"></b> <span data-t="villkor"></span></p>
+
+</div>
+
+<script src="sprak.js"></script>
+<script>
+(function(){
+  /* Sponsringsförfrågan. Meddelandet går till åkaren, inte hit – ett litet
+     skript hos Google slår upp åkarens adress och skickar vidare, med
+     avsändarens adress som svarsadress. Åkarens e-post lämnar därför aldrig
+     arket och står ingenstans på sajten.
+
+     Är åkaren under 18 går förfrågan inte till barnet utan till oss, för
+     vidare till klubben. Det står i texten längst ner, och det är hanterat
+     i skriptet – inte något vi hoppas på. */
+  var ADRESS='https://docs.google.com/forms/d/e/1FAIpQLScJgqc_Kdn1IAs5gelrWxyX5VJRf2XXIsilRUwCa5Rupg8-_g/formResponse';
+  var FALT={fis:'entry.1415034584', namn:'entry.514287182', foretag:'entry.1174111354',
+            epost:'entry.676525013', medd:'entry.1317129133'};
+
+  var SPARAT='rp-sprak';
+  var BORD=(window.SPRAK_KONTAKT||{});
+  function valt(){
+    try{ var v=localStorage.getItem(SPARAT); if(v&&BORD[v]) return v; }catch(e){}
+    return 'en';
+  }
+  var SPR=valt();
+  function O(n){ var b=BORD[SPR]||{}, r=BORD.en||{};
+    return (b[n]!=null?b[n]:(r[n]!=null?r[n]:'')); }
+
+  var FIS=(location.search.match(/[?&]fis=(\d{1,10})/)||[])[1]||'';
+  var NAMN='';
+
+  function skrivTexter(){
+    document.documentElement.lang=SPR;
+    document.title=O('titel');
+    var d=document.querySelector('meta[name="description"]');
+    if(d) d.setAttribute('content', O('lead'));
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function(el){
+      var t=O(el.getAttribute('data-t')); if(t) el.textContent=t; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function(el){
+      var t=O(el.getAttribute('data-p')); if(t) el.setAttribute('placeholder', t); });
+    skrivTill();
+  }
+
+  function skrivTill(){
+    var ruta=document.getElementById('till');
+    if(!FIS){ ruta.textContent=O('fisSaknas');
+      document.getElementById('f').hidden=true; return; }
+    ruta.textContent = NAMN ? O('till').replace('{n}', NAMN)
+                            : O('tillOkand').replace('{n}', FIS);
+  }
+
+  /* Namnet gör rutan begriplig: "Ditt meddelande går till Aada Kanto."
+     Registret ligger ändå på sajten, och misslyckas hämtningen visar vi
+     FIS-koden i stället – aldrig ett tomt namn. */
+  function hamtaNamn(){
+    if(!FIS) return;
+    fetch('fis-akare.js').then(function(r){ return r.ok?r.text():''; }).then(function(t){
+      var m=t.match(/window\.FIS_AKARE\s*=\s*("(?:[^"\\]|\\.)*")/);
+      if(!m) return;
+      var rader=JSON.parse(m[1]).split('\n');
+      for(var i=0;i<rader.length;i++){
+        var d=rader[i].split('|');
+        if(d[0]===FIS){ NAMN=d[1]||''; break; }
+      }
+      skrivTill();
+    }).catch(function(){});
+  }
+
+  function ritaSprakval(){
+    var v=document.getElementById('sprakval');
+    if(!v || !window.SPRAK_NAMN) return;
+    var h='<select aria-label="Language">';
+    Object.keys(window.SPRAK_NAMN).forEach(function(k){
+      if(!BORD[k]) return;
+      h+='<option value="'+k+'"'+(k===SPR?' selected':'')+'>'+window.SPRAK_NAMN[k]+'</option>';
+    });
+    v.innerHTML=h+'</select>';
+    v.querySelector('select').addEventListener('change', function(e){
+      SPR=e.target.value;
+      try{ localStorage.setItem(SPARAT, SPR); }catch(err){}
+      skrivTexter(); ritaSprakval();
+      var s=document.getElementById('svar'); if(s) s.hidden=true;
+      var k=document.getElementById('skicka');
+      if(k && !k.disabled) k.textContent=O('skicka');
+    });
+  }
+
+  skrivTexter(); ritaSprakval(); hamtaNamn();
+
+  var form=document.getElementById('f');
+  var knapp=document.getElementById('skicka');
+  var svar=document.getElementById('svar');
+  function visa(typ,rubrik,text){
+    svar.className='svar '+typ;
+    svar.innerHTML='<b></b><span></span>';
+    svar.querySelector('b').textContent=rubrik;
+    svar.querySelector('span').textContent=text;
+    svar.hidden=false;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var d={fis:FIS};
+    ['namn','foretag','epost','medd'].forEach(function(k){
+      var el=document.getElementById(k);
+      if(el && el.value.trim()) d[k]=el.value.trim();
+    });
+    if(!d.namn || !d.epost || !d.medd || !d.fis){
+      visa('fel', O('felTomB'), O('felTom')); return;
+    }
+    var kropp=new URLSearchParams();
+    Object.keys(d).forEach(function(k){ kropp.append(FALT[k], d[k]); });
+
+    knapp.disabled=true;
+    knapp.textContent=O('skickar');
+    fetch(ADRESS,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:kropp.toString()})
+      .then(function(){
+        form.querySelectorAll('input,textarea').forEach(function(i){ i.value=''; });
+        knapp.textContent=O('skickat');
+        visa('ok', O('tackB'), O('tack'));
+      })
+      .catch(function(){
+        knapp.disabled=false;
+        knapp.textContent=O('skicka');
+        visa('fel', O('felSandB'), O('felSand'));
+      });
+  });
+})();
+</script>
+</body>
+</html>

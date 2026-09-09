@@ -1335,6 +1335,12 @@ async function profilCsv(url){
         const a=heladress('webb', m?m[2]:v);
         if(a) lista.push({typ:'sponsor',namn:m?m[1].trim():'',adress:a});
       });
+      /* Kontaktrutan är åkarens eget val och står i en egen kolumn. Den
+         följer med som en post i listan, så att en åkare som bara vill ha
+         kontaktrutan och inga länkar ändå kommer med. */
+      const jK=kol('kontakt');
+      if(jK>=0 && /^(ja|yes|x|1|true)$/i.test(String(c[jK]||'').trim()))
+        lista.push({typ:'kontakt', namn:'', adress:''});
       if(lista.length) ut[String(+fis)]=lista;
     });
     return ut;
@@ -1497,16 +1503,32 @@ async function ritaAkare(fis,codex){
   });
 
   if(ARK===null) ARK=await hamtaArk();
-  const egna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])]
-    .filter(l=>l.adress&&saker(l.adress,l.typ));
+  const allaEgna=[...((window.FIS_PROFILER||{})[String(fis)]||[]), ...((ARK||{})[String(fis)]||[])];
+  const villKontakt=allaEgna.some(l=>l.typ==='kontakt');
+  const egna=allaEgna.filter(l=>l.adress&&saker(l.adress,l.typ));
   const box=document.getElementById('lankar'), txt=document.getElementById('egna');
+
+  /* Sponsringsrutan. Fanns tidigare bara på de statiska åkarsidorna, så en
+     åkare som slagit på den syntes inte alls här inne. Adressen står aldrig
+     på sidan – knappen leder till ett formulär som skickar vidare. */
+  function ritaKontakt(){
+    if(!villKontakt) return;
+    const kort=box.closest('.card'); if(!kort) return;
+    const PP=(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
+    kort.insertAdjacentHTML('afterend',
+      '<div class="card"><h3>'+esc(PP.kontakt||'Sponsorship')+'</h3>'+
+      '<p class="tom">'+esc(PP.kontaktVuxen||'')+'</p>'+
+      '<div class="lankar" style="margin-top:10px">'+
+      '<a href="kontakt.html?fis='+encodeURIComponent(fis)+'">✉ '+
+      esc(PP.kontaktKnapp||'Get in touch')+'</a></div></div>');
+  }
   /* Uppmaningen ska stå oavsett om åkaren fyllt i något eller inte – den som
      redan lagt upp länkar vill också kunna ändra dem. */
   const uppmaning='<p class="lead" style="margin:12px 0 0">'+esc(T('dinSidaFraga'))+
     ' <a href="lagg-till.html">'+esc(T('dinSidaKnapp'))+'</a>'+
     ' · <a href="guide.html">'+esc(TX('SPRAK_FORMULAR','guideLank'))+'</a></p>';
   if(!egna.length){ txt.textContent=T('ingaEgna');
-    txt.insertAdjacentHTML('afterend',uppmaning); return; }
+    txt.insertAdjacentHTML('afterend',uppmaning); ritaKontakt(); return; }
   txt.remove();
   const sociala=egna.filter(l=>l.typ!=='sponsor');
   const sponsor=egna.filter(l=>l.typ==='sponsor');
@@ -1526,6 +1548,7 @@ async function ritaAkare(fis,codex){
   }
   box.insertAdjacentHTML('afterend',uppmaning);
   ritaAffiliate(fis);
+  ritaKontakt();
 }
 
 /* Rutan "Utrustning och resa". Visas bara om det finns en aktiv partner –

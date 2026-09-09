@@ -423,7 +423,7 @@ links, and most of it goes to this athlete's club. You pay exactly the same pric
 <p class="not">${ung
   ? 'Enquiries go to the club, which passes them on. Nothing is sent directly to the athlete.'
   : 'Your message is forwarded. The address is never shown here.'}</p>
-<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html?kontakt=${esc(a.fis)}">Get in touch</a></div>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/kontakt.html?fis=${esc(a.fis)}">Get in touch</a></div>
 </section>`;
   }
 
@@ -674,7 +674,7 @@ skriv('/index.html', sida({
    serverar webbläsaren gamla poäng och gamla texter i upp till tio minuter
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-['index.html','lagg-till.html','guide.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
+['index.html','lagg-till.html','guide.html','kontakt.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
  'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js',
  'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;

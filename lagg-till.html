@@ -222,6 +222,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
           <span data-t="kryssStod"></span></label>
         <label><input type="checkbox" id="guide" name="guide" value="ja">
           <span data-t="kryssGuide"></span></label>
+        <label><input type="checkbox" id="kontakt" name="kontakt" value="ja">
+          <span data-t="kryssKontakt"></span></label>
       </div>
       <p class="hint" style="margin-top:9px"><span data-t="guideFore"></span>
         <a href="guide.html" data-t="guideLank"></a></p>
@@ -317,7 +319,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
      Skickar vi något annat kastas hela svaret utan felmeddelande. */
   var VAL={affiliate:'Affiliate - egen lank, 80 procent till min klubb',
            stod:'Stodknapp - kunna ta emot gavor',
-           guide:'Guide - skicka mig guiden om pengar och sponsring'};
+           guide:'Guide - skicka mig guiden om pengar och sponsring',
+           kontakt:'Kontaktruta - foretag ska kunna hora av sig om sponsring'};
 
   var form=document.getElementById('f');
   var knapp=document.getElementById('skicka');
@@ -354,7 +357,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
     var kropp=new URLSearchParams();
     Object.keys(d).forEach(function(k){ kropp.append(FALT[k], d[k]); });
-    ['affiliate','stod','guide'].forEach(function(k){
+    ['affiliate','stod','guide','kontakt'].forEach(function(k){
       var el=document.getElementById(k);
       if(el && el.checked) kropp.append(KRYSS, VAL[k]);
     });
