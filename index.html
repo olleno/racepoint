@@ -265,7 +265,8 @@
     transition:border-color .12s, transform .12s, box-shadow .12s}
   .kanal:hover{border-color:currentColor;transform:translateY(-1px);
     box-shadow:0 2px 8px rgba(16,24,40,.09)}
-  .kanal svg{flex:none;width:20px;height:20px;display:block}
+  .kanal svg,.kanal img.marke{flex:none;width:20px;height:20px;display:block;
+    object-fit:contain;border-radius:3px}
   .kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* Klubb- och förbundsnamn är långa. Hellre två rader än "Maelaroearnas …" */
   .kanaler.bred{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
@@ -427,6 +428,7 @@
 <script src="fis-arkiv.js"></script>
 <script src="fis-evenemang.js"></script>
 <script src="fis-ikoner.js"></script>
+<script src="fis-sponsormarken.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -1478,10 +1480,21 @@ function morktLage(){
   if(r==='light') return false;
   try{ return matchMedia('(prefers-color-scheme: dark)').matches; }catch(e){ return false; }
 }
+/* Sponsorns egen sidikon, inbakad av bygget. Finns ingen blir det den
+   ritade standardikonen i stället – aldrig en tom ruta. */
+function egetMarke(typ,adress){
+  if(typ!=='sponsor'&&typ!=='webb') return null;
+  try{ return (window.FIS_SPONSORMARKEN||{})[new URL(adress).hostname.replace(/^www\./,'')]||null; }
+  catch(e){ return null; }
+}
 function kanalKnapp(typ, adress, etikett){
   const ik=(window.FIS_IKONER||{})[typ];
   // "Egen webbplats" ska stå på besökarens språk, inte på engelska
   if(!etikett && typ==='webb') etikett=TX('SPRAK_FORMULAR','webb');
+  const eget=egetMarke(typ,adress);
+  if(eget) return '<a class="kanal" href="'+esc(adress)+'" target="_blank" rel="noopener nofollow">'+
+    '<img class="marke" src="'+esc(eget)+'" alt="" width="20" height="20" loading="lazy">'+
+    '<span class="txt">'+esc(etikett||(ik?ik.namn:typ))+'</span><span class="chev">›</span></a>';
   if(!ik) return '<a class="kanal" href="'+esc(adress)+'" target="_blank" rel="noopener nofollow">'+
     '<span class="txt">'+esc(etikett||typ)+'</span><span class="chev">›</span></a>';
   const farg = ik.toning ? 'url(#rp-ig)'

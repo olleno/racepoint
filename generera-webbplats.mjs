@@ -145,8 +145,13 @@ const IG_TONING='<svg width="0" height="0" style="position:absolute" aria-hidden
 function kanalKnapp(typ, adress, etikett){
   const ik=IKON[typ];
   const namn=etikett||(ik?ik.namn:typ);
-  const svg=ik ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="ik-'+esc(typ)+
-    '" d="'+ik.d+'"/></svg>' : '';
+  /* Sponsorer och egna webbplatser får företagets egen sidikon när bygget
+     lyckats hämta den – annars den ritade standardikonen. Ingen tom ruta. */
+  const eget=(typ==='sponsor'||typ==='webb') ? akarSponsorMarke(adress) : null;
+  const svg=eget
+    ? '<img class="marke" src="'+eget+'" alt="" width="20" height="20" loading="lazy">'
+    : (ik ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="ik-'+esc(typ)+
+        '" d="'+ik.d+'"/></svg>' : '');
   return '<a class="kanal" href="'+esc(adress)+'" rel="noopener nofollow">'+svg+
     '<span class="txt">'+esc(namn)+'</span><span class="chev">›</span></a>';
 }
@@ -220,6 +225,67 @@ try{
     console.log(`Hämtade egna länkar för ${Object.keys(PROFIL).length} åkare`);
   }
 }catch(e){ console.log('Kunde inte hämta åkarnas länkar ('+e.message+') – bygger vidare.'); }
+
+/* ── Sponsorernas egna märken ─────────────────────────────────────────────
+   Instagram och Facebook har vi ritade logotyper för. Åkarnas sponsorer kan
+   vara vilket företag som helst i vilken stad som helst, så dem går inte
+   att rita i förväg. I stället hämtar bygget varje sponsors egen sidikon
+   en gång och bakar in den i sidan.
+
+   Varför inbakad och inte länkad: en bild som hämtas från sponsorns server
+   varje gång någon öppnar en åkarsida talar om för sponsorn vem som tittar,
+   gör sidan långsammare, och blir ett tomt hål den dagen de flyttar filen.
+   Inbakad syns den alltid, och besökaren lämnar inga spår.
+
+   Går något fel – långsam server, ingen ikon, konstigt filformat – blir det
+   ingen bild alls, och knappen får sitt vanliga utseende. Aldrig ett fel
+   som stoppar bygget. */
+const SPONSORMARKE={};
+async function hamtaMarke(bas){
+  const svar=await fetch(bas, {redirect:'follow', signal:AbortSignal.timeout(8000)});
+  const html=await svar.text();
+  const kandidater=[];
+  for(const m of html.matchAll(/<link\b[^>]*>/gi)){
+    const t=m[0];
+    if(!/rel\s*=\s*["'][^"']*icon/i.test(t)) continue;
+    const h=(t.match(/href\s*=\s*["']([^"']+)["']/i)||[])[1];
+    if(!h) continue;
+    const stor=/apple-touch/i.test(t) ? 3 : (/\b(180|192|512)x/.test(t) ? 2 : 1);
+    kandidater.push({url:new URL(h, svar.url).href, vikt:stor});
+  }
+  kandidater.push({url:new URL('/favicon.ico', svar.url).href, vikt:0});
+  kandidater.sort((a,b)=>b.vikt-a.vikt);
+
+  for(const k of kandidater.slice(0,4)){
+    try{
+      const b=await fetch(k.url, {redirect:'follow', signal:AbortSignal.timeout(8000)});
+      if(!b.ok) continue;
+      const typ=(b.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+      if(!/^image\/(png|jpeg|svg\+xml|x-icon|vnd\.microsoft\.icon|webp|gif)$/.test(typ)) continue;
+      const buf=Buffer.from(await b.arrayBuffer());
+      if(!buf.length || buf.length>40000) continue;   // för stor att baka in
+      return `data:${typ};base64,${buf.toString('base64')}`;
+    }catch(e){ /* nästa kandidat */ }
+  }
+  return null;
+}
+try{
+  const varden=new Set();
+  Object.values(PROFIL).forEach(p=>(p.sponsorer||[]).forEach(s=>{
+    try{ varden.add(new URL(s.adress).origin); }catch(e){}
+  }));
+  for(const bas of varden){
+    try{
+      const d=await hamtaMarke(bas);
+      if(d){ SPONSORMARKE[new URL(bas).hostname.replace(/^www\./,'')]=d; }
+    }catch(e){ /* en sponsor utan märke är inget fel */ }
+  }
+  console.log(`Hämtade märken för ${Object.keys(SPONSORMARKE).length} av ${varden.size} sponsorer`);
+}catch(e){ console.log('Sponsorernas märken kunde inte hämtas – bygger vidare.'); }
+const akarSponsorMarke = adress => {
+  try{ return SPONSORMARKE[new URL(adress).hostname.replace(/^www\./,'')]||null; }
+  catch(e){ return null; }
+};
 
 const sok = f => 'https://www.google.com/search?q='+encodeURIComponent(f);
 function forbundLank(nat){
@@ -644,6 +710,16 @@ const allaTavlingar=[...kommande.filter(k=>!avgjordaNycklar.has(k.codex+'|'+k.da
 const arkiv={};
 allaTavlingar.filter(t=>!t.kommande).forEach(t=>{ arkiv[t.codex+'|'+t.datum]=t.adress; });
 mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
+/* Samma märken till sidan inne i appen, så att ett åkarkort och en åkarsida
+   ser likadana ut. Filen skrivs varje bygge och innehåller bara de sponsorer
+   som någon åkare faktiskt lagt upp. */
+writeFileSync(join(UT,'alpine-skiing','fis-sponsormarken.js'),
+`/* Skapad av generera-webbplats.mjs ${new Date().toISOString().slice(0,10)}
+   Sponsorernas egna sidikoner, inbakade så att inget hämtas från deras
+   servrar när någon besöker en åkarsida. */
+window.FIS_SPONSORMARKEN = ${JSON.stringify(SPONSORMARKE)};
+`);
+
 writeFileSync(join(UT,'alpine-skiing','fis-arkiv.js'),
 `/* Skapad av generera-webbplats.mjs. Nyckel: codex|datum -> resultatsida. */
 window.FIS_ARKIV = ${JSON.stringify(arkiv, null, 1)};
@@ -861,7 +937,8 @@ color:var(--ink);font-size:14px;font-weight:560;
 transition:border-color .12s, transform .12s, box-shadow .12s}
 .kanal:hover{border-color:currentColor;transform:translateY(-1px);
 box-shadow:0 2px 8px rgba(16,24,40,.09)}
-.kanal svg{flex:none;width:20px;height:20px;display:block}
+.kanal svg,.kanal img.marke{flex:none;width:20px;height:20px;display:block;
+object-fit:contain;border-radius:3px}
 .kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Klubb- och förbundsnamn är långa. Hellre två rader än "Maelaroearnas …" */
 .kanaler.bred{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
