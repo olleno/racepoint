@@ -428,6 +428,7 @@
 <script src="fis-arkiv.js"></script>
 <script src="fis-evenemang.js"></script>
 <script src="fis-ikoner.js"></script>
+<script src="fis-profildata.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -1395,7 +1396,28 @@ async function profilCsv(url){
     return ut;
   }catch(e){ return {}; }
 }
-const hamtaArk=()=>profilCsv(window.FIS_PROFIL_ARK);
+/* Åkarnas länkar kommer från en statisk fil som bygget skrivit. Besökaren
+   frågar aldrig Google – den adressen stryps när trafiken ökar, och då hade
+   sponsorer och sociala länkar försvunnit tyst från korten.
+
+   Saknas filen, eller är den tom, faller vi tillbaka på att läsa arket
+   direkt. Det gör att sidan fungerar även första gången, innan ett bygge
+   hunnit köra. */
+async function hamtaArk(){
+  const d=window.FIS_PROFILDATA;
+  if(d && Object.keys(d).length){
+    const ut={};
+    for(const fis in d){
+      const p=d[fis]||{}, lista=[];
+      (p.sociala||[]).forEach(l=>lista.push({typ:l.typ, namn:'', adress:l.adress}));
+      (p.sponsorer||[]).forEach(l=>lista.push({typ:'sponsor', namn:l.namn||'', adress:l.adress}));
+      if(p.kontakt) lista.push({typ:'kontakt', namn:'', adress:''});
+      if(lista.length) ut[String(+fis)]=lista;
+    }
+    return ut;
+  }
+  return profilCsv(window.FIS_PROFIL_ARK);
+}
 let ARK=null, MEDIAARK=null;
 
 /* ---------- sändning och webbkameror ---------- */
@@ -1744,6 +1766,13 @@ async function laddaTavling(codex,forsta){
     }
     ritaTavling(a,meta,codex);
     statusText(T('uppdaterad',{t:new Date().toLocaleTimeString(LOK())}),true);
+    /* Är alla i sista åket färdiga – i mål, brutna eller diskade – kommer
+       inget mer. Då slutar vi fråga i stället för att ringa på hos FIS
+       tidtagning var tredje sekund i all evighet. */
+    if(a && !a.fel && Array.isArray(a.kvar) &&
+       a.kvar.every(x=>/dnf|dns|dsq|dq/i.test(String(x.status||'')))
+       && (a.klara||[]).length)
+      slutaFraga(T('avslutat'));
   }catch(e){
     /* Har tävlingen en färdig resultatsida är det den man vill se, inte
        ett felmeddelande – skicka dit direkt. */
@@ -1755,14 +1784,45 @@ async function laddaTavling(codex,forsta){
       '<p class="formel">'+esc(T('ingenLiveForkl'))+'</p></div>';
   }
 }
+/* ── Hur ofta vi frågar efter nya tider ───────────────────────────────────
+   Varje öppen tävlingssida frågar FIS tidtagningsleverantör var tredje
+   sekund. Tusen personer som följer samma lopp blir 333 anrop i sekunden
+   mot deras server – från webbläsare som vi skickat dit. Vi skulle inte
+   krascha, vi skulle bli avstängda, och det vore rimligt av dem.
+
+   Därför tre regler:
+     · Ligger fliken i bakgrunden frågar vi inte alls. Ingen tittar ändå.
+       När den kommer fram igen frågar vi direkt, så inget känns eftersatt.
+     · Är loppet slut – alla i sista åkets startlista har antingen en tid
+       eller ett slutgiltigt besked – slutar vi fråga helt.
+     · Har ingenting ändrats på en halvtimme slutar vi också. Då är det
+       antingen slut eller inställt, och båda betyder samma sak för oss. */
+let oforandradeSvar=0;
+function slutaFraga(varfor){
+  if(timer){ clearInterval(timer); timer=null; }
+  if(varfor) statusText(varfor,true);
+}
 async function puls(){
   if(!aktuell||!aktuell.live||!aktivCodex)return;
+  if(document.hidden) return;            // ingen tittar – fråga inte
   try{
     const t=await grab(mapp(aktivCodex),'updt'+aktuell.live['1']+'.xml');
-    if(t!==senaste){senaste=t;await laddaTavling(aktivCodex,false);}
-    else statusText(T('oforandrad',{t:new Date().toLocaleTimeString(LOK())}),true);
+    if(t!==senaste){
+      senaste=t; oforandradeSvar=0;
+      await laddaTavling(aktivCodex,false);
+    } else {
+      oforandradeSvar++;
+      statusText(T('oforandrad',{t:new Date().toLocaleTimeString(LOK())}),true);
+      // 600 svar á 3 sekunder = en halvtimme utan att något hänt
+      if(oforandradeSvar>=600) slutaFraga(T('avslutat'));
+    }
   }catch(e){}
 }
+/* Kommer fliken fram igen: fråga direkt i stället för att vänta ut nästa
+   varv, så att den som byter tillbaka ser färska tider på en gång. */
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && timer) puls();
+});
 function rutt(){
   if(timer){clearInterval(timer);timer=null;}
   const hash=location.hash||'';

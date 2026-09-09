@@ -736,6 +736,25 @@ const allaTavlingar=[...kommande.filter(k=>!avgjordaNycklar.has(k.codex+'|'+k.da
 const arkiv={};
 allaTavlingar.filter(t=>!t.kommande).forEach(t=>{ arkiv[t.codex+'|'+t.datum]=t.adress; });
 mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
+/* ── Åkarnas länkar som en statisk fil ────────────────────────────────────
+   Tidigare hämtade varje besökare arket direkt från Google när ett åkarkort
+   öppnades. Två problem med det: Google stryper den sortens adress när
+   trafiken ökar – och då försvinner sponsorer och sociala länkar tyst från
+   korten, utan felmeddelande – och åkarkortet inne i appen kunde visa något
+   annat än åkarens egen sida, som byggs en gång per natt.
+
+   Nu läser bygget arket en gång och skriver in resultatet här. Besökaren rör
+   aldrig Google. Priset är att en ändring i arket syns först vid nästa
+   bygge, i stället för efter fem minuter – men då syns den överallt
+   samtidigt, vilket är lättare att lita på. */
+writeFileSync(join(UT,'alpine-skiing','fis-profildata.js'),
+`/* Skapad av generera-webbplats.mjs ${new Date().toISOString().slice(0,10)}
+   Åkarnas egna länkar, godkända i arket. Läses av sidan i stället för att
+   varje besökare frågar Google. */
+window.FIS_PROFILDATA = ${JSON.stringify(PROFIL)};
+`);
+console.log(`Skrev länkar för ${Object.keys(PROFIL).length} åkare`);
+
 /* Samma märken till sidan inne i appen, så att ett åkarkort och en åkarsida
    ser likadana ut. Filen skrivs varje bygge och innehåller bara de sponsorer
    som någon åkare faktiskt lagt upp. */

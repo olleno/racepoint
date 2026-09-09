@@ -174,6 +174,7 @@ en: {
   ingenStartlista:"The feed has no start list yet.",
   okandGren:"Unknown event in the feed: {g}",
   uppdaterad:"updated {t}", oforandrad:"unchanged {t}",
+  avslutat:"Race finished — no longer refreshing",
   sprakval:"Language",
   foot:"Race Point is made for the athletes and the athlete community — the people whose season these numbers decide. It is an independent site and is not affiliated with FIS. Points list: {l} (valid {v}). Times and start lists from FIS live timing, points and rankings from the official FIS points list, weather from Open-Meteo. Broadcasts, cameras, social media and sponsors are added by organisers and athletes and shown after approval.",
   grenar:{DH:"Downhill", SL:"Slalom", GS:"Giant slalom", SG:"Super-G", AC:"Combined"}
@@ -240,6 +241,7 @@ sv: {
   ingenStartlista:"Flödet innehåller ingen startlista ännu.",
   okandGren:"Okänd gren i flödet: {g}",
   uppdaterad:"uppdaterad {t}", oforandrad:"oförändrad {t}",
+  avslutat:"Loppet är slut — uppdaterar inte längre",
   sprakval:"Språk",
   foot:"Race Point är gjord för åkarna och åkarnas krets — de vars säsong de här siffrorna avgör. Sajten är fristående och inte kopplad till FIS. Poängunderlag: {l} (giltig {v}). Tider och startlistor från FIS livetiming, poäng och placeringar från FIS officiella punktlista, väder från Open-Meteo. Sändningar, kameror, sociala medier och sponsorer läggs in av arrangörer och åkare och visas efter godkännande.",
   grenar:{DH:"Störtlopp", SL:"Slalom", GS:"Storslalom", SG:"Super-G", AC:"Kombination"}
@@ -306,6 +308,7 @@ de: {
   ingenStartlista:"Der Feed enthält noch keine Startliste.",
   okandGren:"Unbekannte Disziplin im Feed: {g}",
   uppdaterad:"aktualisiert {t}", oforandrad:"unverändert {t}",
+  avslutat:"Rennen beendet — keine Aktualisierung mehr",
   sprakval:"Sprache",
   foot:"Race Point ist für die Athletinnen und Athleten und ihr Umfeld gemacht — für die, über deren Saison diese Zahlen entscheiden. Die Seite ist unabhängig und steht in keiner Verbindung zur FIS. Punkteliste: {l} (gültig {v}). Zeiten und Startlisten von FIS Live-Timing, Punkte und Platzierungen aus der offiziellen FIS-Punkteliste, Wetter von Open-Meteo. Übertragungen, Kameras, soziale Medien und Sponsoren werden von Veranstaltern und Athleten eingetragen und nach Freigabe angezeigt.",
   grenar:{DH:"Abfahrt", SL:"Slalom", GS:"Riesenslalom", SG:"Super-G", AC:"Kombination"}
@@ -372,6 +375,7 @@ it: {
   ingenStartlista:"Il flusso non contiene ancora una lista di partenza.",
   okandGren:"Specialità sconosciuta nel flusso: {g}",
   uppdaterad:"aggiornato {t}", oforandrad:"invariato {t}",
+  avslutat:"Gara finita — non aggiorniamo più",
   sprakval:"Lingua",
   foot:"Race Point è fatto per gli atleti e la loro comunità — quelli di cui questi numeri decidono la stagione. È un sito indipendente e non affiliato alla FIS. Elenco punti: {l} (valido {v}). Tempi e liste di partenza dal cronometraggio FIS, punti e posizioni dall'elenco punti FIS ufficiale, meteo da Open-Meteo. Dirette, telecamere, social e sponsor sono inseriti da organizzatori e atleti e mostrati dopo approvazione.",
   grenar:{DH:"Discesa libera", SL:"Slalom", GS:"Slalom gigante", SG:"Super-G", AC:"Combinata"}
@@ -438,6 +442,7 @@ fr: {
   ingenStartlista:"Le flux ne contient pas encore de liste de départ.",
   okandGren:"Épreuve inconnue dans le flux : {g}",
   uppdaterad:"mis à jour {t}", oforandrad:"inchangé {t}",
+  avslutat:"Course terminée — plus de mise à jour",
   sprakval:"Langue",
   foot:"Race Point est fait pour les coureurs et leur entourage — ceux dont ces chiffres décident la saison. Le site est indépendant et n'est pas affilié à la FIS. Liste de points : {l} (valable {v}). Temps et listes de départ du chronométrage FIS, points et classements de la liste de points officielle FIS, météo d'Open-Meteo. Diffusions, caméras, réseaux sociaux et sponsors sont ajoutés par les organisateurs et les coureurs et affichés après validation.",
   grenar:{DH:"Descente", SL:"Slalom", GS:"Slalom géant", SG:"Super-G", AC:"Combiné"}
@@ -504,6 +509,7 @@ es: {
   ingenStartlista:"El flujo todavía no contiene lista de salida.",
   okandGren:"Disciplina desconocida en el flujo: {g}",
   uppdaterad:"actualizado {t}", oforandrad:"sin cambios {t}",
+  avslutat:"Carrera terminada — ya no se actualiza",
   sprakval:"Idioma",
   foot:"Race Point está hecho para los corredores y su comunidad — aquellos cuya temporada deciden estas cifras. Es un sitio independiente y no está afiliado a la FIS. Lista de puntos: {l} (válida {v}). Tiempos y listas de salida del cronometraje FIS, puntos y posiciones de la lista de puntos oficial FIS, meteorología de Open-Meteo. Retransmisiones, cámaras, redes sociales y patrocinadores los añaden organizadores y corredores y se muestran tras su aprobación.",
   grenar:{DH:"Descenso", SL:"Eslalon", GS:"Eslalon gigante", SG:"Súper-G", AC:"Combinada"}
