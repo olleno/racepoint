@@ -326,11 +326,23 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   var knapp=document.getElementById('skicka');
   var svar=document.getElementById('svar');
 
-  function visa(typ,rubrik,text){
+  function visa(typ,rubrik,text,lank){
     svar.className='svar '+typ;
     svar.innerHTML='<b></b><span></span>';
     svar.querySelector('b').textContent=rubrik;
     svar.querySelector('span').textContent=text;
+    /* Bad åkaren om guiden får hon den här och nu, inte i ett mejl. Det är
+       snabbare för henne, och Race Point behöver ingen avsändaradress för
+       att hålla ett löfte. */
+    if(lank){
+      var p=document.createElement('p');
+      p.style.margin='10px 0 0';
+      var a=document.createElement('a');
+      a.href='guide.html'; a.textContent=lank;
+      a.style.fontWeight='620';
+      p.appendChild(a);
+      svar.appendChild(p);
+    }
     svar.hidden=false;
   }
 
@@ -369,11 +381,16 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:kropp.toString()})
       .then(function(){
+        /* Läses innan formuläret töms – annars är krysset redan borta när
+           vi ska avgöra om guiden ska visas. */
+        var villGuide=!!(document.getElementById('guide') &&
+                         document.getElementById('guide').checked);
         form.querySelectorAll('input').forEach(function(i){
           if(i.type==='checkbox') i.checked=false; else i.value='';
         });
         knapp.textContent=O('skickat');
-        visa('ok', O('tackB'), O('tack'));
+        visa('ok', O('tackB'), O('tack') + (villGuide ? ' ' + O('tackGuide') : ''),
+             villGuide ? O('guideLank') : '');
       })
       .catch(function(){
         knapp.disabled=false;
