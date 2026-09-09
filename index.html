@@ -251,6 +251,33 @@
   .lankar .lank-tom{display:inline-flex;align-items:center;gap:6px;font-size:13px;
     color:var(--muted);border:1px dashed var(--line);border-radius:8px;
     padding:5px 10px;cursor:default}
+
+  /* ── Åkarens egna kanaler ─────────────────────────────────────────────
+     Tidigare stod de som grå textlänkar under rubriken "Links", och det
+     gick knappt att se att de gick att klicka på – än mindre vilken tjänst
+     de ledde till. Nu är de riktiga knappar med märkets egen logotyp och
+     märkets egen färg, för det är så en besökare känner igen dem på en
+     halv sekund. */
+  .kanaler{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+  .kanal{display:flex;align-items:center;gap:10px;text-decoration:none;
+    background:var(--kort);border:1px solid var(--rand);border-radius:11px;
+    padding:10px 12px;color:var(--ink);font-size:14px;font-weight:560;
+    transition:border-color .12s, transform .12s, box-shadow .12s}
+  .kanal:hover{border-color:currentColor;transform:translateY(-1px);
+    box-shadow:0 2px 8px rgba(16,24,40,.09)}
+  .kanal svg{flex:none;width:20px;height:20px;display:block}
+  .kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kanal .chev{flex:none;font-size:15px;color:var(--muted);line-height:1}
+  /* De officiella länkarna: samma form, lugnare färg. */
+  .kanal.off{color:var(--ink2);font-weight:500}
+  .kanal.off svg{color:var(--muted)}
+  .kanal.off:hover{border-color:var(--accent);color:var(--accent)}
+  .kanal.off:hover svg{color:var(--accent)}
+  .kanal.tomrad{border-style:dashed;color:var(--muted);cursor:default;transform:none;
+    box-shadow:none}
+  .kanal.tomrad:hover{border-color:var(--rand);color:var(--muted);transform:none;
+    box-shadow:none}
+  .kortnot{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.6}
   .tom{font-size:13px;color:var(--muted);line-height:1.65}
   .foot{font-size:12px;color:var(--muted);margin-top:26px;line-height:1.7}
 
@@ -396,6 +423,7 @@
 <script src="fis-affiliate.js"></script>
 <script src="fis-arkiv.js"></script>
 <script src="fis-evenemang.js"></script>
+<script src="fis-ikoner.js"></script>
 <script>
 /* ============ 0. Språk ============
    Engelska är alltid utgångsläget – hela sajten möter besökaren på samma
@@ -1436,6 +1464,39 @@ async function ritaMedia(codex,plats){
   },30000);
 }
 
+/* Ritar en knapp med märkets riktiga logotyp. Instagram har en färgtoning
+   i stället för en färg, så den får en egen definition; övriga får sin
+   officiella färg, och de som är svarta eller mörkblå får en ljusare
+   variant i mörkt läge så att de inte försvinner mot bakgrunden. */
+let __igToning=false;
+function morktLage(){
+  const r=document.documentElement.getAttribute('data-theme');
+  if(r==='dark') return true;
+  if(r==='light') return false;
+  try{ return matchMedia('(prefers-color-scheme: dark)').matches; }catch(e){ return false; }
+}
+function kanalKnapp(typ, adress, etikett){
+  const ik=(window.FIS_IKONER||{})[typ];
+  // "Egen webbplats" ska stå på besökarens språk, inte på engelska
+  if(!etikett && typ==='webb') etikett=TX('SPRAK_FORMULAR','webb');
+  if(!ik) return '<a class="kanal" href="'+esc(adress)+'" target="_blank" rel="noopener nofollow">'+
+    '<span class="txt">'+esc(etikett||typ)+'</span><span class="chev">›</span></a>';
+  const farg = ik.toning ? 'url(#rp-ig)'
+             : (morktLage() && ik.fargMork ? ik.fargMork : ik.farg);
+  let toning='';
+  if(ik.toning && !__igToning){
+    __igToning=true;
+    toning='<svg width="0" height="0" style="position:absolute" aria-hidden="true">'+
+      '<linearGradient id="rp-ig" x1="0" y1="1" x2="1" y2="0">'+
+      '<stop offset="0" stop-color="#FDCB52"/><stop offset=".35" stop-color="#F5643B"/>'+
+      '<stop offset=".7" stop-color="#D6249F"/><stop offset="1" stop-color="#7A34C1"/>'+
+      '</linearGradient></svg>';
+  }
+  return toning+'<a class="kanal" href="'+esc(adress)+'" target="_blank" rel="noopener nofollow">'+
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="'+farg+'" d="'+ik.d+'"/></svg>'+
+    '<span class="txt">'+esc(etikett||ik.namn)+'</span><span class="chev">›</span></a>';
+}
+
 async function ritaAkare(fis,codex){
   nollstallKlocka();
   const app=document.getElementById('app');
@@ -1493,15 +1554,35 @@ async function ritaAkare(fis,codex){
   const forbundLank=fb?fb.webb:('https://www.google.com/search?q='+
     encodeURIComponent((nat||'')+' national ski association alpine'));
 
-  h+='<div class="card"><h3>'+esc(T('lankar'))+'</h3><div class="lankar" id="lankar">'+
-     '<a href="#">⛷ '+esc(T('tillLive'))+'</a>'+
-     (bio?'<a href="'+esc(bio)+'" target="_blank" rel="noopener">📄 '+esc(T('fisBio'))+'</a>'
-         :'<span class="lank-tom">📄 '+esc(T('ingenBio'))+'</span>')+
-     (nat?'<a href="'+esc(forbundLank)+'" target="_blank" rel="noopener">🏔 '+
-        esc(forbundNamn)+'</a>'
-        :'<span class="lank-tom">🏔 '+esc(T('ingetForbund'))+'</span>')+
-     '<span id="klubbplats"></span>'+
-     '</div><p class="tom" id="egna">'+esc(T('laddar'))+'</p></div>';
+  /* Åkarens egna kanaler ritas i en egen ruta ovanför, med hennes namn som
+     rubrik. Rutan skapas här tom och fylls när arket hämtats – annars
+     hoppar sidan. Är den fortfarande tom när allt är läst tas den bort. */
+  h+='<div class="card" id="egnakort" hidden><h3 id="egnarubrik"></h3>'+
+     '<p class="kortnot" id="egnanot"></p><div class="kanaler" id="kanaler"></div>'+
+     '<p class="tom" id="egna">'+esc(T('laddar'))+'</p></div>';
+
+  /* De officiella länkarna får samma knappform som åkarens egna, men med
+     lugna enfärgade ikoner i stället för varumärken. Blandat emoji och
+     riktiga logotyper såg hemgjort ut. */
+  const OFF=window.FIS_IKONER_OFF||{};
+  const offKnapp=(nyckel,adress,text,extern)=>
+    '<a class="kanal off" href="'+esc(adress)+'"'+
+    (extern?' target="_blank" rel="noopener"':'')+'>'+
+    (OFF[nyckel]?'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="'+
+      OFF[nyckel]+'"/></svg>':'')+
+    '<span class="txt">'+esc(text)+'</span><span class="chev">›</span></a>';
+  const offTom=(nyckel,text)=>
+    '<span class="kanal off tomrad">'+
+    (OFF[nyckel]?'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="'+
+      OFF[nyckel]+'"/></svg>':'')+
+    '<span class="txt">'+esc(text)+'</span></span>';
+
+  h+='<div class="card"><h3>'+esc(T('offRubrik'))+'</h3><div class="kanaler" id="lankar">'+
+     offKnapp('live','#',T('tillLive'),false)+
+     (bio?offKnapp('bio',bio,T('fisBio'),true):offTom('bio',T('ingenBio')))+
+     (nat?offKnapp('forbund',forbundLank,forbundNamn,true)
+        :offTom('forbund',T('ingetForbund')))+
+     '<span id="klubbplats"></span></div></div>';
   app.innerHTML=h;
 
   /* Klubben ligger i åkarregistret, som hämtas separat. Den rutan fylls i
@@ -1511,10 +1592,9 @@ async function ritaAkare(fis,codex){
     if(!plats) return;
     const rad=regRad||(reg||[]).find(x=>String(x.fis)===String(fis));
     plats.outerHTML = (rad&&rad.klubb)
-      ? '<a href="'+esc(rad.klubbwebb||('https://www.google.com/search?q='+
-          encodeURIComponent(rad.klubb+' '+nat+' ski club')))+'" target="_blank" '+
-        'rel="noopener">🏁 '+esc(rad.klubb)+'</a>'
-      : '<span class="lank-tom">🏁 '+esc(T('ingenKlubb'))+'</span>';
+      ? offKnapp('klubb', rad.klubbwebb||('https://www.google.com/search?q='+
+          encodeURIComponent(rad.klubb+' '+nat+' ski club')), rad.klubb, true)
+      : offTom('klubb', T('ingenKlubb'));
   }).catch(()=>{
     const plats=document.getElementById('klubbplats'); if(plats) plats.remove();
   });
@@ -1530,7 +1610,8 @@ async function ritaAkare(fis,codex){
      på sidan – knappen leder till ett formulär som skickar vidare. */
   function ritaKontakt(){
     if(!villKontakt) return;
-    const kort=box.closest('.card'); if(!kort) return;
+    const kort=document.getElementById('egnakort')||box.closest('.card');
+    if(!kort) return;
     const PP=(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
     kort.insertAdjacentHTML('afterend',
       '<div class="card"><h3>'+esc(PP.kontakt||'Sponsorship')+'</h3>'+
@@ -1544,26 +1625,37 @@ async function ritaAkare(fis,codex){
   const uppmaning='<p class="lead" style="margin:12px 0 0">'+esc(T('dinSidaFraga'))+
     ' <a href="lagg-till.html">'+esc(T('dinSidaKnapp'))+'</a>'+
     ' · <a href="guide.html">'+esc(TX('SPRAK_FORMULAR','guideLank'))+'</a></p>';
-  if(!egna.length){ txt.textContent=T('ingaEgna');
-    txt.insertAdjacentHTML('afterend',uppmaning); ritaKontakt(); return; }
+  const kort=document.getElementById('egnakort');
+  const kanaler=document.getElementById('kanaler');
+  const rubrik=document.getElementById('egnarubrik');
+  const not=document.getElementById('egnanot');
+  const visningsnamn = namn || ('FIS ' + fis);
+  rubrik.textContent = T('egnaRubrik').replace('{n}', visningsnamn);
+  not.textContent = T('egnaNot');
+  kort.hidden=false;
+
+  if(!egna.length){
+    kanaler.remove(); not.remove();
+    txt.textContent=T('ingaEgna');
+    txt.insertAdjacentHTML('afterend',uppmaning); ritaKontakt(); return;
+  }
   txt.remove();
   const sociala=egna.filter(l=>l.typ!=='sponsor');
   const sponsor=egna.filter(l=>l.typ==='sponsor');
   const P=()=>(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
-  sociala.forEach(l=>{
-    const t=TYPNAMN[l.typ]||['Länk','🔗'];
-    box.insertAdjacentHTML('beforeend','<a href="'+esc(l.adress)+'" target="_blank" '+
-      'rel="noopener nofollow">'+t[1]+' '+esc(l.namn||t[0])+'</a>');
-  });
+  kanaler.innerHTML = sociala.map(l=>kanalKnapp(l.typ, l.adress, l.namn||'')).join('');
+
   /* Åkarens egna sponsorer. Den här rutan är hennes skyltfönster – den
      ska aldrig blandas ihop med affiliate-länkarna nedan, för då ser det ut
      som att ett märke sponsrar henne när det inte gör det. */
   if(sponsor.length){
-    box.insertAdjacentHTML('afterend','<h3 style="margin-top:16px">'+esc(P().sponsorer||T('sponsorer'))+'</h3>'+
-      '<div class="lankar">'+sponsor.map(l=>'<a href="'+esc(l.adress)+'" target="_blank" '+
-      'rel="noopener nofollow">🤝 '+esc(l.namn||l.adress)+'</a>').join('')+'</div>');
+    kanaler.insertAdjacentHTML('afterend',
+      '<h3 style="margin-top:18px">'+esc(P().sponsorer||T('sponsorer'))+'</h3>'+
+      '<div class="kanaler">'+sponsor.map(l=>
+        kanalKnapp('sponsor', l.adress, l.namn||l.adress.replace(/^https?:\/\/(www\.)?/,''))
+      ).join('')+'</div>');
   }
-  box.insertAdjacentHTML('afterend',uppmaning);
+  kort.insertAdjacentHTML('beforeend',uppmaning);
   ritaAffiliate(fis);
   ritaKontakt();
 }

@@ -125,6 +125,44 @@ const profStubbe={};
 try{
   new Function('window', readFileSync(join(HAR,'fis-profiler.js'),'utf8'))(profStubbe);
 }catch(e){ /* filen är valfri */ }
+/* Varumärkeslogotyperna. Samma fil som sajten använder, så att en åkarsida
+   och åkarkortet inne i appen ser likadana ut. */
+const ikonStubbe={};
+try{
+  new Function('window', readFileSync(join(HAR,'fis-ikoner.js'),'utf8'))(ikonStubbe);
+}catch(e){ /* utan filen blir det knappar utan logotyp, inget mer */ }
+const IKON=ikonStubbe.FIS_IKONER||{};
+const IKONOFF=ikonStubbe.FIS_IKONER_OFF||{};
+
+/* En knapp med märkets egen logotyp och egen färg. Tidigare stod de här
+   som grå textlänkar, och en besökare såg varken att de gick att klicka på
+   eller vart de ledde. Instagram har en färgtoning i stället för en färg. */
+const IG_TONING='<svg width="0" height="0" style="position:absolute" aria-hidden="true">'+
+  '<linearGradient id="rp-ig" x1="0" y1="1" x2="1" y2="0">'+
+  '<stop offset="0" stop-color="#FDCB52"/><stop offset=".35" stop-color="#F5643B"/>'+
+  '<stop offset=".7" stop-color="#D6249F"/><stop offset="1" stop-color="#7A34C1"/>'+
+  '</linearGradient></svg>';
+function kanalKnapp(typ, adress, etikett){
+  const ik=IKON[typ];
+  const namn=etikett||(ik?ik.namn:typ);
+  const svg=ik ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="ik-'+esc(typ)+
+    '" d="'+ik.d+'"/></svg>' : '';
+  return '<a class="kanal" href="'+esc(adress)+'" rel="noopener nofollow">'+svg+
+    '<span class="txt">'+esc(namn)+'</span><span class="chev">›</span></a>';
+}
+function offKnapp(nyckel, adress, text, akta){
+  const svg=IKONOFF[nyckel]?'<svg viewBox="0 0 24 24" aria-hidden="true">'+
+    '<path fill="currentColor" d="'+IKONOFF[nyckel]+'"/></svg>':'';
+  return '<a class="kanal off" href="'+esc(adress)+'" rel="noopener'+
+    (akta===false?' nofollow':'')+'">'+svg+'<span class="txt">'+esc(text)+
+    '</span><span class="chev">›</span></a>';
+}
+function offTom(nyckel, text){
+  const svg=IKONOFF[nyckel]?'<svg viewBox="0 0 24 24" aria-hidden="true">'+
+    '<path fill="currentColor" d="'+IKONOFF[nyckel]+'"/></svg>':'';
+  return '<span class="kanal off tomrad">'+svg+'<span class="txt">'+esc(text)+'</span></span>';
+}
+
 const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
 const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
   youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
@@ -388,26 +426,32 @@ for(const a of Object.values(akare)){
   }
 
   const fb=forbundLank(a.nat), kl=klubbLank(a.klubb,a.nat);
-  inneh+=`<section class="kort"><h2>Links</h2><div class="lankar">
-<a href="/alpine-skiing/">Live race points</a>
-<a href="https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${esc(a.id)}&type=result" rel="noopener">FIS biography</a>
-<a href="${esc(fb.webb)}" rel="noopener${fb.akta?'':' nofollow'}">${esc(fb.namn)}</a>`+
-(kl?`\n<a href="${esc(kl.webb)}" rel="noopener${kl.akta?'':' nofollow'}">${esc(kl.namn)}</a>`
-   :`\n<span class="lank-tom">Club not listed by FIS</span>`)+
-((PROFIL[String(+a.fis)]||{sociala:[]}).sociala||[]).map(x=>
-  `\n<a href="${esc(x.adress)}" rel="noopener nofollow">${esc({instagram:'Instagram',
-   tiktok:'TikTok',youtube:'YouTube',facebook:'Facebook',linkedin:'LinkedIn',
-   strava:'Strava',webb:'Own website'}[x.typ]||x.typ)}</a>`).join('')+
-`</div></section>`;
-
   const egna=PROFIL[String(+a.fis)]||null;
-  /* Åkarens egna sponsorer. Egen ruta, aldrig ihopblandad med affiliate –
-     annars ser det ut som att ett märke sponsrar henne när det inte gör det. */
-  if(egna && egna.sponsorer.length){
-    inneh+=`<section class="kort"><h2>Sponsors</h2><div class="lankar">`+
-      egna.sponsorer.map(x=>`<a href="${esc(x.adress)}" rel="noopener nofollow">`+
-        `${esc(x.namn||x.adress)}</a>`).join('')+`</div></section>`;
+
+  /* Åkarens egna kanaler först, under hennes eget namn. En besökare ska se
+     direkt att det är hennes sida och inte en tabell ur ett register. */
+  const sociala=(egna&&egna.sociala)||[];
+  if(sociala.length || (egna && egna.sponsorer.length)){
+    inneh+=IG_TONING+`<section class="kort"><h2>${esc(visa)}’s own links</h2>
+<p class="not">The athlete's own channels — kept up to date by them, not by FIS.</p>`;
+    if(sociala.length)
+      inneh+=`<div class="kanaler">`+sociala.map(x=>
+        kanalKnapp(x.typ, x.adress, x.typ==='webb'?'Own website':'')).join('')+`</div>`;
+    /* Egna sponsorer i egen rubrik, aldrig ihopblandade med affiliate –
+       annars ser det ut som att ett märke sponsrar henne när det inte gör det. */
+    if(egna && egna.sponsorer.length)
+      inneh+=`<h3 class="underrub">Sponsors</h3><div class="kanaler">`+
+        egna.sponsorer.map(x=>kanalKnapp('sponsor', x.adress,
+          x.namn||String(x.adress).replace(/^https?:\/\/(www\.)?/,''))).join('')+`</div>`;
+    inneh+=`</section>`;
   }
+
+  inneh+=`<section class="kort"><h2>FIS and club</h2><div class="kanaler">`+
+    offKnapp('live','/alpine-skiing/','Live race points')+
+    offKnapp('bio','https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid='+esc(a.id)+'&type=result','FIS biography')+
+    offKnapp('forbund',fb.webb,fb.namn,fb.akta)+
+    (kl?offKnapp('klubb',kl.webb,kl.namn,kl.akta):offTom('klubb','Club not listed by FIS'))+
+    `</div></section>`;
 
   /* Utrustning och resa. Bara aktiva partners i konfliktfria kategorier, och
      alltid med utmärkning – reklam måste gå att känna igen. */
@@ -683,7 +727,7 @@ skriv('/index.html', sida({
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 ['index.html','lagg-till.html','guide.html','kontakt.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
- 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js',
+ 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js','fis-ikoner.js',
  'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
   if(f.endsWith('.html')){
@@ -796,6 +840,44 @@ transition:transform .15s}
 .sponsorer img{width:auto;display:block}
 .sponsorer img.marke{height:16px}
 .sponsorer .namn{white-space:nowrap}
+/* Åkarens egna kanaler som riktiga knappar med märkets logotyp och färg.
+   Tidigare grå textlänkar under rubriken "Links" – det gick knappt att se
+   att de gick att klicka på, än mindre vart de ledde. */
+.kanaler{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
+.kanal{display:flex;align-items:center;gap:10px;text-decoration:none;
+background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px;
+color:var(--ink);font-size:14px;font-weight:560;
+transition:border-color .12s, transform .12s, box-shadow .12s}
+.kanal:hover{border-color:currentColor;transform:translateY(-1px);
+box-shadow:0 2px 8px rgba(16,24,40,.09)}
+.kanal svg{flex:none;width:20px;height:20px;display:block}
+.kanal .txt{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kanal .chev{flex:none;font-size:15px;color:var(--muted);line-height:1}
+.kanal.off{color:var(--ink2);font-weight:500}
+.kanal.off svg{color:var(--muted)}
+.kanal.off:hover{border-color:var(--accent);color:var(--accent)}
+.kanal.off:hover svg{color:var(--accent)}
+.kanal.tomrad{border-style:dashed;color:var(--muted);cursor:default}
+.kanal.tomrad:hover{border-color:var(--line);color:var(--muted);transform:none;box-shadow:none}
+.underrub{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+color:var(--muted);margin:18px 0 8px}
+/* Märkesfärgerna. Instagram har en toning, resten sin officiella färg. */
+.ik-instagram{fill:url(#rp-ig)}
+.ik-facebook{fill:#1877F2}
+.ik-youtube{fill:#FF0000}
+.ik-tiktok{fill:#000}
+.ik-linkedin{fill:#0A66C2}
+.ik-strava{fill:#FC4C02}
+.ik-webb{fill:#0a5fbf}
+.ik-sponsor{fill:#0a7a41}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .ik-tiktok{fill:#fff}
+  :root:not([data-theme="light"]) .ik-webb{fill:#63a8ff}
+  :root:not([data-theme="light"]) .ik-sponsor{fill:#4ec281}
+}
+:root[data-theme="dark"] .ik-tiktok{fill:#fff}
+:root[data-theme="dark"] .ik-webb{fill:#63a8ff}
+:root[data-theme="dark"] .ik-sponsor{fill:#4ec281}
 .dinsida{border-top:3px solid var(--sport)}
 .reklamnot{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 11px;
 background:#fdf3e3;border-radius:8px;padding:8px 11px}
