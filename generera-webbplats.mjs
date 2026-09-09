@@ -241,8 +241,19 @@ try{
    ingen bild alls, och knappen får sitt vanliga utseende. Aldrig ett fel
    som stoppar bygget. */
 const SPONSORMARKE={};
+/* Många företagssajter svarar inte på ett anrop utan webbläsarhuvuden – de
+   tar det för en robot och stänger dörren. Rossignol var ett sådant fall:
+   ikonerna fanns, men hämtningen kom aldrig fram. Vi presenterar oss därför
+   som en vanlig webbläsare, precis som en besökare hade gjort. */
+const HUVUD={
+  'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '+
+               '(KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+  'Accept':'text/html,application/xhtml+xml,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language':'en;q=0.9'
+};
 async function hamtaMarke(bas){
-  const svar=await fetch(bas, {redirect:'follow', signal:AbortSignal.timeout(8000)});
+  const svar=await fetch(bas, {redirect:'follow', headers:HUVUD,
+                               signal:AbortSignal.timeout(8000)});
   const html=await svar.text();
   const kandidater=[];
   for(const m of html.matchAll(/<link\b[^>]*>/gi)){
@@ -258,7 +269,8 @@ async function hamtaMarke(bas){
 
   for(const k of kandidater.slice(0,4)){
     try{
-      const b=await fetch(k.url, {redirect:'follow', signal:AbortSignal.timeout(8000)});
+      const b=await fetch(k.url, {redirect:'follow', headers:HUVUD,
+                                  signal:AbortSignal.timeout(8000)});
       if(!b.ok) continue;
       const typ=(b.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
       if(!/^image\/(png|jpeg|svg\+xml|x-icon|vnd\.microsoft\.icon|webp|gif)$/.test(typ)) continue;
@@ -270,15 +282,23 @@ async function hamtaMarke(bas){
   return null;
 }
 try{
-  const varden=new Set();
+  /* Vi läser den adress åkaren faktiskt angav, inte bara domänen. En
+     startsida kan skicka vidare till en landsväljare eller en inloggning;
+     sidan hon länkat till vet vi renderar. Märket sparas ändå per domän,
+     så två åkare med samma sponsor delar en hämtning. */
+  const varden=new Map();
   Object.values(PROFIL).forEach(p=>(p.sponsorer||[]).forEach(s=>{
-    try{ varden.add(new URL(s.adress).origin); }catch(e){}
-  }));
-  for(const bas of varden){
     try{
-      const d=await hamtaMarke(bas);
-      if(d){ SPONSORMARKE[new URL(bas).hostname.replace(/^www\./,'')]=d; }
-    }catch(e){ /* en sponsor utan märke är inget fel */ }
+      const v=new URL(s.adress).hostname.replace(/^www\./,'');
+      if(!varden.has(v)) varden.set(v, s.adress);
+    }catch(e){}
+  }));
+  for(const [vard, adress] of varden){
+    try{
+      const d=await hamtaMarke(adress);
+      if(d) SPONSORMARKE[vard]=d;
+      else console.log(`  inget märke hos ${vard}`);
+    }catch(e){ console.log(`  ${vard} svarade inte (${e.message})`); }
   }
   console.log(`Hämtade märken för ${Object.keys(SPONSORMARKE).length} av ${varden.size} sponsorer`);
 }catch(e){ console.log('Sponsorernas märken kunde inte hämtas – bygger vidare.'); }
