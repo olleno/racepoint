@@ -1280,14 +1280,31 @@ const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','
 const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
   youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
   linkedin:'https://www.linkedin.com/in/',strava:'https://www.strava.com/athletes/'};
+/* Gör en riktig adress av det åkaren skrev. Åkare skriver på tre sätt:
+   hela adressen, adressen utan https, eller bara sitt användarnamn.
+
+   Två fällor som båda slog till på den allra första riktiga inskickningen:
+
+     · "esther.nordberg" i Instagram-rutan såg ut som en domän, eftersom det
+       finns en punkt i namnet. Den blev https://esther.nordberg, som inte
+       är instagram.com, och länken slängdes tyst. Punkter är vanliga i
+       användarnamn – därför gäller domäntolkningen bara egen webbplats och
+       sponsorer, eller när det finns ett snedstreck i texten.
+
+     · "Esther Nordberg" i Facebook-rutan blev en länk med ett mellanslag i,
+       som leder till en tom sida. Inget användarnamn innehåller mellanslag,
+       så det är ett namn – och då är ingen länk bättre än en trasig. */
 function heladress(typ,v){
   v=String(v||'').trim();
   if(!v) return '';
   if(/^https?:\/\//i.test(v)) return v;
   if(/^www\./i.test(v)) return 'https://'+v;
-  if(/^[a-z0-9-]+\.[a-z]{2,}([/?#]|$)/i.test(v)) return 'https://'+v;
+  const egenSida = (typ==='webb'||typ==='sponsor');
+  if(/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}([/?#]|$)/i.test(v) && (egenSida || v.indexOf('/')>=0))
+    return 'https://'+v;
   const bas=PROFILBAS[typ];
   if(!bas) return '';
+  if(/\s/.test(v)) return '';                 // ett namn, inte ett konto
   return bas+v.replace(/^@/,'');
 }
 async function profilCsv(url){

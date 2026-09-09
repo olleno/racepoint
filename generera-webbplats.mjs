@@ -129,14 +129,22 @@ const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','
 const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
   youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
   linkedin:'https://www.linkedin.com/in/',strava:'https://www.strava.com/athletes/'};
+/* Samma regler som i index.html – se kommentaren där. Kort: en punkt i
+   texten betyder inte att det är en domän ("esther.nordberg" är ett
+   Instagram-konto), och ett mellanslag betyder att åkaren skrev sitt namn
+   i stället för sitt konto, och då blir det ingen länk alls. */
 function heladress(typ,v){
   v=String(v||'').trim();
   if(!v) return '';
   if(/^https?:\/\//i.test(v)) return v;
   if(/^www\./i.test(v)) return 'https://'+v;
-  if(/^[a-z0-9-]+\.[a-z]{2,}([/?#]|$)/i.test(v)) return 'https://'+v;
+  const egenSida = (typ==='webb'||typ==='sponsor');
+  if(/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}([/?#]|$)/i.test(v) && (egenSida || v.indexOf('/')>=0))
+    return 'https://'+v;
   const bas=PROFILBAS[typ];
-  return bas ? bas+v.replace(/^@/,'') : '';
+  if(!bas) return '';
+  if(/\s/.test(v)) return '';
+  return bas+v.replace(/^@/,'');
 }
 let PROFIL={};
 try{
