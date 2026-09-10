@@ -1527,6 +1527,18 @@ function egetMarke(typ,adress){
   try{ return (window.FIS_SPONSORMARKEN||{})[new URL(adress).hostname.replace(/^www\./,'')]||null; }
   catch(e){ return null; }
 }
+/* Samma regel som i generera-webbplats.mjs: skrev åkaren bara en adress i
+   sponsorrutan blir domänens egennamn knappens text – "Rossignol", inte
+   "rossignol.com/se-en/". */
+function sponsorNamnUrAdress(adress){
+  try{
+    const del=new URL(adress).hostname.replace(/^www\./i,'').split('.');
+    const ord = del.length>2 && /^(co|com|org|net|gov|ac)$/i.test(del[del.length-2])
+      ? del[del.length-3] : del[0];
+    return ord.split('-').filter(Boolean)
+      .map(o=>o.charAt(0).toUpperCase()+o.slice(1)).join(' ');
+  }catch(e){ return String(adress).replace(/^https?:\/\/(www\.)?/,''); }
+}
 function kanalKnapp(typ, adress, etikett){
   const ik=(window.FIS_IKONER||{})[typ];
   // "Egen webbplats" ska stå på besökarens språk, inte på engelska
@@ -1709,7 +1721,7 @@ async function ritaAkare(fis,codex){
     kanaler.insertAdjacentHTML('afterend',
       '<h3 style="margin-top:18px">'+esc(P().sponsorer||T('sponsorer'))+'</h3>'+
       '<div class="kanaler">'+sponsor.map(l=>
-        kanalKnapp('sponsor', l.adress, l.namn||l.adress.replace(/^https?:\/\/(www\.)?/,''))
+        kanalKnapp('sponsor', l.adress, l.namn||sponsorNamnUrAdress(l.adress))
       ).join('')+'</div>');
   }
   kort.insertAdjacentHTML('beforeend',uppmaning);

@@ -367,6 +367,46 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       return;
     }
 
+    /* En åkare la sin Facebook-adress i LinkedIn-rutan, och då stod det
+       LinkedIn på knappen på hans sida. Adressen avslöjar vilken tjänst den
+       hör till, så vi säger ifrån här i stället för att upptäcka det efteråt.
+       Märkesnamnen är desamma på alla språk och behöver ingen översättning. */
+    var TJANST=[
+      ['Instagram','instagram', /(^|\.)instagram\.com$/i],
+      ['TikTok','tiktok',       /(^|\.)tiktok\.com$/i],
+      ['YouTube','youtube',     /(^|\.)(youtube\.com|youtu\.be)$/i],
+      ['Facebook','facebook',   /(^|\.)(facebook\.com|fb\.com|fb\.me|fb\.watch)$/i],
+      ['LinkedIn','linkedin',   /(^|\.)linkedin\.com$/i],
+      ['Strava','strava',       /(^|\.)strava\.(com|app\.link)$/i]
+    ];
+    function vard(v){
+      v=String(v||'').trim();
+      if(!v) return '';
+      if(!/^https?:\/\//i.test(v)){
+        /* "esther.nordberg" är ett användarnamn, inte en domän – bara det
+           som ser ut som en riktig adress ska prövas mot tjänsterna. */
+        if(!/^([a-z0-9-]+\.)+[a-z]{2,}([\/?#]|$)/i.test(v)) return '';
+        v='https://'+v;
+      }
+      try{ return new URL(v).hostname.replace(/^www\./i,''); }catch(e){ return ''; }
+    }
+    var fel=[];
+    TJANST.forEach(function(t){
+      var el=document.getElementById(t[1]); if(!el) return;
+      var h=vard(el.value); if(!h) return;
+      TJANST.forEach(function(u){
+        if(u[1]!==t[1] && u[2].test(h)) fel.push(t[0]+' → '+u[0]);
+      });
+    });
+    var hw=vard((document.getElementById('webb')||{}).value);
+    if(hw) TJANST.forEach(function(u){
+      if(u[2].test(hw)) fel.push(O('webb')+' → '+u[0]);
+    });
+    if(fel.length){
+      visa('fel', O('felFeltB'), O('felFelt')+' '+fel.join(', '));
+      return;
+    }
+
     var kropp=new URLSearchParams();
     Object.keys(d).forEach(function(k){ kropp.append(FALT[k], d[k]); });
     ['affiliate','stod','guide','kontakt'].forEach(function(k){

@@ -168,6 +168,20 @@ function offTom(nyckel, text){
   return '<span class="kanal off tomrad">'+svg+'<span class="txt">'+esc(text)+'</span></span>';
 }
 
+/* Skrev åkaren bara en adress i sponsorrutan, utan namn, stod hela adressen
+   på knappen – "rossignol.com/se-en/" i stället för "Rossignol". Domänens
+   egennamn duger som namn, och bindestreck blir mellanslag: vola-racing.com
+   blir "Vola Racing". Bättre än att kräva rätt format av varje åkare. */
+function sponsorNamnUrAdress(adress){
+  try{
+    const del=new URL(adress).hostname.replace(/^www\./i,'').split('.');
+    const ord = del.length>2 && /^(co|com|org|net|gov|ac)$/i.test(del[del.length-2])
+      ? del[del.length-3] : del[0];
+    return ord.split('-').filter(Boolean)
+      .map(o=>o.charAt(0).toUpperCase()+o.slice(1)).join(' ');
+  }catch(e){ return String(adress).replace(/^https?:\/\/(www\.)?/,''); }
+}
+
 const PROFILKOL=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
 const PROFILBAS={instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/@',
   youtube:'https://www.youtube.com/@',facebook:'https://www.facebook.com/',
@@ -545,7 +559,7 @@ for(const a of Object.values(akare)){
     if(egna && egna.sponsorer.length)
       inneh+=`<h3 class="underrub">Sponsors</h3><div class="kanaler">`+
         egna.sponsorer.map(x=>kanalKnapp('sponsor', x.adress,
-          x.namn||String(x.adress).replace(/^https?:\/\/(www\.)?/,''))).join('')+`</div>`;
+          x.namn||sponsorNamnUrAdress(x.adress))).join('')+`</div>`;
     inneh+=`</section>`;
   }
 
