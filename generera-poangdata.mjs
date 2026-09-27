@@ -59,6 +59,13 @@ for (let n = 30; n >= 1; n--) {
 }
 if (!zip) throw new Error('Hittade ingen punktlista hos FIS');
 
+/* Spara zippen at nasta steg i bygget. Tidigare hamtade generera-webbplats.mjs
+   samma fil en gang till, direkt efter det har skriptet - och da hade FIS
+   redan fatt ett femtiotal anrop fran samma adress och borjade avvisa allt.
+   Da dog steg 5 pa "Hittade ingen punktlista", trots att listan fanns.
+   En hamtning racker. */
+writeFileSync(new URL('./fis-punktlista.zip', import.meta.url), zip);
+
 const filer = zipFiler(zip);
 const hitta = s => filer[Object.keys(filer).find(k => k.endsWith(s))];
 const hdr = tabell(hitta('hdr.csv'))[0];
