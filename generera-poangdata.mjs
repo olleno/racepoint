@@ -54,7 +54,14 @@ for (let n = 30; n >= 1; n--) {
     `https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`);
   if (svar.ok) {
     const b = Buffer.from(await svar.arrayBuffer());
-    if (b.length > 1000 && b.readUInt32LE(0) === 0x04034b50) { zip = b; nummer = n; break; }
+    if (b.length > 1000 && b.readUInt32LE(0) === 0x04034b50) {
+      /* FIS levererar ibland en avhuggen fil: borjan ser riktig ut men slutet
+         saknas, och da smaller uppackningen med Z_BUF_ERROR langre ner. Prova
+         att packa upp har och ga vidare till nasta lista om filen ar trasig,
+         i stallet for att falla hela bygget pa en halv nedladdning. */
+      try { zipFiler(b); } catch (fel) { continue; }
+      zip = b; nummer = n; break;
+    }
   }
 }
 if (!zip) throw new Error('Hittade ingen punktlista hos FIS');
