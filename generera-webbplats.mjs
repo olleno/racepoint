@@ -502,7 +502,8 @@ const akareAdress = a => `/alpine-skiing/athletes/${a.fis}-${slug(namnSnyggt(a.e
 
 /* ─────────────── 3. skriv sidor ─────────────── */
 if(existsSync(UT)) rmSync(UT,{recursive:true});
-['','/alpine-skiing','/alpine-skiing/races','/alpine-skiing/athletes','/ikoner']
+['','/alpine-skiing','/alpine-skiing/races','/alpine-skiing/athletes',
+ '/alpine-skiing/clubs','/ikoner']
   .forEach(m=>mkdirSync(UT+m,{recursive:true}));
 
 const adresser=[];
@@ -519,6 +520,22 @@ function skriv(adress, html){
    just i dag. Formen är avsiktligt kompakt – en rad per åkare. */
 const register=[];
 let antalAkare=0;
+
+/* Klubbsidorna: en sida per klubb med klubbens egna akare och hur manga av
+   dem som fyllt i sin sida. En tranare som ser "8 av 34" paminner om det pa
+   nasta traning, och en akare som ser en klubbkamrat sta Complete bredvid
+   sitt eget Empty fyller i. */
+const KLUBBSIDOR={};
+const klubbNyckel=(nat,namn)=>nat+'|'+String(namn||'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,'');
+const klubbAdress=(nat,namn)=>`/alpine-skiing/clubs/${slug(nat)}-${slug(namn)}.html`;
+const PROFILFALT=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
+function ifyllt(egna){
+  if(!egna) return 0;
+  let n=(egna.sociala||[]).filter(x=>PROFILFALT.includes(x.typ)).length;
+  if((egna.sponsorer||[]).length) n++;
+  return Math.min(n,8);
+}
 for(const a of Object.values(akare)){
   const grenar=GRENAR.filter(g=>a.poang[g]!=null);
   if(!grenar.length) continue;                 // ingen data, ingen sida
@@ -578,12 +595,26 @@ for(const a of Object.values(akare)){
     inneh+=`</section>`;
   }
 
+  let klubbsidaAdress='';
+  if(klubbVisa){
+    const nyckel=klubbNyckel(a.nat, klubbVisa);
+    const post=KLUBBSIDOR[nyckel] || (KLUBBSIDOR[nyckel]={
+      nat:a.nat, namn:klubbVisa, webb:kl&&kl.akta?kl.webb:'',
+      adress:klubbAdress(a.nat, klubbVisa), akare:[]});
+    if(!post.webb && kl && kl.akta) post.webb=kl.webb;
+    post.akare.push({fis:a.fis, visa, fodd:a.fodd, adress,
+      ifyllt:ifyllt(egna), poang:a.poang[basta]});
+    klubbsidaAdress=post.adress;
+  }
+
   inneh+=`<section class="kort"><h2>FIS and club</h2><div class="kanaler bred">`+
     offKnapp('live','/alpine-skiing/','Live race points')+
     offKnapp('bio','https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid='+esc(a.id)+'&type=result','FIS biography')+
     offKnapp('forbund',fb.webb,fb.namn,fb.akta)+
     (kl?offKnapp('klubb',kl.webb,kl.namn,kl.akta):offTom('klubb','Club not listed by FIS'))+
-    `</div></section>`;
+    `</div>`+
+    (klubbsidaAdress?`<div class="lankar"><a href="${esc(klubbsidaAdress)}">Everyone from ${esc(klubbVisa)}</a></div>`:'')+
+    `</section>`;
 
   /* Utrustning och resa. Bara aktiva partners i konfliktfria kategorier, och
      alltid med utmärkning – reklam måste gå att känna igen. */
@@ -639,6 +670,96 @@ a couple of minutes, and everything is checked before it appears.</p>
   antalAkare++;
 }
 console.log(`Skrev ${antalAkare} åkarsidor`);
+
+/* ---- klubbsidor ---- */
+let antalKlubb=0;
+const klubbRegister=[];
+for(const k of Object.values(KLUBBSIDOR)){
+  k.akare.sort((x,y)=>(x.poang==null?1e9:x.poang)-(y.poang==null?1e9:y.poang));
+  const antal=k.akare.length;
+  const klara=k.akare.filter(a=>a.ifyllt>0).length;
+  const rubrik=`${k.namn} – athletes and FIS points`;
+
+  let inneh=`<h1>${flagga(k.nat)} ${esc(k.namn)}</h1>
+<p class="ingress">${antal} athlete${antal===1?'':'s'} on the FIS alpine points list${
+  k.webb?' · <a href="'+esc(k.webb)+'" rel="noopener">club website</a>':''}</p>
+<section class="kort"><h2>Pages filled in</h2><div class="nums">
+<div><div class="n">${klara}</div><small>of ${antal} filled in</small></div>
+<div><div class="n">${antal-klara}</div><small>still empty</small></div>
+</div><p class="not">Every athlete below already has a page, built from the official FIS
+points list. What the athlete adds is social media, own website and sponsors — that is
+what turns the page into something to show a local sponsor.</p></section>
+<section class="kort"><h2>Athletes</h2><div class="tblwrap"><table>
+<tr><th>Athlete</th><th class="n">Born</th><th class="n">Best points</th><th class="n">Page</th></tr>`;
+  k.akare.forEach(a=>{
+    const status = a.ifyllt===0 ? '<span class="muted">Empty</span>'
+                 : a.ifyllt>=8  ? '<span class="klar">Complete</span>'
+                 : `<span class="delvis">${a.ifyllt} of 8</span>`;
+    inneh+=`<tr><td><a href="${esc(a.adress)}">${esc(a.visa)}</a></td>`+
+      `<td class="n muted">${esc(a.fodd||'')}</td>`+
+      `<td class="n">${a.poang!=null?a.poang.toFixed(2):'–'}</td>`+
+      `<td class="n">${status}</td></tr>`;
+  });
+  inneh+=`</table></div></section>
+
+<section class="kort dinsida"><h2>Is one of them you?</h2>
+<p class="not">Adding your links takes a couple of minutes and costs nothing. Everything is
+checked before it appears.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a>
+<a class="knapp" href="/alpine-skiing/guide.html">Three ways to fund your season</a></div></section>
+
+<section class="kort"><h2>For the club</h2>
+<p class="not">Nothing here needs an account, an approval or any administration from the
+club. The one thing that helps is passing this on. Text ready to paste into the parents'
+chat:</p>
+<blockquote class="klipp">Every one of our racers now has their own page on Race Point with
+their FIS results. Add your Instagram and your sponsors' logos and you have something
+concrete to show the firm that pays. Takes a couple of minutes and costs nothing:
+${esc(DOMAN + k.adress)}</blockquote>
+<p class="not">Something wrong in the list — a spelling, a wrong club, someone who has
+stopped? <a href="/alpine-skiing/kontakt.html">Tell us</a> and we fix it the same day.</p>
+</section>`;
+
+  skriv(k.adress, sida({
+    titel:`${rubrik} | Race Point`,
+    beskrivning:`${k.namn}: ${antal} athlete${antal===1?'':'s'} on the FIS alpine points list, with points, ranking and results.`,
+    adress:k.adress, rot:'../../',
+    brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › <a href="./">Clubs</a> › ${esc(k.namn)}`,
+    innehall:inneh,
+    jsonld:{'@context':'https://schema.org','@type':'SportsTeam', name:k.namn,
+      sport:'Alpine skiing', ...(k.webb?{url:k.webb}:{})}
+  }));
+  klubbRegister.push({nat:k.nat, namn:k.namn, adress:k.adress, antal, klara});
+  antalKlubb++;
+}
+console.log(`Skrev ${antalKlubb} klubbsidor`);
+
+const klubbPerNation={};
+klubbRegister.forEach(k=>(klubbPerNation[k.nat]=klubbPerNation[k.nat]||[]).push(k));
+let klubbInneh=`<h1>Alpine skiing clubs</h1>
+<p class="ingress">${klubbRegister.length} clubs with athletes on the current FIS points
+list. Each club page lists its own athletes and their points.</p>`;
+Object.keys(klubbPerNation).sort().forEach(nat=>{
+  const lista=klubbPerNation[nat].slice().sort((a,b)=>a.namn.localeCompare(b.namn,'sv'));
+  klubbInneh+=`<section class="kort"><h2>${flagga(nat)} ${esc(nat)} · ${lista.length}</h2>
+<div class="lankar">`+lista.map(k=>
+    `<a href="${esc(k.adress.replace('/alpine-skiing/clubs/',''))}">${esc(k.namn)} <span class="sm">${k.antal}</span></a>`
+  ).join('')+`</div></section>`;
+});
+skriv('/alpine-skiing/clubs/index.html', sida({
+  titel:'Alpine skiing clubs – athletes and FIS points | Race Point',
+  beskrivning:`All ${klubbRegister.length} clubs with athletes on the FIS alpine points list.`,
+  adress:'/alpine-skiing/clubs/', rot:'../../',
+  brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Clubs`,
+  innehall:klubbInneh
+}));
+
+mkdirSync(join(UT,'alpine-skiing'),{recursive:true});
+writeFileSync(join(UT,'alpine-skiing','fis-klubbsidor.js'),
+`/* Skapad av generera-webbplats.mjs ${new Date().toISOString().slice(0,10)}
+   Klubbar med egen sida: nation, namn, adress, antal åkare, antal ifyllda. */
+window.FIS_KLUBBSIDOR = ${JSON.stringify(klubbRegister)};
+`);
 
 /* Registret som en egen fil, hämtas först när någon börjar söka. */
 register.sort((x,y)=>x.split('|')[1].localeCompare(y.split('|')[1],'sv'));
@@ -815,7 +936,12 @@ allaTavlingar.forEach(t=>{
 listInneh+=`</table></div></section>
 <section class="kort"><h2>Athletes</h2>
 <p class="not">${antalAkare} athletes with valid FIS points, each with their points,
-world ranking and results. Find them through a race, or search for the name.</p></section>`;
+world ranking and results. Find them through a race, or search for the name.</p>
+<div class="lankar"><a href="../athletes/">All athletes</a></div></section>
+<section class="kort"><h2>Clubs</h2>
+<p class="not">${antalKlubb} clubs, each with its own athletes, their points and how many
+of them have filled in their page.</p>
+<div class="lankar"><a href="../clubs/">All clubs</a></div></section>`;
 skriv('/alpine-skiing/races/index.html', sida({
   titel:'Alpine skiing races – results, penalty and FIS points | Race Point',
   beskrivning:'Every FIS alpine race with live timing: results, applied penalty and the FIS points each athlete scored.',
@@ -921,7 +1047,7 @@ writeFileSync(join(UT,'stil.css'), `:root{--bg:#f4f6f8;--card:#fff;--ink:#0f1419
 --gren-telemark:#7d6b23;--gren-speed:#b4213d;--gren-freeride:#3f6212;
 --sport:var(--gren-alpint);
 --guld:#9a7209;--guld-bg:#fdf4dd;--silver:#5d6672;--silver-bg:#eef1f5;
---brons:#96521f;--brons-bg:#fbeee2}
+--brons:#96521f;--brons-bg:#fbeee2;--ok:#0a7a41}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1014;--card:#161a1f;--ink:#e9edf2;--ink2:#c3cad3;
 --muted:#8e99a6;--line:#252b32;--line2:#1d2228;--accent:#63a8ff;--accent-bg:#14243a;
 --sigill:#dfe7f0;--shadow:0 1px 3px rgba(0,0,0,.4);
@@ -929,7 +1055,7 @@ writeFileSync(join(UT,'stil.css'), `:root{--bg:#f4f6f8;--card:#fff;--ink:#0f1419
 --gren-freestyle:#f472b6;--gren-snowboard:#38bdd8;--gren-masters:#93a3b5;
 --gren-telemark:#cbb85a;--gren-speed:#ff6b81;--gren-freeride:#a3d05a;
 --guld:#e3bc4d;--guld-bg:#2b2513;--silver:#aab4c0;--silver-bg:#20262d;
---brons:#d59462;--brons-bg:#2b1f16}}
+--brons:#d59462;--brons-bg:#2b1f16;--ok:#4ec281}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
 font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 -webkit-font-smoothing:antialiased}
@@ -1051,6 +1177,11 @@ background:#fdf3e3;border-radius:8px;padding:8px 11px}
 border:1px dashed var(--line);border-radius:8px;padding:6px 11px}
 .lankar a.knapp{background:var(--sport);color:#fff;border-color:var(--sport);font-weight:620}
 .lankar a.knapp:hover{filter:brightness(1.08)}
+.klar{color:var(--ok);font-weight:620}
+.delvis{color:var(--ink2);font-variant-numeric:tabular-nums}
+.klipp{margin:0;padding:12px 14px;background:var(--accent-bg);border-radius:9px;
+border-left:3px solid var(--accent);font-size:13.5px;line-height:1.6;color:var(--ink2);
+word-break:break-word}
 .foot{font-size:12px;color:var(--muted);margin-top:30px;line-height:1.7;
 border-top:1px solid var(--line);padding-top:16px}
 @media(max-width:640px){.wrap{padding:14px 12px 60px}h1{font-size:20px}
