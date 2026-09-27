@@ -64,6 +64,7 @@ function zipFiler(buf){
   return filer;
 }
 const tabell = txt => {
+  if(!txt) return [];
   const rader=txt.trim().split('\r\n'), rubrik=rader[0].split('\t');
   return rader.slice(1).map(r=>{ const c=r.split('\t'), o={};
     rubrik.forEach((k,i)=>o[k]=c[i]); return o; });
