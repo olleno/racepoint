@@ -401,6 +401,16 @@ ${innehall}
 /* ─────────────── 1. hämta data ─────────────── */
 console.log('Hämtar FIS punktlista …');
 let zip=null, nummer=null;
+
+/* Steget fore har redan hamtat listan och sparat den. Att hamta om den ger
+   inget nytt, och FIS avvisar den som fragar for manga ganger fran samma
+   adress - det var precis det som sankte bygget. */
+const sparad = join(HAR, 'fis-punktlista.zip');
+if(existsSync(sparad)){
+  const b=readFileSync(sparad);
+  if(b.length>1000 && b.readUInt32LE(0)===0x04034b50) zip=b;
+}
+if(!zip)
 for(let n=30;n>=1;n--){
   const svar=await fetch(`https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`);
   if(svar.ok){
@@ -419,7 +429,11 @@ const res=tabell(hitta('res.csv'));
 console.log(`  ${hdr.Listname}: ${com.length} åkare, ${rac.length} tävlingar, ${res.length} resultat`);
 
 console.log('Hämtar kommande tävlingar …');
-const liveHtml=await (await fetch('https://www.fis-ski.com/DB/alpine-skiing/live.html')).text();
+/* Kommande tavlingar ar en bonus, inte grunden. Svarar inte FIS ska sajten
+   byggas anda - med poang och resultat, men utan kommande lopp. */
+let liveHtml='';
+try{ liveHtml=await (await fetch('https://www.fis-ski.com/DB/alpine-skiing/live.html')).text(); }
+catch(e){ console.log('  kunde inte hamta kommande tavlingar - bygger vidare'); }
 const kommande=[];
 for(const bit of liveHtml.split('class="g-row"').slice(1)){
   const codex=(bit.match(/clip gray"[^>]*>\s*([0-9]{3,5})\s*</)||[])[1];
