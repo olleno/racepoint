@@ -48,11 +48,29 @@ const tabell = txt => {
 };
 
 /* ---------- 1. hämta senaste punktlistan ---------- */
+/* FIS svarar inte pa anrop utan webblasarhuvuden, och avvisar den som fragar
+   manga ganger i rad utan paus. Bygget foll pa det: samma kod som gick igenom
+   en dag fick allt avvisat nasta. Darfor riktiga huvuden och en kort paus.
+   Svarskoderna sparas ocksa, for "Hittade ingen punktlista" betyder annars tva
+   helt olika saker - att listan inte finns, eller att vi blivit avvisade. */
+const HUVUD = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+                '(KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+  'Accept': 'application/zip,application/octet-stream,*/*;q=0.8',
+  'Accept-Language': 'en;q=0.9'
+};
+const paus = ms => new Promise(r => setTimeout(r, ms));
+const svarskoder = [];
 let zip = null, nummer = null;
 for (let n = 30; n >= 1; n--) {
-  const svar = await fetch(
-    `https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`);
-  if (svar.ok) {
+  let svar;
+  try {
+    svar = await fetch(
+      `https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`,
+      { headers: HUVUD, signal: AbortSignal.timeout(20000) });
+  } catch (fel) { svarskoder.push(n + ':' + (fel.name || 'fel')); await paus(150); continue; }
+  if (!svar.ok) { svarskoder.push(n + ':' + svar.status); await paus(150); continue; }
+  {
     const b = Buffer.from(await svar.arrayBuffer());
     if (b.length > 1000 && b.readUInt32LE(0) === 0x04034b50) {
       /* FIS levererar ibland en avhuggen fil: borjan ser riktig ut men slutet
@@ -64,7 +82,8 @@ for (let n = 30; n >= 1; n--) {
     }
   }
 }
-if (!zip) throw new Error('Hittade ingen punktlista hos FIS');
+if (!zip) throw new Error('Hittade ingen punktlista hos FIS. FIS svarade: ' +
+  svarskoder.slice(0, 10).join(' ') + (svarskoder.length > 10 ? ' ...' : ''));
 
 /* Spara zippen at nasta steg i bygget. Tidigare hamtade generera-webbplats.mjs
    samma fil en gang till, direkt efter det har skriptet - och da hade FIS
