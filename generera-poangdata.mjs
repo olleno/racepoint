@@ -6,7 +6,7 @@
    Kräver Node 18 eller nyare. Inga paket behöver installeras. */
 
 import { inflateRawSync } from 'node:zlib';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const SASONG = 27;                       // 27 = säsongen 2026/27
 const GRENAR = ['DH', 'SL', 'GS', 'SG', 'AC'];
@@ -61,36 +61,80 @@ const HUVUD = {
 };
 const paus = ms => new Promise(r => setTimeout(r, ms));
 const svarskoder = [];
+
+/* Fraga FIS vilken lista som ar den senaste i stallet for att gissa.
+   Tidigare provade bygget filnamn fran nummer 30 och nedat tills nagot
+   svarade. De flesta av dem finns inte, och efter ett tiotal nej borjar FIS
+   avvisa allt fran samma adress - aven listan som faktiskt finns - med 404.
+   Det var det som fallde bygget natt efter natt: samma adresser svarade 200
+   nar man bad om dem en och en, men 404 nar bygget bad om trettio i rad.
+   FIS egen listsida har filnamnen i sig, sa ett anrop dit och ett for
+   nedladdningen racker. Tva anrop i stallet for trettio. */
+const LISTSIDA = 'https://www.fis-ski.com/DB/alpine-skiing/fis-points-lists.html';
+const NUMMERFIL = new URL('./fis-listnummer.txt', import.meta.url);
+const adress = n => `https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`;
+
+let attProva = [];
+try {
+  const html = await (await fetch(LISTSIDA,
+    { headers: HUVUD, signal: AbortSignal.timeout(30000) })).text();
+  const re = new RegExp('ALFP(\\d+)' + SASONG + 'F\\.zip', 'g');
+  attProva = [...new Set([...html.matchAll(re)].map(m => Number(m[1])))]
+               .sort((a, b) => b - a).slice(0, 3);
+} catch (fel) { svarskoder.push('listsida:' + (fel.name || 'fel')); }
+
+/* Gick listsidan inte att lasa: utga fran forra korningens nummer och prova
+   det plus nasta tva. Fortfarande en handfull anrop, inte trettio. */
+if (!attProva.length && existsSync(NUMMERFIL)) {
+  const sist = Number(readFileSync(NUMMERFIL, 'utf8').trim());
+  if (sist > 0) attProva = [sist + 1, sist, sist + 2];
+}
+if (!attProva.length) attProva = [13, 12, 14];
+
 let zip = null, nummer = null;
-for (let n = 30; n >= 1; n--) {
+for (const n of attProva) {
+  await paus(1000);
   let svar;
   try {
-    svar = await fetch(
-      `https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`,
-      { headers: HUVUD, signal: AbortSignal.timeout(20000) });
-  } catch (fel) { svarskoder.push(n + ':' + (fel.name || 'fel')); await paus(150); continue; }
-  if (!svar.ok) { svarskoder.push(n + ':' + svar.status); await paus(150); continue; }
-  {
-    const b = Buffer.from(await svar.arrayBuffer());
-    if (b.length > 1000 && b.readUInt32LE(0) === 0x04034b50) {
-      /* FIS levererar ibland en avhuggen fil: borjan ser riktig ut men slutet
-         saknas, och da smaller uppackningen med Z_BUF_ERROR langre ner. Prova
-         att packa upp har och ga vidare till nasta lista om filen ar trasig,
-         i stallet for att falla hela bygget pa en halv nedladdning. */
-      try { zipFiler(b); } catch (fel) { continue; }
-      zip = b; nummer = n; break;
-    }
-  }
+    svar = await fetch(adress(n), { headers: HUVUD, signal: AbortSignal.timeout(30000) });
+  } catch (fel) { svarskoder.push(n + ':' + (fel.name || 'fel')); continue; }
+  if (!svar.ok) { svarskoder.push(n + ':' + svar.status); continue; }
+  const b = Buffer.from(await svar.arrayBuffer());
+  if (b.length < 1000 || b.readUInt32LE(0) !== 0x04034b50) { svarskoder.push(n + ':ejzip'); continue; }
+  /* FIS levererar ibland en avhuggen fil: borjan ser riktig ut men slutet
+     saknas, och da smaller uppackningen med Z_BUF_ERROR langre ner. Prova
+     att packa upp har och ga vidare till nasta lista om filen ar trasig,
+     i stallet for att falla hela bygget pa en halv nedladdning. */
+  try { zipFiler(b); } catch (fel) { svarskoder.push(n + ':trasig'); continue; }
+  zip = b; nummer = n; break;
 }
-if (!zip) throw new Error('Hittade ingen punktlista hos FIS. FIS svarade: ' +
+
+/* FIS avvisar ibland GitHubs servrar helt: samma adresser som svarar 200
+   hemifran ger 404 fran bygget, i timmar eller dygn, och sedan slapper det av
+   sig sjalvt. Da ska bygget inte falla - da ska det anvanda forra nattens fil.
+   Den ligger kvar mellan korningarna tack vare cache-steget i publicera.yml.
+   Sidan blir nagra dygn gammal i stallet for att sluta uppdateras alls. */
+let reserv = false;
+const SPARAD = new URL('./fis-punktlista.zip', import.meta.url);
+if (!zip && existsSync(SPARAD)) {
+  const b = readFileSync(SPARAD);
+  try { zipFiler(b); zip = b; reserv = true; } catch (fel) { /* trasig reserv */ }
+}
+if (!zip) throw new Error('Hittade ingen punktlista hos FIS och ingen sparad fil ' +
+  'att falla tillbaka pa. FIS svarade: ' +
   svarskoder.slice(0, 10).join(' ') + (svarskoder.length > 10 ? ' ...' : ''));
+if (reserv) console.log('FIS avvisade alla anrop (' + svarskoder.slice(0, 5).join(' ') +
+  '). Bygger vidare pa den sparade punktlistan fran forra korningen.');
 
 /* Spara zippen at nasta steg i bygget. Tidigare hamtade generera-webbplats.mjs
    samma fil en gang till, direkt efter det har skriptet - och da hade FIS
    redan fatt ett femtiotal anrop fran samma adress och borjade avvisa allt.
    Da dog steg 5 pa "Hittade ingen punktlista", trots att listan fanns.
    En hamtning racker. */
-writeFileSync(new URL('./fis-punktlista.zip', import.meta.url), zip);
+if (!reserv) {
+  writeFileSync(SPARAD, zip);
+  writeFileSync(NUMMERFIL, String(nummer));
+}
 
 const filer = zipFiler(zip);
 const hitta = s => filer[Object.keys(filer).find(k => k.endsWith(s))];
@@ -162,7 +206,13 @@ window.FIS_CFG = ${JSON.stringify(cfg, null, 2)};
 
 /* ---------- 2. bygg tävlingskalendern ---------- */
 // kommande och pågående lopp: FIS egen livetiming-sida
-const liveHtml = await (await fetch('https://www.fis-ski.com/DB/alpine-skiing/live.html')).text();
+let liveHtml = '';
+try {
+  liveHtml = await (await fetch('https://www.fis-ski.com/DB/alpine-skiing/live.html',
+    { headers: HUVUD, signal: AbortSignal.timeout(20000) })).text();
+} catch (fel) {
+  console.log('Kom inte at FIS livesida - kalendern byggs pa avgjorda lopp bara.');
+}
 const kommande = [];
 for (const bit of liveHtml.split('class="g-row"').slice(1)) {
   const codex = (bit.match(/clip gray"[^>]*>\s*([0-9]{3,5})\s*</) || [])[1];
