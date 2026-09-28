@@ -1,0 +1,28 @@
+name: Diagnos FIS 3
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: curl mot node
+        run: |
+          UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+          Z=https://www.fis-ski.com/DB/v2/download/fis-list/ALFP1327F.zip
+          echo "CURL-naken: $(curl -s -o /tmp/a -w '%{http_code}/%{size_download}' --max-time 25 "$Z")"
+          echo "CURL-ua: $(curl -s -o /tmp/b -w '%{http_code}/%{size_download}' -A "$UA" --max-time 25 "$Z")"
+          cat > /tmp/t.mjs <<'EOF'
+          const Z='https://www.fis-ski.com/DB/v2/download/fis-list/ALFP1327F.zip';
+          const UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
+          let r = await fetch(Z);
+          console.log('NODE-naken: ' + r.status);
+          r = await fetch(Z, {headers:{'User-Agent':UA,'Accept':'application/zip,*/*;q=0.8','Accept-Language':'en;q=0.9'}});
+          console.log('NODE-huvuden: ' + r.status);
+          r = await fetch(Z, {headers:{'User-Agent':'curl/8.5.0'}});
+          console.log('NODE-curlua: ' + r.status);
+          EOF
+          sed -i 's/^          //' /tmp/t.mjs
+          node /tmp/t.mjs
