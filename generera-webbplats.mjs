@@ -377,6 +377,7 @@ function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall
 <meta property="og:description" content="${esc(beskrivning)}">
 <meta property="og:url" content="${esc(DOMAN + adress)}">
 ${jsonld ? '<script type="application/ld+json">'+JSON.stringify(jsonld)+'</script>' : ''}
+<script data-goatcounter="https://racepoint.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <div class="wrap">
