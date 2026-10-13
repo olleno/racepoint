@@ -73,14 +73,20 @@
      "Abderrahmane Nacer Ellah Bouderbala", och ett kort där namnet rinner ut
      över kanten är värre än ett kort med lite mindre namn. */
   function skrivKrympt(k, text, x, y, vikt, familj, start, minsta, bredd) {
-    var s = start;
+    var s = start, t = String(text == null ? '' : text);
     var fore = vikt ? vikt + ' ' : '';
     for (;;) {
       k.font = fore + s + 'px ' + familj;
-      if (k.measureText(text).width <= bredd || s <= minsta) break;
-      s -= 2;
+      if (k.measureText(t).width <= bredd) break;
+      if (s > minsta) { s -= 2; continue; }
+      /* Nedre gransen nadd. Da kortas namnet av i stallet for att krympa
+         vidare - "Edmondo Maurizio Duperty Villafranca Boscone" blev annars
+         en rad grastecken ingen kunde lasa. */
+      while (t.length > 1 && k.measureText(t + '…').width > bredd) t = t.slice(0, -1);
+      t = t.replace(/\s+$/, '') + '…';
+      break;
     }
-    k.fillText(text, x, y);
+    k.fillText(t, x, y);
     return s;
   }
 
@@ -193,7 +199,7 @@
     var under = [d.klubb, d.nat].filter(Boolean).join(' · ');
     if (under) {
       k.fillStyle = DIS;
-      skrivKrympt(k, under, 64, 936, '600', TEXT, 30, 18, STOR - 128);
+      skrivKrympt(k, under, 64, 936, '600', TEXT, 30, 22, STOR - 128);
     }
 
     fot(k, 'CALCULATED IN THE FINISH AREA');
@@ -249,7 +255,7 @@
       k.fillText(('0' + (i + 1)).slice(-2), 64, y + 34);
 
       k.fillStyle = VIT;
-      skrivKrympt(k, r.namn || '', 128, y + 34, '600', TEXT, 32, 19, 480);
+      skrivKrympt(k, r.namn || '', 128, y + 34, '600', TEXT, 32, 26, 470);
 
       k.fillStyle = DIS;
       k.font = '600 24px ' + TEXT;
