@@ -867,6 +867,22 @@ skriv('/alpine-skiing/athletes/index.html', sida({
   innehall:listaInneh
 }));
 
+/* ---- Boende vid tävlingsorten (Stay22, Olles konto aid=wineradar, 13 okt 2026) ----
+   Familjer och tränare reser till tävlingarna, så kommande tävlingar får en ruta
+   med boende nära backen. Det här är sajtens egen intäkt – ingen åkare berörs,
+   och rutan är alltid märkt som reklam. */
+const STAY22_AID='wineradar';
+const LANDNAMN=new Intl.DisplayNames(['en'],{type:'region'});
+function resaRuta(plats, nat, datum){
+  const iso=ISO[nat]; const land=iso?LANDNAMN.of(iso):'';
+  const d=new Date(datum+'T12:00:00Z'); const dag=n=>new Date(d.getTime()+n*864e5).toISOString().slice(0,10);
+  const adr=encodeURIComponent([plats,land].filter(Boolean).join(', '));
+  const url=`https://www.stay22.com/allez/roam?aid=${STAY22_AID}&address=${adr}&checkin=${dag(-1)}&checkout=${dag(1)}&campaign=rp_race`;
+  return `<section class="kort"><h2>Staying near the race</h2>
+<p class="reklamnot">Advertising. Race Point earns a commission if you book through this link. You pay the same price.</p>
+<div class="lankar"><a href="${esc(url)}" target="_blank" rel="noopener sponsored nofollow">Hotels and apartments near ${esc(plats)} <span class="sm">${esc(dag(-1))} – ${esc(dag(1))}</span></a></div></section>`;
+}
+
 /* ---- tävlingssidor: avgjorda ---- */
 let antalTavling=0;
 for(const t of Object.values(tavlingar)){
@@ -929,7 +945,8 @@ for(const k of kommande){
 <section class="kort"><h2>Live race points</h2>
 <p class="not">This race has not been run yet. During the race Race Point works out the
 penalty and every athlete's new FIS points after each finish, instead of waiting days for FIS.</p>
-<div class="lankar"><a href="/alpine-skiing/#tavling/${esc(k.codex)}">Open live page</a></div></section>`;
+<div class="lankar"><a href="/alpine-skiing/#tavling/${esc(k.codex)}">Open live page</a></div></section>`+
+  resaRuta(k.plats, k.nat, k.datum);
   skriv(adress, sida({
     titel:`${rubrik}, ${k.datum} – live FIS points | Race Point`,
     beskrivning:`${rubrik}, ${k.datum}. Live results, penalty and new FIS points as the race is run. FIS codex ${k.codex}.`,
