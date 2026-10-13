@@ -1043,13 +1043,29 @@ skriv('/alpine-skiing/races/index.html', sida({
   innehall:listInneh
 }));
 
+/* ---- övriga grenar (längd först, 13 okt 2026) – se generera-gren.mjs ----
+   En gren som fallerar får aldrig stoppa alpint: varje gren i egen try/catch. */
+const KLARA_GRENAR=new Set();
+try{
+  const {GRENER, byggGren} = await import('./generera-gren.mjs');
+  for(const g of GRENER){
+    try{
+      await byggGren(g, {esc, slug, flagga, sida, skriv, tabell, zipFiler, forbundLank, klubbLank,
+        offKnapp, offTom, namnSnyggt, writeFileSync, mkdirSync, join, UT, DOMAN, SASONG});
+      KLARA_GRENAR.add(g.namn);
+    }catch(e){ console.log(`${g.namn} kunde inte byggas den här gången: ${e.message} – alpint påverkas inte.`); }
+  }
+}catch(e){ console.log('generera-gren.mjs kunde inte laddas: '+e.message); }
+
 /* ---- startsidan för racepoints.com ---- */
 /* FIS egna grenar, hämtade ur deras kalenderval (sectorcode). Grässkidor
    är med hos FIS men hoppas över här – det är ingen snösport. */
 const grenarPaSidan=[
   {namn:'Alpine Skiing', adress:'alpine-skiing/', klar:true, farg:'alpint',
    text:'Live penalty and FIS points, race by race.'},
-  {namn:'Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
+  KLARA_GRENAR.has('Cross-Country')
+    ? {namn:'Cross-Country', adress:'cross-country/', klar:true, farg:'langd', text:'FIS points, world ranking and results. Live points coming.'}
+    : {namn:'Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
   {namn:'Ski Jumping', adress:null, klar:false, farg:'backe', text:'Coming.'},
   {namn:'Nordic Combined', adress:null, klar:false, farg:'nordisk', text:'Coming.'},
   {namn:'Freestyle & Ski Cross', adress:null, klar:false, farg:'freestyle', text:'Coming.'},
