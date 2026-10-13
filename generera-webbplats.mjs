@@ -1315,3 +1315,22 @@ writeFileSync(join(UT,'sitemap.xml'), karta);
 
 console.log(`\nKlart. ${adresser.length} adresser i webbplats/`);
 console.log(`Sitemap: ${DOMAN}/sitemap.xml`);
+
+/* ---- IndexNow (Bing, Yandex, Seznam m.fl.), 13 okt 2026 ----
+   Berättar för sökmotorerna vilka sidor som ändrats i stället för att vänta på att de hittar dem.
+   Nyckeln är publik och ska ligga på sajten. Körs bara i GitHubs bygge. Pingen går före publiceringen,
+   men nyckelfilen finns kvar på sajten från förra natten, så kontrollen går igenom.
+   Tävlingssidor och översiktssidor varje natt; alla sidor på måndagar, när FIS nya lista slagit igenom. */
+const INDEXNOW_KEY='3b4bdc59d9a56740ddbda2b83acf1a6b';
+writeFileSync(join(UT, INDEXNOW_KEY+'.txt'), INDEXNOW_KEY+'\n');
+if(process.env.GITHUB_ACTIONS==='true'){
+  let urls=adresser.map(a=>DOMAN+a.replace(/index\.html$/,''));
+  if(new Date().getUTCDay()!==1) urls=urls.filter(u=>u.includes('/races/')||u.endsWith('/'));
+  try{
+    const r=await fetch('https://api.indexnow.org/indexnow',{method:'POST',
+      headers:{'Content-Type':'application/json; charset=utf-8'},
+      body:JSON.stringify({host:new URL(DOMAN).hostname, key:INDEXNOW_KEY,
+        keyLocation:`${DOMAN}/${INDEXNOW_KEY}.txt`, urlList:urls.slice(0,10000)})});
+    console.log(`IndexNow: ${urls.length} adresser – svar ${r.status}`);
+  }catch(e){ console.log('IndexNow misslyckades – bygget fortsätter: '+e.message); }
+}
