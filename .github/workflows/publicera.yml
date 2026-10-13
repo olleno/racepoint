@@ -33,12 +33,16 @@ jobs:
 
       # Sparar FIS-filen mellan körningar. Avvisar FIS bygget en natt
       # byggs sidan vidare på gårdagens lista i stället för att falla.
+      # fis-senaste/fis-baslinje är poang fran denna och forra punktlistan,
+      # och det ar skillnaden mellan dem som delningskortet visar.
       - name: Spara FIS-filen mellan körningar
         uses: actions/cache@v4
         with:
           path: |
             fis-punktlista.zip
             fis-listnummer.txt
+            fis-senaste.json
+            fis-baslinje.json
           key: fis-lista-${{ github.run_id }}
           restore-keys: fis-lista-
 
