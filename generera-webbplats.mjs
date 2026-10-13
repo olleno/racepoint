@@ -632,7 +632,7 @@ for(const a of Object.values(akare)){
     if(!post.webb && kl && kl.akta) post.webb=kl.webb;
     post.akare.push({fis:a.fis, visa, fodd:a.fodd, adress,
       ifyllt:ifyllt(egna), poang:a.poang[basta],
-      gren:GRENNAMN[basta]||basta, sank:sankning(a.fis, a.poang)});
+      gren:basta, sank:sankning(a.fis, a.poang)});
     klubbsidaAdress=post.adress;
   }
 
@@ -739,7 +739,7 @@ for(const k of Object.values(KLUBBSIDOR)){
   const medSank=k.akare.filter(a=>a.sank)
     .sort((x,y)=>y.sank.diff-x.sank.diff).slice(0,5);
   const kortRader=(medSank.length?medSank:k.akare.slice(0,5)).map(a=>a.sank
-    ? {namn:a.visa, gren:GRENNAMN[a.sank.gren]||a.sank.gren,
+    ? {namn:a.visa, gren:a.sank.gren,
        nu:+a.sank.nu.toFixed(2), forra:+a.sank.forra.toFixed(2)}
     : {namn:a.visa, gren:a.gren, nu:a.poang!=null?+a.poang.toFixed(2):null});
   const kortRubrik=medSank.length
