@@ -144,48 +144,42 @@
       k.font = '34px ' + SVART;
       k.fillText('POINTS DROPPED', 64, 330);
 
+      /* Grennamnet pa egen rad under talet. Bredvid talet gick "Giant Slalom"
+         utanfor kanten sa fort poangen var trestallig. */
       k.fillStyle = VIT;
-      k.font = '220px ' + SVART;
-      var txt = '−' + sankning.toFixed(2);
-      k.fillText(txt, 64, 520);
-      var slut = 64 + k.measureText(txt).width;
+      skrivKrympt(k, '−' + sankning.toFixed(2), 64, 520, '', SVART, 220, 110, STOR - 128);
 
       k.fillStyle = LJUS;
-      k.font = '46px ' + SVART;
-      k.fillText(String(d.gren || '').toUpperCase(), slut + 26, 520);
+      skrivKrympt(k, String(d.gren || '').toUpperCase(), 64, 580, '', SVART, 46, 24, STOR - 128);
 
-      var b = overstruken(k, forra.toFixed(2), 64, 610, '700 50px ' + TEXT, DIS2);
+      var b = overstruken(k, forra.toFixed(2), 64, 668, '700 50px ' + TEXT, DIS2);
 
       k.strokeStyle = DIS;
       k.lineWidth = 4;
       k.beginPath();
-      k.moveTo(64 + b + 28, 592); k.lineTo(64 + b + 102, 592);
-      k.moveTo(64 + b + 88, 580); k.lineTo(64 + b + 104, 592);
-      k.lineTo(64 + b + 88, 604);
+      k.moveTo(64 + b + 28, 650); k.lineTo(64 + b + 102, 650);
+      k.moveTo(64 + b + 88, 638); k.lineTo(64 + b + 104, 650);
+      k.lineTo(64 + b + 88, 662);
       k.stroke();
 
       k.fillStyle = VIT;
       k.font = '700 74px ' + TEXT;
-      k.fillText(nu.toFixed(2), 64 + b + 132, 614);
+      k.fillText(nu.toFixed(2), 64 + b + 132, 672);
     } else {
       k.fillStyle = ORANGE;
       k.font = '34px ' + SVART;
       k.fillText('FIS POINTS', 64, 330);
 
       k.fillStyle = VIT;
-      k.font = '230px ' + SVART;
-      var p = nu != null ? nu.toFixed(2) : '–';
-      k.fillText(p, 64, 530);
-      var slut2 = 64 + k.measureText(p).width;
+      skrivKrympt(k, nu != null ? nu.toFixed(2) : '–', 64, 530, '', SVART, 230, 110, STOR - 128);
 
       k.fillStyle = LJUS;
-      k.font = '46px ' + SVART;
-      k.fillText(String(d.gren || '').toUpperCase(), slut2 + 26, 530);
+      skrivKrympt(k, String(d.gren || '').toUpperCase(), 64, 590, '', SVART, 46, 24, STOR - 128);
 
       if (d.rank) {
         k.fillStyle = DIS;
         k.font = '600 42px ' + TEXT;
-        k.fillText('No. ' + d.rank + ' in the world', 64, 614);
+        k.fillText('No. ' + d.rank + ' in the world', 64, 668);
       }
     }
 
