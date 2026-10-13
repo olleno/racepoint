@@ -169,6 +169,47 @@ pts.forEach(p => {
   (poang[f] = poang[f] || {})[p.Disciplinecode] = p.Fispoints + '/' + (p.Position || '');
 });
 
+/* ---------- baslinje: poangen pa FORRA punktlistan ----------
+
+   Sajten ska kunna saga "du sankte fran 78.12 till 73.94". Punktlistan
+   innehaller bara nulaget, sa skillnaden maste bygget minnas sjalvt.
+
+   Tva filer, bada utanfor sajten och enbart for byggets eget bruk:
+     fis-senaste.json   poangen fran forra korningen
+     fis-baslinje.json  poangen fran forra PUNKTLISTAN
+
+   Listan byts ungefar en gang i veckan medan bygget kor varje natt. Darfor
+   flyttas senaste till baslinje forst nar listans namn andras - annars hade
+   baslinjen blivit gardagens identiska siffror och varje sankning sett ut
+   som noll. Filerna foljer med mellan nattbyggena via cache-steget i
+   publicera.yml. Forsta gangen finns ingen baslinje: da visas poangen utan
+   sankning, och nasta listbyte fyller i resten av sig sjalvt. */
+const SENASTFIL = new URL('./fis-senaste.json', import.meta.url);
+const BASFIL    = new URL('./fis-baslinje.json', import.meta.url);
+
+const enkelPoang = {};
+Object.keys(poang).forEach(f => {
+  const rad = {};
+  GRENAR.forEach(g => {
+    if (poang[f][g] != null) {
+      const v = parseFloat(String(poang[f][g]).split('/')[0]);
+      if (isFinite(v)) rad[g] = v;
+    }
+  });
+  if (Object.keys(rad).length) enkelPoang[f] = rad;
+});
+
+let senaste = null;
+if (existsSync(SENASTFIL)) {
+  try { senaste = JSON.parse(readFileSync(SENASTFIL, 'utf8')); }
+  catch (fel) { senaste = null; }
+}
+if (senaste && senaste.lista && senaste.lista !== cfg.lista && senaste.poang) {
+  writeFileSync(BASFIL, JSON.stringify(senaste));
+  console.log('Ny punktlista. Baslinjen ar nu ' + senaste.lista + '.');
+}
+writeFileSync(SENASTFIL, JSON.stringify({ lista: cfg.lista, poang: enkelPoang }));
+
 // en rad per åkare: "fiskod internt-id DH SL GS SG AC"
 // där varje gren är "poäng/placering i världen", eller - om poäng saknas
 const poangrader = Object.keys(poang).sort((a, b) => a - b).map(f =>
