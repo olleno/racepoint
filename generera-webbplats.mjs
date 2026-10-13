@@ -359,6 +359,10 @@ const SIGILL = `<svg width="38" height="38" viewBox="0 0 52 52" aria-hidden="tru
 <path d="M12 33l7.5-11 5 7 6-9.5L38 33z" fill="#fff"/>
 <rect x="12" y="35.4" width="26" height="2" rx="1" fill="#2f7fb8"/></svg>`;
 
+/* Stampel pa de skript sidorna laddar, sa att en andring slar igenom direkt
+   i stallet for att ligga kvar i besokarens cache tills den loper ut. */
+const BYGGID=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+
 function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall, jsonld, skript}){
   return `<!doctype html>
 <html lang="en">
@@ -394,7 +398,7 @@ ${innehall}
   FIS points list.</p>
 </footer>
 </div>
-${skript ? '<script src="'+rot+'alpine-skiing/'+skript+'" defer></script>' : ''}
+${skript ? '<script src="'+rot+'alpine-skiing/'+skript+'?v='+BYGGID+'" defer></script>' : ''}
 </body>
 </html>
 `;
