@@ -359,7 +359,7 @@ const SIGILL = `<svg width="38" height="38" viewBox="0 0 52 52" aria-hidden="tru
 <path d="M12 33l7.5-11 5 7 6-9.5L38 33z" fill="#fff"/>
 <rect x="12" y="35.4" width="26" height="2" rx="1" fill="#2f7fb8"/></svg>`;
 
-function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall, jsonld}){
+function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall, jsonld, skript}){
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -394,6 +394,7 @@ ${innehall}
   FIS points list.</p>
 </footer>
 </div>
+${skript ? '<script src="'+rot+'alpine-skiing/'+skript+'" defer></script>' : ''}
 </body>
 </html>
 `;
@@ -411,14 +412,10 @@ if(existsSync(sparad)){
   const b=readFileSync(sparad);
   if(b.length>1000 && b.readUInt32LE(0)===0x04034b50) zip=b;
 }
-if(!zip)
-for(let n=30;n>=1;n--){
-  const svar=await fetch(`https://www.fis-ski.com/DB/v2/download/fis-list/ALFP${n}${SASONG}F.zip`);
-  if(svar.ok){
-    const b=Buffer.from(await svar.arrayBuffer());
-    if(b.length>1000 && b.readUInt32LE(0)===0x04034b50){ zip=b; nummer=n; break; }
-  }
-}
+/* Hamtar inte om listan har. Steg 4 har antingen laddat ner den eller fallit
+   tillbaka pa den sparade - i bada fallen ligger filen pa plats. Saknas den ar
+   det steg 4 som gatt fel, och da ska felet sta dar och inte doljas av trettio
+   nya anrop till FIS som anda bara leder till att vi blir avvisade. */
 if(!zip) throw new Error('Hittade ingen punktlista hos FIS');
 const filer=zipFiler(zip);
 const hitta = s => filer[Object.keys(filer).find(k=>k.endsWith(s))];
@@ -526,6 +523,32 @@ let antalAkare=0;
    dem som fyllt i sin sida. En tranare som ser "8 av 34" paminner om det pa
    nasta traning, och en akare som ser en klubbkamrat sta Complete bredvid
    sitt eget Empty fyller i. */
+/* Poangen pa FORRA punktlistan, skriven av generera-poangdata.mjs. Finns
+   den inte - forsta bygget, eller en cache som rensats - visar korten bara
+   dagens poang i stallet for sankningen. Ingenting faller pa det. */
+let BAS={};
+try{
+  const f=join(HAR,'fis-baslinje.json');
+  if(existsSync(f)) BAS=(JSON.parse(readFileSync(f,'utf8')).poang)||{};
+}catch(e){ BAS={}; }
+console.log(`Baslinje for sankningar: ${Object.keys(BAS).length} akare`);
+
+/* Storsta sankningen den har akaren gjort sedan forra listan. Storsta och
+   inte basta grenen med flit - en akare som sankte sin storslalom med fyra
+   poang har gjort sin helg, aven om slalomen ar hennes starkaste gren. */
+function sankning(fis, poang){
+  const forra=BAS[String(fis)];
+  if(!forra) return null;
+  let b=null;
+  for(const g of GRENAR){
+    const nu=poang[g], f=forra[g];
+    if(nu==null || f==null) continue;
+    const d=f-nu;
+    if(d>0.004 && (!b || d>b.diff)) b={gren:g, nu, forra:f, diff:d};
+  }
+  return b;
+}
+
 const KLUBBSIDOR={};
 const klubbNyckel=(nat,namn)=>nat+'|'+String(namn||'')
   .toLowerCase().replace(/[^a-z0-9]+/g,'');
@@ -604,7 +627,8 @@ for(const a of Object.values(akare)){
       adress:klubbAdress(a.nat, klubbVisa), akare:[]});
     if(!post.webb && kl && kl.akta) post.webb=kl.webb;
     post.akare.push({fis:a.fis, visa, fodd:a.fodd, adress,
-      ifyllt:ifyllt(egna), poang:a.poang[basta]});
+      ifyllt:ifyllt(egna), poang:a.poang[basta],
+      gren:GRENNAMN[basta]||basta, sank:sankning(a.fis, a.poang)});
     klubbsidaAdress=post.adress;
   }
 
@@ -643,6 +667,30 @@ links, and most of it goes to this athlete's club. You pay exactly the same pric
 </section>`;
   }
 
+  /* Delningskortet. Det ar har sidan slutar vara en tabell och blir nagot
+     en akare vill visa. Bilden ritas i hennes egen mobil nar hon trycker -
+     sajten forgenererar ingenting. Sankningen visas nar vi har forra listan
+     att jamfora med, annars dagens poang. */
+  {
+    const sank=sankning(a.fis, a.poang);
+    const gren=sank?sank.gren:basta;
+    const rubrik=sank
+      ? `You dropped ${sank.diff.toFixed(2)} points`
+      : `Share your FIS points`;
+    const under=sank
+      ? `${GRENNAMN[gren]} ${sank.forra.toFixed(2)} → ${sank.nu.toFixed(2)} since the last list. Worth showing.`
+      : `A card with your points, ready for Instagram. It takes a second and nothing is uploaded — the image is made on your phone.`;
+    inneh+=`<section class="kort"><h2>${esc(rubrik)}</h2>
+<p class="not">${esc(under)}</p>
+<div class="lankar"><button type="button" class="knapp" data-kort="akare"`+
+      ` data-namn="${esc(visa)}" data-klubb="${esc(klubbVisa||'')}" data-nat="${esc(a.nat)}"`+
+      ` data-gren="${esc(GRENNAMN[gren]||gren)}" data-poang="${(sank?sank.nu:a.poang[gren]).toFixed(2)}"`+
+      (sank?` data-forra="${sank.forra.toFixed(2)}"`:'')+
+      (!sank&&a.rank[gren]?` data-rank="${esc(String(a.rank[gren]))}"`:'')+
+      ` data-lista="${esc(hdr.Listname)}">Make my card</button></div>
+</section>`;
+  }
+
   /* Utan den här rutan hittar ingen åkare fram till formuläret, och då
      står profilerna tomma hur bra röret än fungerar. */
   inneh+=`<section class="kort dinsida"><h2>Is this you?</h2>
@@ -656,7 +704,7 @@ a couple of minutes, and everything is checked before it appears.</p>
     titel:`${visa} – FIS points and results | Race Point`,
     beskrivning, adress, rot:'../../',
     brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Athletes`,
-    innehall:inneh,
+    innehall:inneh, skript:'fis-delning.js',
     jsonld:{'@context':'https://schema.org','@type':'Person', name:visa,
       nationality:a.nat, identifier:a.fis,
       sameAs:`https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${a.id}`}
@@ -681,6 +729,22 @@ for(const k of Object.values(KLUBBSIDOR)){
   const klara=k.akare.filter(a=>a.ifyllt>0).length;
   const rubrik=`${k.namn} – athletes and FIS points`;
 
+  /* Klubbkortet. Sankningarna forst nar det finns nagra - det ar dem en
+     tranare vill skicka in i foraldrachatten - annars klubbens basta poang,
+     sa att kortet funkar aven veckan da ingen tavlat. */
+  const medSank=k.akare.filter(a=>a.sank)
+    .sort((x,y)=>y.sank.diff-x.sank.diff).slice(0,5);
+  const kortRader=(medSank.length?medSank:k.akare.slice(0,5)).map(a=>a.sank
+    ? {namn:a.visa, gren:GRENNAMN[a.sank.gren]||a.sank.gren,
+       nu:+a.sank.nu.toFixed(2), forra:+a.sank.forra.toFixed(2)}
+    : {namn:a.visa, gren:a.gren, nu:a.poang!=null?+a.poang.toFixed(2):null});
+  const kortRubrik=medSank.length
+    ? `${medSank.length===1?'One athlete':medSank.length+' athletes'} dropped points this week`
+    : 'Share the club card';
+  const kortUnder=medSank.length
+    ? 'A card with the biggest drops in the club, ready for the parents\u2019 chat. The image is made on your phone — nothing is uploaded.'
+    : 'A card with the club, its athletes and how many pages are filled in. The image is made on your phone — nothing is uploaded.';
+
   let inneh=`<h1>${flagga(k.nat)} ${esc(k.namn)}</h1>
 <p class="ingress">${antal} athlete${antal===1?'':'s'} on the FIS alpine points list${
   k.webb?' · <a href="'+esc(k.webb)+'" rel="noopener">club website</a>':''}</p>
@@ -702,6 +766,13 @@ what turns the page into something to show a local sponsor.</p></section>
       `<td class="n">${status}</td></tr>`;
   });
   inneh+=`</table></div></section>
+
+<section class="kort"><h2>${esc(kortRubrik)}</h2>
+<p class="not">${esc(kortUnder)}</p>
+<div class="lankar"><button type="button" class="knapp" data-kort="klubb"
+ data-namn="${esc(k.namn)}" data-nat="${esc(k.nat)}" data-antal="${antal}" data-klara="${klara}"
+ data-lista="${esc(hdr.Listname)}" data-rader="${esc(JSON.stringify(kortRader))}">Make the club card</button></div>
+</section>
 
 <section class="kort dinsida"><h2>Is one of them you?</h2>
 <p class="not">Adding your links takes a couple of minutes and costs nothing. Everything is
@@ -726,7 +797,7 @@ stopped? <a href="/alpine-skiing/kontakt.html">Tell us</a> and we fix it the sam
     beskrivning:`${k.namn}: ${antal} athlete${antal===1?'':'s'} on the FIS alpine points list, with points, ranking and results.`,
     adress:k.adress, rot:'../../',
     brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › <a href="./">Clubs</a> › ${esc(k.namn)}`,
-    innehall:inneh,
+    innehall:inneh, skript:'fis-delning.js',
     jsonld:{'@context':'https://schema.org','@type':'SportsTeam', name:k.namn,
       sport:'Alpine skiing', ...(k.webb?{url:k.webb}:{})}
   }));
@@ -1015,7 +1086,7 @@ skriv('/index.html', sida({
    efter ett bygge – och den som råkar ha sidan öppen ser fel siffror. */
 const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 ['index.html','lagg-till.html','guide.html','kontakt.html','sprak.js','fis-kalender.js','fis-poangdata.js','fis-profiler.js',
- 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js','fis-ikoner.js',
+ 'fis-media.js','fis-forbund.js','fis-nyheter.js','fis-affiliate.js','fis-evenemang.js','fis-ikoner.js','fis-delning.js',
  'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
   if(f.endsWith('.html')){
@@ -1178,6 +1249,22 @@ background:#fdf3e3;border-radius:8px;padding:8px 11px}
 border:1px dashed var(--line);border-radius:8px;padding:6px 11px}
 .lankar a.knapp{background:var(--sport);color:#fff;border-color:var(--sport);font-weight:620}
 .lankar a.knapp:hover{filter:brightness(1.08)}
+.lankar button.knapp{background:var(--sport);color:#fff;border:1px solid var(--sport);
+font:inherit;font-weight:620;border-radius:8px;padding:9px 14px;
+min-height:44px;cursor:pointer}
+.lankar button.knapp:hover{filter:brightness(1.08)}
+.lankar button.knapp[disabled]{opacity:.65;cursor:default}
+.delaruta{position:fixed;inset:0;background:rgba(8,16,28,.72);z-index:60;
+display:flex;align-items:center;justify-content:center;padding:16px}
+.delalada{background:var(--card);border-radius:14px;padding:14px;max-width:420px;width:100%;
+box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.delalada img{display:block;width:100%;height:auto;border-radius:9px}
+.delaknappar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.delaknappar .knapp{flex:1 1 auto;text-align:center;background:var(--sport);color:#fff;
+border:1px solid var(--sport);border-radius:8px;padding:11px 14px;min-height:44px;
+font:inherit;font-weight:620;cursor:pointer;text-decoration:none;
+display:inline-flex;align-items:center;justify-content:center}
+.delaknappar .knapp.sekundar{background:transparent;color:var(--ink2);border-color:var(--line)}
 .klar{color:var(--ok);font-weight:620}
 .delvis{color:var(--ink2);font-variant-numeric:tabular-nums}
 .klipp{margin:0;padding:12px 14px;background:var(--accent-bg);border-radius:9px;
