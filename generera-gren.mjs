@@ -439,7 +439,7 @@ format suggests (e.g. on courses with little climbing) – the official result a
     skriv(`${BAS}/calculator/index.html`, sidaG({
       titel:'Cross-country FIS points calculator – penalty and race points | Race Point',
       beskrivning:'Free cross-country FIS points calculator: race points from your time, the race penalty from the top five finishers, and your FIS points – the official FIS formula, checked against 193 races.',
-      adress:`${BAS}/calculator/`, rot:'../', brodsmula:brod('FIS points calculator'), innehall:kalk}));
+      adress:`${BAS}/calculator/`, rot:'../../', brodsmula:brod('FIS points calculator'), innehall:kalk}));
   }
 
   console.log(`${g.namn}: ${antalAkare} åkarsidor, ${klubbLista.length} klubbsidor, ${loppLista.length} loppsidor`);
