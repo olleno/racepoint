@@ -1068,8 +1068,12 @@ const grenarPaSidan=[
     : {namn:'Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
   {namn:'Ski Jumping', adress:null, klar:false, farg:'backe', text:'Coming.'},
   {namn:'Nordic Combined', adress:null, klar:false, farg:'nordisk', text:'Coming.'},
-  {namn:'Freestyle & Ski Cross', adress:null, klar:false, farg:'freestyle', text:'Coming.'},
-  {namn:'Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'},
+  KLARA_GRENAR.has('Freestyle & Ski Cross')
+    ? {namn:'Freestyle & Ski Cross', adress:'freestyle/', klar:true, farg:'freestyle', text:'FIS points, world ranking and clubs.'}
+    : {namn:'Freestyle & Ski Cross', adress:null, klar:false, farg:'freestyle', text:'Coming.'},
+  KLARA_GRENAR.has('Snowboard')
+    ? {namn:'Snowboard', adress:'snowboard/', klar:true, farg:'snowboard', text:'FIS points, world ranking and clubs.'}
+    : {namn:'Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'},
   {namn:'Para Alpine Skiing', adress:null, klar:false, farg:'alpint', text:'Coming.'},
   {namn:'Para Cross-Country', adress:null, klar:false, farg:'langd', text:'Coming.'},
   {namn:'Para Snowboard', adress:null, klar:false, farg:'snowboard', text:'Coming.'},

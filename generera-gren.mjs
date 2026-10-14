@@ -20,7 +20,17 @@
 export const GRENER = [
   { kod:'CC', mapp:'cross-country', namn:'Cross-Country', sport:'Cross-country skiing',
     lista:'https://www.fis-ski.com/DB/cross-country/fis-points-lists.html', prefix:'CCFP',
-    discipliner:{DI:'Distance', SP:'Sprint'} }
+    discipliner:{DI:'Distance', SP:'Sprint'}, hogreBattre:false, live:true },
+  /* Snowboard och freestyle: poängen delas ut efter placering, så HÖGRE är bättre –
+     tvärtom mot alpint och längd. ST är Street Style (FIS egen åkarprofil, okt 2026). */
+  { kod:'SB', mapp:'snowboard', namn:'Snowboard', sport:'Snowboarding',
+    lista:'https://www.fis-ski.com/DB/snowboard/fis-points-lists.html', prefix:'SBFP',
+    discipliner:{PAR:'Parallel', SBX:'Snowboard Cross', HP:'Halfpipe', SS:'Slopestyle', BA:'Big Air', ST:'Street Style'},
+    hogreBattre:true, live:false },
+  { kod:'FS', mapp:'freestyle', namn:'Freestyle & Ski Cross', sport:'Freestyle skiing',
+    lista:'https://www.fis-ski.com/DB/freestyle-freeski/fis-points-lists.html', prefix:'FSFP',
+    discipliner:{MO:'Moguls', AE:'Aerials', SX:'Ski Cross', HP:'Halfpipe', SS:'Slopestyle', BA:'Big Air', ST:'Street Style'},
+    hogreBattre:true, live:false }
 ];
 
 const HUVUD = {
@@ -68,6 +78,8 @@ export async function byggGren(g, h){
   const com = tabell(hitta('com.csv')), pts = tabell(hitta('pts.csv'));
   const rac = tabell(hitta('rac.csv')), res = tabell(hitta('res.csv'));
   const DISC = g.discipliner, KODER = Object.keys(DISC);
+  const battre = (x,y) => g.hogreBattre ? y-x : x-y;   // sorterar bäst först
+  const RIKTNING = g.hogreBattre ? 'Higher points are better' : 'Lower points are better';
   const M = g.mapp, BAS = `/${M}`;
   console.log(`${g.namn}: ${hdr.Listname} (${kalla}) – ${com.length} åkare, ${rac.length} lopp, ${res.length} resultat`);
 
@@ -103,7 +115,7 @@ export async function byggGren(g, h){
     const t = lopp[r.Raceid]; if(!t) return;
     const rad = {pos:r.Position?parseInt(r.Position,10):null, bib:r.Bib, fis:String(Number(r.Fiscode)),
       namn:stada(r.Competitorname), nat:r.Nationcode, status:r.Status,
-      tid:r.Timetot||'', poang:r.Racepoints?parseFloat(r.Racepoints):null};
+      tid:r.Timetot||r.Tot||'', poang:r.Racepoints?parseFloat(r.Racepoints):null};
     t.resultat.push(rad);
     const a = akare[rad.fis];
     if(a) a.resultat.push({lopp:t, pos:rad.pos, status:rad.status, poang:rad.poang});
@@ -135,7 +147,7 @@ export async function byggGren(g, h){
 <tr><th>Event</th><th class="n">Points</th><th class="n">World ranking</th></tr>`+
       disc.map(d=>`<tr><td>${DISC[d]}</td><td class="n">${n2(a.poang[d])}</td>`+
         `<td class="n muted">${a.rank[d]?'no. '+a.rank[d]:'–'}</td></tr>`).join('')+
-      `</table></div><p class="not">Lower points are better. From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</p></section>`;
+      `</table></div><p class="not">${RIKTNING}. From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</p></section>`;
     if(a.resultat.length){
       inneh += `<section class="kort"><h2>Results</h2><div class="tblwrap"><table>
 <tr><th>Date</th><th>Race</th><th class="n">Pos</th><th class="n">FIS points</th></tr>`+
@@ -149,7 +161,7 @@ export async function byggGren(g, h){
       const k = klubbNyckel(a.nat, klubbVisa);
       const post = klubbar[k] || (klubbar[k] = {nat:a.nat, namn:klubbVisa, webb:kl&&kl.akta?kl.webb:'',
                                                  adress:klubbAdress(a.nat, klubbVisa), akare:[]});
-      const basta = disc.slice().sort((x,y)=>a.poang[x]-a.poang[y])[0];
+      const basta = disc.slice().sort((x,y)=>battre(a.poang[x],a.poang[y]))[0];
       post.akare.push({visa, fodd:a.fodd, adress, poang:a.poang[basta], disc:basta});
       klubbsida = post.adress;
     }
@@ -175,7 +187,7 @@ export async function byggGren(g, h){
   /* ---- klubbar ---- */
   const klubbLista = [];
   for(const k of Object.values(klubbar)){
-    k.akare.sort((x,y)=>x.poang-y.poang);
+    k.akare.sort((x,y)=>battre(x.poang,y.poang));
     const antal = k.akare.length;
     const inneh = `<h1>${flagga(k.nat)} ${esc(k.namn)}</h1>
 <p class="ingress">${antal} athlete${antal===1?'':'s'} on the FIS ${esc(g.namn.toLowerCase())} points list${
@@ -208,7 +220,7 @@ ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</sma
 <div><div class="n">${t.resultat.filter(r=>r.pos).length}</div><small>classified</small></div>
 </div><p class="not">Each athlete's FIS points for this race are the race points plus the applied penalty.</p></section>`:''}
 <section class="kort"><h2>Results</h2><div class="tblwrap"><table>
-<tr><th class="n">Pos</th><th></th><th>Athlete</th><th class="n">Time</th><th class="n">FIS points</th></tr>`+
+<tr><th class="n">Pos</th><th></th><th>Athlete</th><th class="n">${g.hogreBattre?'Result':'Time'}</th><th class="n">FIS points</th></tr>`+
       t.resultat.map(r=>{
         const a = akare[r.fis];
         const namn = a ? namnSnyggt(a.efter,a.forn) : r.namn;
@@ -283,7 +295,7 @@ From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</
         `<td><a href="${esc(a.adress)}">${esc(a.visa)}</a></td><td class="n">${n2(a.poang[d])}</td></tr>`).join('')+
       `</table></div></section>`;
   }
-  inneh += `<section class="kort"><h2>Live race points</h2><p class="not">Live penalty and new FIS
+  if(g.live) inneh += `<section class="kort"><h2>Live race points</h2><p class="not">Live penalty and new FIS
 points during the race are coming for ${esc(g.namn.toLowerCase())}, the same way Race Point already
 does it for <a href="/alpine-skiing/">alpine skiing</a>. Until then, every athlete's current points,
 world ranking and results are here, updated every night from the official FIS list.</p></section>`;
