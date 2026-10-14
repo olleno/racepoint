@@ -113,13 +113,52 @@ export async function byggGren(g, h){
   });
   res.forEach(r=>{
     const t = lopp[r.Raceid]; if(!t) return;
-    const rad = {pos:r.Position?parseInt(r.Position,10):null, bib:r.Bib, fis:String(Number(r.Fiscode)),
+    t.resultat.push({pos:r.Position?parseInt(r.Position,10):null, bib:r.Bib, fis:String(Number(r.Fiscode)),
       namn:stada(r.Competitorname), nat:r.Nationcode, status:r.Status,
-      tid:r.Timetot||r.Tot||'', poang:r.Racepoints?parseFloat(r.Racepoints):null};
-    t.resultat.push(rad);
-    const a = akare[rad.fis];
-    if(a) a.resultat.push({lopp:t, pos:rad.pos, status:rad.status, poang:rad.poang});
+      tid:r.Timetot||r.Tot||'', poang:r.Racepoints?parseFloat(r.Racepoints):null});
   });
+
+  /* ---- arkiv över avgjorda lopp (Olles beslut 14 okt 2026) ----
+     Varje punktlista innehåller bara loppen sedan förra listan. Utan arkiv
+     försvann alla tävlingssidor när FIS släppte en ny lista. Arkivet ligger på
+     sajten själv (<gren>/lopp-arkiv.json): förra nattens arkiv hämtas, dagens
+     lopp läggs till, och det nya arkivet publiceras. Lopp äldre än tre år
+     rensas bort. Går arkivet inte att hämta byggs sidorna på dagens lista, och
+     arkivet skrivs då INTE över – så nästa natt har det fortfarande allt. */
+  const ARKIVFIL = 'lopp-arkiv.json';
+  const grans = new Date(Date.now()-3*365*864e5).toISOString().slice(0,10);
+  let arkiv = null;
+  for(let forsok=1; forsok<=4 && !arkiv; forsok++){      // vår egen sajt – svarar nästan alltid, men prova några gånger
+    try{
+      const sv = await fetch(`${h.DOMAN}/${M}/${ARKIVFIL}`, {signal:AbortSignal.timeout(60000)});
+      if(sv.ok) arkiv = await sv.json();
+      else if(sv.status===404) arkiv = {lopp:[]};        // första gången: inget arkiv ännu
+      else throw new Error('svar '+sv.status);
+    }catch(e){
+      console.log(`${g.namn}: arkivet kunde inte hämtas, försök ${forsok} (${e.message})`);
+      if(forsok<4) await paus(10000*forsok);
+    }
+  }
+  let franArkiv = 0;
+  if(arkiv){
+    for(const x of arkiv.lopp||[]){
+      if(lopp[x.raceid] || x.datum < grans) continue;
+      lopp[x.raceid] = {...x, resultat:(x.r||[]).map(d=>({pos:d[0], bib:d[1], fis:d[2], namn:d[3],
+        nat:d[4], status:d[5], tid:d[6], poang:d[7]}))};
+      franArkiv++;
+    }
+    const ut = Object.values(lopp).filter(t=>t.resultat.length && t.datum >= grans).map(t=>({
+      raceid:t.raceid, codex:t.codex, datum:t.datum, plats:t.plats, nat:t.nat, kat:t.kat, kon:t.kon,
+      namn:t.namn, penalty:t.penalty, beraknad:t.beraknad,
+      r:t.resultat.map(d=>[d.pos, d.bib, d.fis, d.namn, d.nat, d.status, d.tid, d.poang])}));
+    writeFileSync(join(UT, M, ARKIVFIL), JSON.stringify({uppdaterad:new Date().toISOString().slice(0,10), lopp:ut}));
+    console.log(`${g.namn}: ${franArkiv} lopp från arkivet, ${ut.length} lopp i nya arkivet`);
+  }
+
+  for(const t of Object.values(lopp)) for(const d of t.resultat){
+    const a = akare[d.fis];
+    if(a) a.resultat.push({lopp:t, pos:d.pos, status:d.status, poang:d.poang});
+  }
   Object.values(lopp).forEach(t=>t.resultat.sort((a,b)=>(a.pos||9999)-(b.pos||9999)));
   Object.values(akare).forEach(a=>a.resultat.sort((x,y)=>y.lopp.datum.localeCompare(x.lopp.datum)));
 
@@ -266,7 +305,7 @@ ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</sma
     adress:`${BAS}/clubs/`, rot:'../../', brodsmula:brod('Clubs'), innehall:inneh}));
 
   inneh = `<h1>${esc(g.namn)} races</h1>
-<p class="ingress">${loppLista.length} races that counted for FIS points in ${esc(hdr.Listname)}, newest first.</p>`;
+<p class="ingress">${loppLista.length} races that counted for FIS points, newest first.</p>`;
   const perManad = {};
   loppLista.forEach(t=>(perManad[t.datum.slice(0,7)]=perManad[t.datum.slice(0,7)]||[]).push(t));
   Object.keys(perManad).sort().reverse().forEach(m=>{
