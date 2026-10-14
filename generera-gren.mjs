@@ -348,7 +348,7 @@ ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</sma
 ${register.length} athletes, ${klubbLista.length} clubs and ${loppLista.length} races.
 From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</p>
 <div class="lankar"><a class="knapp" href="${BAS}/athletes/">All athletes</a>
-<a class="knapp" href="${BAS}/clubs/">All clubs</a><a class="knapp" href="${BAS}/races/">Races and results</a></div>`;
+<a class="knapp" href="${BAS}/clubs/">All clubs</a><a class="knapp" href="${BAS}/races/">Races and results</a>${g.kod==='CC'?`<a class="knapp" href="${BAS}/calculator/">FIS points calculator</a>`:''}</div>`;
   for(const d of KODER) for(const [kon,konNamn] of [['M','Men'],['W','Women']]){
     const topp = register.filter(a=>a.kon===kon && a.rank[d]).sort((a,b)=>a.rank[d]-b.rank[d]).slice(0,25);
     if(!topp.length) continue;
@@ -366,6 +366,81 @@ world ranking and results are here, updated every night from the official FIS li
     titel:`${g.namn} FIS points and world ranking | Race Point`,
     beskrivning:`FIS ${g.namn.toLowerCase()} points for every athlete: world ranking in ${KODER.map(d=>DISC[d].toLowerCase()).join(' and ')}, clubs and race results, updated every night.`,
     adress:`${BAS}/`, rot:'../', brodsmula:`<a href="/">Race Point</a> › ${esc(g.namn)}`, innehall:inneh}));
+
+  /* ---- FIS-poängkalkylator för längd (14 okt 2026) ----
+     Formeln ur FIS Points Rules Cross-Country 2025/26 (art. 1.2, 5.3) och kontrollerad
+     mot FIS egna uträkningar: 192 av 193 lopp under lista 6/7 2025/26 gav exakt samma
+     penalty (det sista hade färre än fem klassade). Fungerar utan livetider; livetiderna
+     kopplas på när säsongen börjar och vi vet hur FIS längdflöde ser ut. */
+  if(g.kod==='CC'){
+    const kalk = `<h1>Cross-country FIS points calculator</h1>
+<p class="ingress">Work out the race penalty and your FIS points for a cross-country race: winner's time,
+your time, the race format and the FIS points of the top five finishers. The same formula FIS uses
+– checked against 193 official races, exact in every one with five classified finishers.</p>
+<section class="kort"><h2>The race</h2>
+<div class="kalk">
+<label>Format<select id="f"><option value="800">Interval start (F 800)</option>
+<option value="1200">Sprint qualification / pursuit 2nd part (F 1200)</option>
+<option value="1400">Mass start / skiathlon (F 1400)</option>
+<option value="2800">Long distance or roller on flat course (F 2800)</option></select></label>
+<label>Level<select id="min"><option value="20">FIS / COC senior (min. penalty 20)</option>
+<option value="35">FIS / COC junior (min. 35)</option><option value="35L">FIS long distance &gt; 30 km (min. 35)</option>
+<option value="25">U23 World Championships (min. 25)</option><option value="35J">Junior World Championships (min. 35)</option>
+<option value="0">World Cup, Olympics, World Championships (fixed 0)</option>
+<option value="45">Roller FIS (min. 45)</option><option value="60">Roller FIS juniors (min. 60)</option></select></label>
+<label>Winner's time<input id="to" placeholder="25:31.4" inputmode="decimal"></label>
+<label>Your time<input id="tx" placeholder="27:02.9" inputmode="decimal"></label>
+</div></section>
+<section class="kort"><h2>FIS points of the top five finishers</h2>
+<p class="not">Distance points for distance races, sprint points for sprint. Leave a box empty if that
+skier has no FIS points – FIS then counts 700. Find anyone's points on their <a href="${BAS}/athletes/">athlete page</a>.</p>
+<div class="kalk fem">${[1,2,3,4,5].map(i=>`<label>${i}.<input class="p5" inputmode="decimal" placeholder="–"></label>`).join('')}</div></section>
+<section class="kort"><h2>Result</h2><div class="nums">
+<div><div class="n" id="rp">–</div><small>race points</small></div>
+<div><div class="n" id="pen">–</div><small>penalty</small></div>
+<div><div class="n" id="fp">–</div><small>your FIS points</small></div></div>
+<p class="not" id="forkl">Fill in the times and the five FIS points.</p></section>
+<section class="kort"><h2>How it is worked out</h2><p class="not">Race points = (your time ÷ winner's time − 1) × F.
+Penalty: take the FIS points of the top five finishers, remove the best and the worst, add the remaining three and
+divide by 3.50. If that is below the minimum for the level, the minimum is used; World Cup, Olympics and World
+Championships have a fixed penalty of 0; the maximum is 700. Your FIS points are race points plus penalty, rounded to
+two decimals. Source: FIS Points Rules Cross-Country, articles 1.2 and 5.3. A few races use another F-value than their
+format suggests (e.g. on courses with little climbing) – the official result always decides.</p></section>
+<style>.kalk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kalk label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink2)}
+.kalk input,.kalk select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.kalk.fem{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}</style>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const sek=s=>{s=String(s||'').trim().replace(',','.'); if(!s) return NaN;
+    return s.split(':').reduce((v,x)=>v*60+parseFloat(x),0);};
+  const r2=v=>Math.round((v+1e-9)*100)/100;
+  function rakna(){
+    const F=+$('f').value, minTxt=$('min').value, min=parseFloat(minTxt), fast0=minTxt==='0';
+    const To=sek($('to').value), Tx=sek($('tx').value);
+    const p=[...document.querySelectorAll('.p5')].map(i=>{const v=parseFloat(String(i.value).replace(',','.'));
+      return isFinite(v)?Math.min(v,700):700;});
+    const ifyllda=[...document.querySelectorAll('.p5')].filter(i=>i.value.trim()).length;
+    let rp=null, pen=null;
+    if(isFinite(To)&&isFinite(Tx)&&To>0&&Tx>=To) rp=r2((Tx/To-1)*F);
+    if(fast0) pen=0;
+    else if(ifyllda){ const s=p.slice().sort((a,b)=>a-b); const ber=r2((s[1]+s[2]+s[3])/3.5);
+      pen=Math.min(700,Math.max(ber,min)); $('forkl').textContent='Calculated penalty '+ber.toFixed(2)+
+      (ber<min?' is below the minimum for this level, so '+min.toFixed(2)+' is used.':'.'); }
+    $('rp').textContent=rp==null?'–':rp.toFixed(2);
+    $('pen').textContent=pen==null?'–':pen.toFixed(2);
+    $('fp').textContent=(rp==null||pen==null)?'–':r2(rp+pen).toFixed(2);
+    if(fast0) $('forkl').textContent='World Cup, Olympics and World Championships have a fixed penalty of 0.';
+  }
+  document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',rakna));
+})();
+</script>`;
+    skriv(`${BAS}/calculator/index.html`, sidaG({
+      titel:'Cross-country FIS points calculator – penalty and race points | Race Point',
+      beskrivning:'Free cross-country FIS points calculator: race points from your time, the race penalty from the top five finishers, and your FIS points – the official FIS formula, checked against 193 races.',
+      adress:`${BAS}/calculator/`, rot:'../', brodsmula:brod('FIS points calculator'), innehall:kalk}));
+  }
 
   console.log(`${g.namn}: ${antalAkare} åkarsidor, ${klubbLista.length} klubbsidor, ${loppLista.length} loppsidor`);
   return {antalAkare, klubbar:klubbLista.length, lopp:loppLista.length};
