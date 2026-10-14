@@ -115,7 +115,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
       <rect x="23.8" y="21" width="4.4" height="10.6" fill="var(--sigill-txt)"/>
       <rect x="31.6" y="16" width="4.4" height="15.6" fill="var(--sigill-txt)"/>
     </svg>
-    <div class="wm"><b>Race Point</b><span class="rule"></span><span>Alpine skiing</span></div>
+    <div class="wm"><b>Race Point</b><span class="rule"></span><span>Athlete page</span></div>
     <div id="sprakval" class="sprakval"></div>
   </div>
 
@@ -324,6 +324,9 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
            kontakt:'Kontaktruta - foretag ska kunna hora av sig om sponsring'};
 
   var form=document.getElementById('f');
+  /* Kommer åkaren från sin egen sida står FIS-koden redan i adressen (?fis=…). */
+  try{ var pf=new URLSearchParams(location.search).get('fis');
+       if(pf && /^\d{3,9}$/.test(pf)) document.getElementById('fis').value=pf; }catch(e){}
   var knapp=document.getElementById('skicka');
   var svar=document.getElementById('svar');
 

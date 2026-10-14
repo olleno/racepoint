@@ -71,6 +71,8 @@ async function hamtaLista(g, h){
 export async function byggGren(g, h){
   const {esc, slug, flagga, sida, skriv, tabell, zipFiler, forbundLank, klubbLank,
          offKnapp, offTom, namnSnyggt, writeFileSync, mkdirSync, join, UT} = h;
+  const PROFIL = h.PROFIL || {}, kanalKnapp = h.kanalKnapp, IG_TONING = h.IG_TONING || '',
+        sponsorNamn = h.sponsorNamnUrAdress || (x=>x);
   const {zip, kalla} = await hamtaLista(g, h);
   const filer = zipFiler(zip);
   const hitta = s => filer[Object.keys(filer).find(k=>k.endsWith(s))];
@@ -204,6 +206,18 @@ export async function byggGren(g, h){
       post.akare.push({visa, fodd:a.fodd, adress, poang:a.poang[basta], disc:basta});
       klubbsida = post.adress;
     }
+    /* Åkarens egna länkar och sponsorer – samma formulär och samma godkännande
+       som alpint (fis-profiler.js, nyckel = FIS-kod). */
+    const egna = PROFIL[String(+a.fis)] || null;
+    const sociala = (egna && egna.sociala) || [], sponsorer = (egna && egna.sponsorer) || [];
+    if(kanalKnapp && (sociala.length || sponsorer.length)){
+      inneh += IG_TONING+`<section class="kort"><h2>${esc(visa)}’s own links</h2>
+<p class="not">The athlete's own channels — kept up to date by them, not by FIS.</p>`+
+        (sociala.length ? `<div class="kanaler">`+sociala.map(x=>kanalKnapp(x.typ, x.adress, x.typ==='webb'?'Own website':'')).join('')+`</div>` : '')+
+        (sponsorer.length ? `<h3 class="underrub">Sponsors</h3><div class="kanaler">`+
+          sponsorer.map(x=>kanalKnapp('sponsor', x.adress, x.namn||sponsorNamn(x.adress))).join('')+`</div>` : '')+
+        `</section>`;
+    }
     const fb = forbundLank(a.nat);
     inneh += `<section class="kort"><h2>FIS and club</h2><div class="kanaler bred">`+
       offKnapp('bio', `https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=${g.kod}&competitorid=${esc(a.id)}&type=result`, 'FIS biography')+
@@ -211,6 +225,11 @@ export async function byggGren(g, h){
       (kl ? offKnapp('klubb', kl.webb, kl.namn, kl.akta) : offTom('klubb','Club not listed by FIS'))+
       `</div>`+(klubbsida?`<div class="lankar"><a href="${esc(klubbsida)}">Everyone from ${esc(klubbVisa)}</a></div>`:'')+
       `</section>`;
+    inneh += `<section class="kort dinsida"><h2>Is this you?</h2>
+<p class="not">Add your social media and your sponsors to this page. It is free, it takes
+a couple of minutes, and everything is checked before it appears.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html?fis=${esc(a.fis)}">Add your links</a>
+<a class="knapp" href="/alpine-skiing/guide.html">Three ways to fund your season</a></div></section>`;
     skriv(adress, sidaG({
       titel:`${visa} – ${g.namn.toLowerCase()} FIS points and results | Race Point`,
       beskrivning:`${visa} (${a.nat}) ${g.namn.toLowerCase()} FIS points: `+
@@ -235,7 +254,12 @@ export async function byggGren(g, h){
 <tr><th>Athlete</th><th class="n">Born</th><th class="n">Best points</th></tr>`+
       k.akare.map(a=>`<tr><td><a href="${esc(a.adress)}">${esc(a.visa)}</a></td>`+
         `<td class="n muted">${esc(a.fodd||'')}</td><td class="n">${n2(a.poang)} <span class="sm muted">${esc(DISC[a.disc])}</span></td></tr>`).join('')+
-      `</table></div><p class="not">Something wrong in the list? <a href="/alpine-skiing/kontakt.html">Tell us</a> and we fix it the same day.</p></section>`;
+      `</table></div><p class="not">Something wrong in the list? <a href="/alpine-skiing/kontakt.html">Tell us</a> and we fix it the same day.</p></section>`+
+      `<section class="kort dinsida"><h2>Is one of them you?</h2>
+<p class="not">Every athlete above already has a page. Adding social media and sponsors takes a
+couple of minutes and costs nothing. Everything is checked before it appears.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a>
+<a class="knapp" href="/alpine-skiing/guide.html">Three ways to fund your season</a></div></section>`;
     skriv(k.adress, sidaG({
       titel:`${k.namn} – ${g.namn.toLowerCase()} athletes and FIS points | Race Point`,
       beskrivning:`${k.namn}: ${antal} athlete${antal===1?'':'s'} on the FIS ${g.namn.toLowerCase()} points list, with points and results.`,

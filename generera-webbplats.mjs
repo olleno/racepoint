@@ -493,6 +493,44 @@ res.forEach(r=>{
   const a=akare[rad.fis];
   if(a) a.resultat.push({tavling:t, pos:rad.pos, status:rad.status, poang:rad.slutpoang});
 });
+/* ---- arkiv över avgjorda alpina lopp (Olles beslut 14 okt 2026) ----
+   Samma lösning som för de andra grenarna (generera-gren.mjs): punktlistan har
+   bara loppen sedan förra listan, så utan arkiv försvann tävlingssidorna varje
+   vecka. Förra nattens arkiv hämtas från sajten, dagens lopp läggs till och det
+   nya arkivet skrivs längst ner. Går det inte att hämta skrivs inget nytt arkiv
+   alls (sidan alpine-skiing/lopp-arkiv.json saknas då i ett bygge) – därför
+   flera försök. Lopp äldre än tre år rensas. */
+const ARKIVGRANS=new Date(Date.now()-3*365*864e5).toISOString().slice(0,10);
+let alpintArkiv=null;
+for(let forsok=1; forsok<=4 && !alpintArkiv; forsok++){
+  try{
+    const sv=await fetch(DOMAN+'/alpine-skiing/lopp-arkiv.json',{signal:AbortSignal.timeout(60000)});
+    if(sv.ok) alpintArkiv=await sv.json();
+    else if(sv.status===404) alpintArkiv={lopp:[]};
+    else throw new Error('svar '+sv.status);
+  }catch(e){
+    console.log(`Alpina arkivet kunde inte hämtas, försök ${forsok} (${e.message})`);
+    if(forsok<4) await new Promise(r=>setTimeout(r,10000*forsok));
+  }
+}
+let alpintArkivUt=null;
+if(alpintArkiv){
+  let franArkiv=0;
+  for(const x of alpintArkiv.lopp||[]){
+    if(tavlingar[x.raceid] || x.datum<ARKIVGRANS) continue;
+    const t={...x, resultat:(x.r||[]).map(d=>({pos:d[0], bib:d[1], fis:d[2], namn:d[3], nat:d[4],
+      status:d[5], tid:d[6], slutpoang:d[7]}))};
+    delete t.r;
+    tavlingar[x.raceid]=t; franArkiv++;
+    t.resultat.forEach(rad=>{ const a=akare[rad.fis];
+      if(a) a.resultat.push({tavling:t, pos:rad.pos, status:rad.status, poang:rad.slutpoang}); });
+  }
+  alpintArkivUt=Object.values(tavlingar).filter(t=>t.resultat.length && t.datum>=ARKIVGRANS).map(t=>({
+    raceid:t.raceid, codex:t.codex, datum:t.datum, plats:t.plats, nat:t.nat, kat:t.kat, gren:t.gren,
+    kon:t.kon, penalty:t.penalty, beraknad:t.beraknad, live:t.live,
+    r:t.resultat.map(d=>[d.pos, d.bib, d.fis, d.namn, d.nat, d.status, d.tid, d.slutpoang])}));
+  console.log(`Alpint: ${franArkiv} lopp från arkivet, ${alpintArkivUt.length} lopp i nya arkivet`);
+}
 Object.values(tavlingar).forEach(t=>t.resultat.sort((a,b)=>(a.pos||999)-(b.pos||999)));
 Object.values(akare).forEach(a=>a.resultat.sort((x,y)=>
   y.tavling.datum.localeCompare(x.tavling.datum)));
@@ -591,7 +629,7 @@ for(const a of Object.values(akare)){
 <p class="not">Lower points are better. From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</p></section>`;
 
   if(a.resultat.length){
-    inneh+=`<section class="kort"><h2>Results this period</h2><div class="tblwrap"><table>
+    inneh+=`<section class="kort"><h2>Results</h2><div class="tblwrap"><table>
 <tr><th>Date</th><th>Race</th><th class="n">Pos</th><th class="n">FIS points</th></tr>`;
     a.resultat.slice(0,40).forEach(r=>{
       inneh+=`<tr><td class="muted">${esc(r.tavling.datum)}</td>`+
@@ -700,7 +738,7 @@ links, and most of it goes to this athlete's club. You pay exactly the same pric
   inneh+=`<section class="kort dinsida"><h2>Is this you?</h2>
 <p class="not">Add your social media and your sponsors to this page. It is free, it takes
 a couple of minutes, and everything is checked before it appears.</p>
-<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html">Add your links</a>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/lagg-till.html?fis=${esc(a.fis)}">Add your links</a>
 <a class="knapp" href="/alpine-skiing/guide.html">Three ways to fund your season</a></div>
 </section>`;
 
@@ -1051,7 +1089,8 @@ try{
   for(const g of GRENER){
     try{
       await byggGren(g, {esc, slug, flagga, sida, skriv, tabell, zipFiler, forbundLank, klubbLank,
-        offKnapp, offTom, namnSnyggt, writeFileSync, mkdirSync, join, UT, DOMAN, SASONG});
+        offKnapp, offTom, namnSnyggt, writeFileSync, mkdirSync, join, UT, DOMAN, SASONG,
+        PROFIL, kanalKnapp, IG_TONING, sponsorNamnUrAdress});
       KLARA_GRENAR.add(g.namn);
     }catch(e){ console.log(`${g.namn} kunde inte byggas den här gången: ${e.message} – alpint påverkas inte.`); }
   }
@@ -1321,6 +1360,9 @@ border-top:1px solid var(--line);padding-top:16px}
    Måste ligga med i det som publiceras, annars tappas den egna domänen
    varje gång jobbet lägger upp en ny version. */
 writeFileSync(join(UT,'CNAME'), new URL(DOMAN).hostname + '\n');
+
+if(alpintArkivUt) writeFileSync(join(UT,'alpine-skiing','lopp-arkiv.json'),
+  JSON.stringify({uppdaterad:new Date().toISOString().slice(0,10), lopp:alpintArkivUt}));
 
 /* ---- robots och sitemap ---- */
 writeFileSync(join(UT,'robots.txt'),
