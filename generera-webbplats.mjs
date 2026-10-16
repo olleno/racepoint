@@ -1364,9 +1364,58 @@ writeFileSync(join(UT,'CNAME'), new URL(DOMAN).hostname + '\n');
 if(alpintArkivUt) writeFileSync(join(UT,'alpine-skiing','lopp-arkiv.json'),
   JSON.stringify({uppdaterad:new Date().toISOString().slice(0,10), lopp:alpintArkivUt}));
 
-/* ---- robots och sitemap ---- */
+/* ---- robots och sitemap ----
+   Sökmotorer och AI-tjänster (ChatGPT, Claude, Perplexity m.fl.) släpps in
+   uttryckligen, en grupp per bot, så att ingen av dem tolkar tystnad som nej.
+   Sajten har inget som ska stängas ute – därför bara Allow: /. (16 okt 2026) */
+const AI_BOTAR=['Googlebot','Google-Extended','Bingbot','GPTBot','OAI-SearchBot','ChatGPT-User',
+  'ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Applebot',
+  'Applebot-Extended','CCBot','meta-externalagent','DuckAssistBot'];
 writeFileSync(join(UT,'robots.txt'),
-`User-agent: *\nAllow: /\n\nSitemap: ${DOMAN}/sitemap.xml\n`);
+  [...AI_BOTAR,'*'].map(b=>`User-agent: ${b}\nAllow: /\n`).join('\n')+
+  `\nSitemap: ${DOMAN}/sitemap.xml\n`);
+
+/* ---- llms.txt: en kort karta över sajten för AI-tjänster (llmstxt.org) ----
+   Byggs här så att den bara länkar till sidor och data som faktiskt finns i
+   det här bygget – en gren som inte byggdes i natt kommer inte med. */
+{
+  const finns=a=>existsSync(join(UT,a.replace(/^\//,'').replace(/\/$/,'/index.html')));
+  const rad=(titel,a,text)=>finns(a)?`- [${titel}](${DOMAN}${a}): ${text}\n`:'';
+  const grenSidor=[['Alpine Skiing','/alpine-skiing'],['Cross-Country','/cross-country'],
+    ['Snowboard','/snowboard'],['Freestyle & Ski Cross','/freestyle']];
+  let llms=`# Race Point
+
+> Race Point (racepoint.net) shows FIS points, race penalties, results and world rankings for snow sports. In alpine skiing it works out race points and penalty live while the race is still running.
+
+Race Point is an independent site, not affiliated with FIS. It is published by Foodbergs Stockholm AB (Swedish company reg. no. 559518-4457). All points, rankings and results come from the official FIS points lists and FIS live timing; the site is rebuilt from FIS data every night (this file was generated ${new Date().toISOString().slice(0,10)}).
+
+How lists are ordered: athlete and club directories are grouped by nation and sorted alphabetically; athletes within a club are sorted by FIS points (best first); races are listed newest first; race results are in finishing order. Nothing is ranked by payment. Upcoming-race pages may carry a link to accommodation near the venue; that link is marked "Advertising" and earns a commission, which does not affect any order or number on the site.
+
+## Main pages
+`;
+  llms+=rad('Race Point – home','/','all snow sports covered, with links to each sport');
+  llms+=rad('Alpine skiing – live FIS points calculator','/alpine-skiing/','live race points and penalty during a race, from the FIS live timing feed');
+  llms+=rad('Alpine skiing – funding your season','/alpine-skiing/guide.html','guide for athletes on getting sponsors and funding');
+  llms+=rad('Cross-country FIS points calculator','/cross-country/calculator/','race points, penalty and FIS points with the official FIS formula');
+  llms+=`\n## Sports\n`;
+  for(const [namn,bas] of grenSidor){
+    if(bas!=='/alpine-skiing' && !finns(bas+'/')) continue;
+    if(bas!=='/alpine-skiing') llms+=rad(`${namn} – overview`,bas+'/','world ranking per discipline from the current FIS points list');
+    llms+=rad(`${namn} – athletes`,bas+'/athletes/','every athlete on the current FIS points list, by nation');
+    llms+=rad(`${namn} – clubs`,bas+'/clubs/','clubs with athletes on the FIS points list, by nation');
+    llms+=rad(`${namn} – races`,bas+'/races/','races that counted for FIS points, with full results and applied penalty');
+  }
+  llms+=`\n## Machine-readable data\n`;
+  for(const [namn,bas] of grenSidor){
+    if(existsSync(join(UT,bas.slice(1),'lopp-arkiv.json')))
+      llms+=`- [${namn} race archive (JSON)](${DOMAN}${bas}/lopp-arkiv.json): settled races from the last three years with results, race points and penalty (per race: raceid, codex, datum = date, plats = venue, nat = nation, kon = sex, penalty, and r = results as [position, bib, FIS code, name, nation, status, time, race points])\n`;
+  }
+  llms+=`- [Sitemap](${DOMAN}/sitemap.xml)\n`;
+  llms+=`\n## Optional\n`;
+  llms+=rad('Add your links','/alpine-skiing/lagg-till.html','athletes can add their own social and sponsor links to their profile');
+  llms+=rad('Contact','/alpine-skiing/kontakt.html','contact and sponsorship enquiries');
+  writeFileSync(join(UT,'llms.txt'), llms);
+}
 
 const idag=new Date().toISOString().slice(0,10);
 const karta='<?xml version="1.0" encoding="UTF-8"?>\n'+
