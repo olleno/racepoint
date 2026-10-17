@@ -1,6 +1,8 @@
 {
   "_om": "Undantag från fabrikens gemensamma koll (~/verket/fabrik/fabrikskoll.py), godkända av Olle 2026-10-17. Ändra bara efter Olles beslut.",
   "public_dir": "webbplats",
+  "annonsord": ["Advertising"],
+  "_annonsord": "Sajten är på engelska: reklammärkningen skrivs \"Advertising\" i HTML-koden (byts till besökarens språk med javascript). Uppdrag via Olle 2026-10-17.",
   "nedrakning": [
     {"sokvag": "alpine-skiing/",
      "motivering": "Nedräkningen till loppstart på kalkylatorn är saklig information om när loppet börjar, inte säljpress. Godkänd av Olle 2026-10-17."}

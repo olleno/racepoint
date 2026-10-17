@@ -423,6 +423,9 @@
     from the same live timing feed the officials use – slalom, giant slalom, super-G, downhill and alpine combined.</p>
     <p>Every athlete on the FIS alpine points list has a page with current points and world ranking in each event, and every club has a list of its athletes.
     <a href="athletes/">All athletes</a> · <a href="clubs/">All clubs</a> · <a href="races/">Races and results</a> · <a href="ranking/">World ranking</a> · <a href="how-fis-points-are-calculated/">How FIS points are calculated</a> · <a href="guide.html">Three ways to fund your season</a></p>
+    <!-- Reklammärkningen står i själva HTML-koden, så att den syns även utan javascript (fabrikskollen, 17 okt 2026).
+         Ordet byts till besökarens språk av ritaFot() med samma text som i sprak.js (affiliateNot). -->
+    <p class="reklamnot"><span class="reklametikett">Advertising</span>: athlete pages can show equipment and travel links. Race Point earns a commission on them, and most of it goes to the athlete's club. You pay the same price, and nothing on the site is ranked by payment.</p>
   </section>
   <p class="foot" id="foot"></p>
 </div>
@@ -485,6 +488,10 @@ function ritaFot(){
   const f=document.getElementById('foot'); if(!f) return;
   f.textContent=window.FIS_CFG
     ? T('foot',{l:window.FIS_CFG.lista, v:window.FIS_CFG.giltig}) : '';
+  // reklamordet i den fasta märkningen: första ordet i affiliateNot på besökarens språk
+  const P=(window.SPRAK_PROFIL||{})[SPR]||(window.SPRAK_PROFIL||{}).en||{};
+  const ord=String(P.affiliateNot||'').split('.')[0];
+  if(ord) document.querySelectorAll('.reklametikett').forEach(el=>{el.textContent=ord;});
 }
 
 /* ============ 1. FIS eget dataformat (PHP-serialiserat) ============ */
