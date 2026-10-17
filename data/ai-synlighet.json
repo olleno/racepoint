@@ -1,0 +1,31 @@
+{
+  "om": "Mätprotokoll för Race Points synlighet i AI-tjänster (AI-sökpaketet, 17 okt 2026). Manuellt nu, kan automatiseras senare via officiella API:er.",
+  "sajt": "racepoint.net",
+  "fragebank": "data/ai-fragor.json",
+  "frekvens": "en gång i månaden, första veckan",
+  "tjanster": ["ChatGPT", "Gemini", "Claude", "Perplexity", "Copilot"],
+  "regler": [
+    "Samma frågor varje månad: alla frågor i data/ai-fragor.json, ordagrant, på det språk de står.",
+    "Ny konversation per fråga, utloggad eller utan sparad historik/minne, så att tidigare svar inte påverkar.",
+    "Bara via tjänsternas officiella gränssnitt (app, webbplats eller officiellt API). Ingen automatisk skrapning av AI-tjänsternas webbsidor.",
+    "Notera datum, tjänst, modell/läge om det syns (t.ex. med eller utan webbsök), och om racepoint.net länkas eller bara nämns.",
+    "Frågor med status 'saknar data' mäts också – de visar var en ny sida skulle göra nytta om datan blir tillgänglig."
+  ],
+  "klassning": {
+    "ej_namnd": "Race Point eller racepoint.net förekommer inte i svaret eller källorna.",
+    "namnd": "Nämns eller länkas någonstans i svaret eller källistan.",
+    "topp3": "Bland de tre första källorna/förslagen.",
+    "nr1": "Första källan eller det första förslaget."
+  },
+  "nyckeltal": {
+    "andel_namnd": "Andel svar (fråga × tjänst) klassade namnd, topp3 eller nr1. Per tjänst och totalt.",
+    "besok_fran_ai": "Besök med hänvisning från chatgpt.com, perplexity.ai, gemini.google.com, claude.ai, copilot.microsoft.com och bing.com/chat – ur GoatCounter (racepoint.goatcounter.com, 'Referrers').",
+    "andel_indexerade": "Indexerade sidor / sidor i sitemap.xml – ur Google Search Console (sc-domain:racepoint.net) och Bing Webmaster Tools.",
+    "klick_vidare_fran_ai": "Utgående klick på reklamlänkar (Stay22, campaign=rp_race) från AI-hänvisade besök. Går bara att mäta på kampanjnivå i Stay22-panelen i dag; ingen uppdelning per hänvisning."
+  },
+  "begransningar": [
+    "Sajten ligger på GitHub Pages: det finns inga serverloggar, så AI-botarnas crawl (GPTBot, ClaudeBot, PerplexityBot m.fl.) går inte att räkna här. Bing Webmaster Tools och Search Console visar sökmotorernas egen crawl.",
+    "GoatCounter räknar bara besök där webbläsaren kör javascript och skickar hänvisning; en del AI-appar skickar ingen."
+  ],
+  "matningar": []
+}

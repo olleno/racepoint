@@ -363,7 +363,41 @@ const SIGILL = `<svg width="38" height="38" viewBox="0 0 52 52" aria-hidden="tru
    i stallet for att ligga kvar i besokarens cache tills den loper ut. */
 const BYGGID=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 
+/* ---- AI-sökpaketet (17 okt 2026): samma namn och "om oss" överallt ----
+   Samma uppgifter står i sidfoten, i llms.txt och i JSON-LD Organization, så
+   att sökmotorer och AI-tjänster känner igen sajten som en och samma källa. */
+const UTGIVARE={namn:'Foodbergs Stockholm AB', orgnr:'559518-4457'};
+const OM_RP='Race Point (racepoint.net) shows FIS points, race penalties, results and world rankings for snow sports, '+
+  'from the official FIS points lists and FIS live timing. In alpine skiing it works out race points and penalty live while the race is still running.';
+const ORG_ID=DOMAN+'/#organization', WEBB_ID=DOMAN+'/#website';
+const ORG_LD={'@type':'Organization','@id':ORG_ID, name:'Race Point', url:DOMAN+'/',
+  logo:DOMAN+'/ikoner/ikon-512.png', description:OM_RP,
+  parentOrganization:{'@type':'Organization', name:UTGIVARE.namn, identifier:UTGIVARE.orgnr,
+    address:{'@type':'PostalAddress', addressCountry:'SE'}}};
+const WEBB_LD={'@type':'WebSite','@id':WEBB_ID, name:'Race Point', url:DOMAN+'/', inLanguage:'en',
+  description:OM_RP, publisher:{'@id':ORG_ID}};
+
+/* Brödsmulan finns redan som HTML på varje sida. Samma länkar blir
+   BreadcrumbList, så att strukturen alltid stämmer med det besökaren ser.
+   Relativa länkar ("../") räknas om mot sidans egen adress. */
+function brodsmuleLd(brodsmula, adress, titel){
+  if(!brodsmula) return null;
+  const bas=DOMAN+adress, delar=[];
+  const re=/<a href="([^"]*)">([\s\S]*?)<\/a>/g; let m;
+  while((m=re.exec(brodsmula))) delar.push({namn:m[2], url:new URL(m[1].replace(/&amp;/g,'&'), bas).href});
+  const avkoda=t=>String(t).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+  const lista=delar.map(d=>({namn:avkoda(d.namn), url:d.url})).filter(d=>d.url!==bas);
+  /* Sista ledet är alltid sidan själv, med sidans eget namn (titeln utan "| Race Point"). */
+  lista.push({namn:String(titel).split(' | ')[0].trim(), url:bas});
+  return {'@context':'https://schema.org','@type':'BreadcrumbList',
+    itemListElement:lista.map((d,i)=>({'@type':'ListItem', position:i+1, name:d.namn, item:d.url}))};
+}
+const ldSkript = o => '<script type="application/ld+json">'+JSON.stringify(o).replace(/</g,'\\u003c')+'</script>';
+
 function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall, jsonld, skript}){
+  const ld=[...(Array.isArray(jsonld)?jsonld:(jsonld?[jsonld]:[]))];
+  const bs=brodsmuleLd(brodsmula, adress, titel);
+  if(bs) ld.push(bs);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -380,7 +414,7 @@ function sida({titel, beskrivning, adress, rot, underrubrik, brodsmula, innehall
 <meta property="og:title" content="${esc(titel)}">
 <meta property="og:description" content="${esc(beskrivning)}">
 <meta property="og:url" content="${esc(DOMAN + adress)}">
-${jsonld ? '<script type="application/ld+json">'+JSON.stringify(jsonld)+'</script>' : ''}
+${ld.map(ldSkript).join('\n')}
 <script data-goatcounter="https://racepoint.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
@@ -395,7 +429,8 @@ ${innehall}
   <p>Race Point is made for the athletes and the athlete community — the people whose
   season these numbers decide. It is an independent site and is not affiliated with FIS.</p>
   <p>Times and start lists from FIS live timing, points and rankings from the official
-  FIS points list.</p>
+  FIS points list. Page updated ${new Date().toISOString().slice(0,10)}. Race Point is published by ${UTGIVARE.namn} (${UTGIVARE.orgnr}), Sweden.
+  <a href="${rot}api/">Open data</a> · <a href="${rot}llms.txt">llms.txt</a></p>
 </footer>
 </div>
 ${skript ? '<script src="'+rot+'alpine-skiing/'+skript+'?v='+BYGGID+'" defer></script>' : ''}
@@ -453,6 +488,9 @@ for(const bit of liveHtml.split('class="g-row"').slice(1)){
     kon:t.find(x=>x==='M'||x==='W')||'', tid:(bit.match(/data-time="([0-9:]{4,5})"/)||[])[1]||''});
 }
 console.log(`  ${kommande.length} kommande`);
+
+/* Källan i klartext, med datum. Står i "svaret först" överst på sidorna. */
+const KALLA_LISTA=`official ${hdr.Listname} (valid ${hdr.Validfrom} to ${hdr.Validto})`;
 
 /* ─────────────── 2. sortera datan ─────────────── */
 /* FIS-filen kommer ur en databasexport där apostrofer är escapade: klubben
@@ -592,8 +630,10 @@ function sankning(fis, poang){
 }
 
 const KLUBBSIDOR={};
-const klubbNyckel=(nat,namn)=>nat+'|'+String(namn||'')
-  .toLowerCase().replace(/[^a-z0-9]+/g,'');
+/* Nyckeln normaliseras på samma sätt som adressen (slug), annars blir "Ármann"
+   och "Armann" två klubbar med samma adress – och den ena sidan skriver över
+   den andra (och adressen hamnade två gånger i sitemap). */
+const klubbNyckel=(nat,namn)=>nat+'|'+slug(namn||'');
 const klubbAdress=(nat,namn)=>`/alpine-skiing/clubs/${slug(nat)}-${slug(namn)}.html`;
 const PROFILFALT=['instagram','tiktok','youtube','facebook','linkedin','strava','webb'];
 function ifyllt(egna){
@@ -619,7 +659,10 @@ for(const a of Object.values(akare)){
 
   let inneh=`<h1>${flagga(a.nat)} ${esc(visa)}</h1>
 <p class="ingress">FIS code ${esc(a.fis)} · ${esc(a.nat)}${a.fodd?' · born '+esc(a.fodd):''}${klubbVisa?' · '+esc(klubbVisa):''}</p>
-<section class="kort"><h2>FIS points</h2>
+<p class="svar">${esc(visa)} has alpine FIS points in ${grenar.length} event${grenar.length===1?'':'s'}. Lowest:
+${esc(GRENNAMN[basta])}, ${a.poang[basta].toFixed(2)} points${a.rank[basta]?` (world no. ${a.rank[basta]})`:''}. Lower is better.
+Source: ${esc(KALLA_LISTA)}.</p>
+<section class="kort"><h2>What are ${esc(visa)}’s FIS points?</h2>
 <div class="tblwrap"><table><tr><th>Event</th><th class="n">Points</th><th class="n">World ranking</th></tr>`;
   grenar.forEach(g=>{
     inneh+=`<tr><td>${GRENNAMN[g]}</td><td class="n">${a.poang[g].toFixed(2)}</td>`+
@@ -747,7 +790,7 @@ a couple of minutes, and everything is checked before it appears.</p>
     beskrivning, adress, rot:'../../',
     brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Athletes`,
     innehall:inneh, skript:'fis-delning.js',
-    jsonld:{'@context':'https://schema.org','@type':'Person', name:visa,
+    jsonld:{'@context':'https://schema.org','@type':'Person', name:visa, url:DOMAN+adress,
       nationality:a.nat, identifier:a.fis,
       sameAs:`https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=AL&competitorid=${a.id}`}
   }));
@@ -790,6 +833,9 @@ for(const k of Object.values(KLUBBSIDOR)){
   let inneh=`<h1>${flagga(k.nat)} ${esc(k.namn)}</h1>
 <p class="ingress">${antal} athlete${antal===1?'':'s'} on the FIS alpine points list${
   k.webb?' · <a href="'+esc(k.webb)+'" rel="noopener">club website</a>':''}</p>
+<p class="svar">${esc(k.namn)} (${esc(k.nat)}) has ${antal} athlete${antal===1?'':'s'} with alpine FIS points${
+  k.akare[0]&&k.akare[0].poang!=null?`; the lowest is ${esc(k.akare[0].visa)} with ${k.akare[0].poang.toFixed(2)} in ${esc(GRENNAMN[k.akare[0].gren])}`:''}.
+Source: ${esc(KALLA_LISTA)}.</p>
 <section class="kort"><h2>Pages filled in</h2><div class="nums">
 <div><div class="n">${klara}</div><small>of ${antal} filled in</small></div>
 <div><div class="n">${antal-klara}</div><small>still empty</small></div>
@@ -921,6 +967,19 @@ function resaRuta(plats, nat, datum){
 <div class="lankar"><a href="${esc(url)}" target="_blank" rel="noopener sponsored nofollow">Hotels and apartments near ${esc(plats)} <span class="sm">${esc(dag(-1))} – ${esc(dag(1))}</span></a></div></section>`;
 }
 
+/* SportsEvent (en sorts Event) för tävlingar. Landet som ISO-kod, så att
+   adressen går att tolka. Status bara för kommande lopp – schema.org har
+   ingen status för "avgjord". Ingen arrangör anges: den står inte i datan. */
+function evenemangLd({namn, datum, plats, nat, sport, adress, kat, kommande}){
+  const iso=ISO[nat];
+  return {'@context':'https://schema.org','@type':'SportsEvent', name:namn, url:DOMAN+adress,
+    startDate:datum, endDate:datum, sport, ...(kat?{description:`FIS race category ${kat}`}:{}),
+    eventAttendanceMode:'https://schema.org/OfflineEventAttendanceMode',
+    ...(kommande?{eventStatus:'https://schema.org/EventScheduled'}:{}),
+    location:{'@type':'Place', name:plats,
+      address:{'@type':'PostalAddress', addressLocality:plats, ...(iso?{addressCountry:iso}:{})}}};
+}
+
 /* ---- tävlingssidor: avgjorda ---- */
 let antalTavling=0;
 for(const t of Object.values(tavlingar)){
@@ -934,7 +993,11 @@ for(const t of Object.values(tavlingar)){
 
   let inneh=`<h1>${flagga(t.nat)} ${esc(rubrik)}</h1>
 <p class="ingress">${esc(t.datum)} · ${esc(t.kat)} · FIS codex ${esc(t.codex)}</p>
-<section class="kort"><h2>Penalty</h2><div class="nums">
+${(()=>{ const v=t.resultat.find(r=>r.pos===1); const va=v&&akare[v.fis];
+  const vn=v?(va?namnSnyggt(va.efter,va.forn):v.namn):'';
+  return `<p class="svar">${v?`${esc(vn)} (${esc(v.nat)}) won${v.tid?' in '+tid(v.tid):''}. `:''}The applied penalty was ${esc(t.penalty)} and ${t.resultat.filter(r=>r.pos).length} athletes were classified.
+Source: official FIS results, race date ${esc(t.datum)}.</p>`; })()}
+<section class="kort"><h2>What was the penalty?</h2><div class="nums">
 <div><div class="n">${esc(t.penalty)}</div><small>applied</small></div>
 <div><div class="n">${esc(t.beraknad)}</div><small>calculated</small></div>
 <div><div class="n">${t.resultat.filter(r=>r.pos).length}</div><small>classified</small></div>
@@ -960,9 +1023,7 @@ for(const t of Object.values(tavlingar)){
     beskrivning, adress, rot:'../../',
     brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Races`,
     innehall:inneh,
-    jsonld:{'@context':'https://schema.org','@type':'SportsEvent', name:rubrik,
-      startDate:t.datum, sport:'Alpine skiing',
-      location:{'@type':'Place', name:t.plats, address:t.nat}}
+    jsonld:evenemangLd({namn:rubrik, datum:t.datum, plats:t.plats, nat:t.nat, sport:'Alpine skiing', adress, kat:t.kat})
   }));
   antalTavling++;
 }
@@ -991,9 +1052,7 @@ penalty and every athlete's new FIS points after each finish, instead of waiting
     adress, rot:'../../',
     brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › Races`,
     innehall:inneh,
-    jsonld:{'@context':'https://schema.org','@type':'SportsEvent', name:rubrik,
-      startDate:k.datum, sport:'Alpine skiing', eventStatus:'https://schema.org/EventScheduled',
-      location:{'@type':'Place', name:k.plats, address:k.nat}}
+    jsonld:evenemangLd({namn:rubrik, datum:k.datum, plats:k.plats, nat:k.nat, sport:'Alpine skiing', adress, kat:k.kat, kommande:true})
   }));
   antalTavling++;
 }
@@ -1072,7 +1131,10 @@ world ranking and results. Find them through a race, or search for the name.</p>
 <section class="kort"><h2>Clubs</h2>
 <p class="not">${antalKlubb} clubs, each with its own athletes, their points and how many
 of them have filled in their page.</p>
-<div class="lankar"><a href="../clubs/">All clubs</a></div></section>`;
+<div class="lankar"><a href="../clubs/">All clubs</a></div></section>
+<section class="kort"><h2>Ranking and rules</h2><div class="lankar">
+<a href="../ranking/">World ranking per event</a><a href="../how-fis-points-are-calculated/">How FIS points are calculated</a>
+<a href="penalty/">Races with the lowest penalty</a></div></section>`;
 skriv('/alpine-skiing/races/index.html', sida({
   titel:'Alpine skiing races – results, penalty and FIS points | Race Point',
   beskrivning:'Every FIS alpine race with live timing: results, applied penalty and the FIS points each athlete scored.',
@@ -1081,17 +1143,148 @@ skriv('/alpine-skiing/races/index.html', sida({
   innehall:listInneh
 }));
 
+/* ---- AI-sökpaketet (17 okt 2026): två svarssidor för alpint ----
+   1. Världsrankningen per gren och kön – längd, snowboard och freestyle hade
+      redan en sådan översikt, alpint saknade den.
+   2. Hur FIS-poäng räknas i alpint – F-värden, maxpoäng, minsta penalty och
+      tillägg per tävlingsnivå, allt ur samma FIS-fil som resten av sajten
+      (dis.csv, cat.csv, Fiscategory.txt). Formeln är den som kalkylatorn
+      använder och som stämt mot 44 officiella lopp. */
+const RANK_ADR='/alpine-skiing/ranking/', FORMEL_ADR='/alpine-skiing/how-fis-points-are-calculated/';
+{
+  let inneh=`<h1>Alpine skiing world ranking – FIS points</h1>
+<p class="svar">The top 25 men and women in each alpine event on the ${esc(KALLA_LISTA)}.
+Lower FIS points are better. Ranking and points are copied from the list as published by FIS.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/athletes/">All athletes</a>
+<a class="knapp" href="/alpine-skiing/races/">Races and results</a>
+<a class="knapp" href="${FORMEL_ADR}">How FIS points are calculated</a></div>`;
+  for(const g of GRENAR) for(const [kon,konNamn] of [['M','Men'],['W','Women']]){
+    const topp=Object.values(akare).filter(a=>a.kon===kon && a.rank[g] && a.poang[g]!=null)
+      .sort((x,y)=>x.rank[g]-y.rank[g]).slice(0,25);
+    if(!topp.length) continue;
+    inneh+=`<section class="kort"><h2>Who leads the ${esc(GRENNAMN[g].toLowerCase())} FIS points list? · ${konNamn}</h2><div class="tblwrap"><table>
+<tr><th class="n">Rank</th><th></th><th>Athlete</th><th class="n">FIS points</th></tr>`+
+      topp.map(a=>`<tr><td class="n">${a.rank[g]}</td><td>${flagga(a.nat)}</td>`+
+        `<td><a href="${esc(akareAdress(a))}">${esc(namnSnyggt(a.efter,a.forn))}</a></td><td class="n">${a.poang[g].toFixed(2)}</td></tr>`).join('')+
+      `</table></div></section>`;
+  }
+  skriv(RANK_ADR+'index.html', sida({
+    titel:'Alpine skiing world ranking – FIS points list | Race Point',
+    beskrivning:`Top 25 men and women in slalom, giant slalom, super-G, downhill and alpine combined on the ${hdr.Listname}, valid ${hdr.Validfrom} to ${hdr.Validto}.`,
+    adress:RANK_ADR, rot:'../../',
+    brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › World ranking`,
+    innehall:inneh,
+    jsonld:{'@context':'https://schema.org','@type':'Dataset', name:`Alpine skiing FIS points world ranking (${hdr.Listname})`,
+      description:`Top 25 per alpine event and sex from the ${hdr.Listname}.`, url:DOMAN+RANK_ADR,
+      temporalCoverage:`${hdr.Validfrom}/${hdr.Validto}`, dateModified:new Date().toISOString().slice(0,10),
+      isBasedOn:'https://www.fis-ski.com/DB/alpine-skiing/fis-points-lists.html', creator:{'@id':ORG_ID}, publisher:{'@id':ORG_ID},
+      isAccessibleForFree:true}
+  }));
+}
+/* Regelverket ur FIS-filen */
+const DIS=tabell(hitta('dis.csv')), KAT=tabell(hitta('cat.csv'));
+const NIVA={}, KATNAMN={};
+(hitta('Fiscategory.txt')||'').split(/\r?\n/).slice(1).forEach(r=>{ const c=r.split('\t');
+  if(c[1]==='AL'){ NIVA[c[2]]=Number(c[7]); KATNAMN[c[2]]=c[3]; } });
+const FORMEL={lista:hdr.Listname, giltig:{fran:hdr.Validfrom, till:hdr.Validto},
+  grenar:DIS.filter(d=>GRENNAMN[d.Disciplinecode]).map(d=>({gren:d.Disciplinecode, namn:GRENNAMN[d.Disciplinecode], kon:d.Gender,
+    F:+d.Fvalue, max:+d.Maxpoints, tillagg:[+d.Adder0,+d.Adder1,+d.Adder2,+d.Adder3,+d.Adder4]})),
+  kategorier:KAT.filter(c=>KATNAMN[c.Catcode] && NIVA[c.Catcode]!=null && c.Maxfispoints==='999')
+    .map(c=>({kod:c.Catcode, namn:KATNAMN[c.Catcode], minPenalty:parseFloat(c.Minfispoints), niva:NIVA[c.Catcode]}))
+    .sort((a,b)=>a.niva-b.niva||a.kod.localeCompare(b.kod))};
+{
+  const lika=FORMEL.grenar.every(d=>{const o=FORMEL.grenar.find(x=>x.gren===d.gren&&x.kon!==d.kon); return !o||(o.F===d.F&&o.max===d.max);});
+  const fGrenar=GRENAR.flatMap(g=>lika?[FORMEL.grenar.find(d=>d.gren===g)].filter(Boolean)
+    :FORMEL.grenar.filter(d=>d.gren===g).map(d=>({...d, namn:d.namn+(d.kon==='M'?' (men)':' (women)')})));
+  const sammaTillagg=niva=>{ const v=[...new Set(FORMEL.grenar.map(d=>d.tillagg[niva]))]; return v.length===1?v[0]:null; };
+  let inneh=`<h1>How are FIS points calculated in alpine skiing?</h1>
+<p class="svar">Your FIS points for a race are your race points plus the race penalty. Race points =
+(your time ÷ winner's time − 1) × F, where F depends on the event – ${fGrenar.map(d=>`${esc(d.namn.toLowerCase())} ${d.F}`).join(', ')}.
+The penalty measures how strong the field was, and is never lower than the minimum for the race category.
+All values below are from the ${esc(KALLA_LISTA)}.</p>
+<section class="kort"><h2>What is the F-value for each event?</h2><div class="tblwrap"><table>
+<tr><th>Event</th><th class="n">F-value</th><th class="n">Max points</th></tr>`+
+    fGrenar.map(d=>`<tr><td>${esc(d.namn)}</td><td class="n">${d.F}</td><td class="n">${d.max}</td></tr>`).join('')+
+  `</table></div><p class="not">${lika?'Men and women have the same values on this list. ':''}Race points are capped at the max points.</p></section>
+<section class="kort"><h2>How is the penalty worked out?</h2>
+<p class="not" style="margin-top:0">Penalty = (A + B − C) ÷ 10 + category adder.</p>
+<p class="not">A: the sum of the five best FIS points among the top ten finishers. B: the sum of the five best FIS points
+among all starters. C: the sum of the race points of the five athletes counted in A. Athletes without FIS points in the
+event count as the max points. If fewer than three of the five in A have FIS points, the penalty becomes at least twice
+the max points. The result is never lower than the minimum penalty for the race category below. Source: FIS Points
+Rules, article 4.4.</p></section>
+<section class="kort"><h2>What is the minimum penalty for each race category?</h2><div class="tblwrap"><table>
+<tr><th>Category</th><th></th><th class="n">Min. penalty</th><th class="n">Adder</th></tr>`+
+    FORMEL.kategorier.map(c=>{ const t=sammaTillagg(c.niva);
+      return `<tr><td>${esc(c.namn)}</td><td class="muted">${esc(c.kod)}</td><td class="n">${c.minPenalty}</td><td class="n">${t==null?'varies':t}</td></tr>`; }).join('')+
+  `</table></div><p class="not">The adder depends on the race level FIS gives each category.</p></section>
+<section class="kort"><h2>Can I see it live?</h2><p class="not">During a race, Race Point does this calculation after every finish,
+from the FIS live timing feed. It has been checked against 44 official races and reproduced the published penalty exactly in every one.</p>
+<div class="lankar"><a class="knapp" href="/alpine-skiing/">Open the live FIS points calculator</a>
+<a class="knapp" href="${RANK_ADR}">World ranking</a></div></section>`;
+  skriv(FORMEL_ADR+'index.html', sida({
+    titel:'How FIS points are calculated in alpine skiing – F-values and penalty | Race Point',
+    beskrivning:`The alpine FIS points formula: race points, F-values per event, penalty and minimum penalty per race category, from the ${hdr.Listname}.`,
+    adress:FORMEL_ADR, rot:'../../',
+    brodsmula:`<a href="../../">Race Point</a> › <a href="../">Alpine Skiing</a> › How FIS points are calculated`,
+    innehall:inneh,
+    jsonld:{'@context':'https://schema.org','@type':'Article', headline:'How are FIS points calculated in alpine skiing?',
+      url:DOMAN+FORMEL_ADR, dateModified:new Date().toISOString().slice(0,10), inLanguage:'en',
+      author:{'@id':ORG_ID}, publisher:{'@id':ORG_ID}, isBasedOn:'https://www.fis-ski.com/DB/alpine-skiing/fis-points-lists.html'}
+  }));
+}
+
+/* 3. Lopp sorterade efter applicerad penalty – åkare letar efter lopp där
+      fältet ger låg penalty. Bara avgjorda lopp senaste 365 dagarna, och inte
+      kategorier med fast penalty 0 (världscup, OS, VM), som annars skulle
+      fylla listan utan att säga något. Ordningen är penaltyn, inget annat. */
+const PENALTY_ADR='/alpine-skiing/races/penalty/';
+{
+  const fran=new Date(Date.now()-365*864e5).toISOString().slice(0,10);
+  const lopp=Object.values(tavlingar).filter(t=>t.resultat.length && t.datum>=fran &&
+    NIVA[t.kat]!==0 && t.penalty!=='' && t.penalty!=null && isFinite(parseFloat(t.penalty)));
+  let inneh=`<h1>Which alpine FIS races had the lowest penalty?</h1>
+<p class="svar">${lopp.length} settled FIS alpine races from ${esc(fran)} to today, per event and sex, ordered by the applied
+penalty (lowest first). World Cup, Olympics and World Championships are left out – their penalty is fixed at 0.
+Source: official FIS results via the ${esc(KALLA_LISTA)} and Race Point's race archive.</p>`;
+  let antalTabeller=0;
+  for(const g of GRENAR) for(const [kon,konNamn] of [['M','Men'],['W','Women']]){
+    const l=lopp.filter(t=>t.gren===g && t.kon===kon)
+      .sort((a,b)=>parseFloat(a.penalty)-parseFloat(b.penalty)||a.datum.localeCompare(b.datum)).slice(0,30);
+    if(l.length<3) continue;
+    antalTabeller++;
+    inneh+=`<section class="kort"><h2>${esc(GRENNAMN[g])} · ${konNamn}</h2><div class="tblwrap"><table>
+<tr><th class="n">Penalty</th><th>Date</th><th>Race</th><th>Category</th></tr>`+
+      l.map(t=>`<tr><td class="n">${parseFloat(t.penalty).toFixed(2)}</td><td class="muted">${esc(t.datum)}</td>`+
+        `<td>${flagga(t.nat)} <a href="${esc(tavlingAdress(t))}">${esc(t.plats)}</a></td><td class="muted">${esc(t.kat)}</td></tr>`).join('')+
+      `</table></div></section>`;
+  }
+  if(antalTabeller){
+    inneh+=`<section class="kort"><h2>What does the penalty mean?</h2><p class="not">Every athlete's FIS points for a race are
+the race points plus the penalty, so a lower penalty means lower FIS points for the same time gap.
+<a href="${FORMEL_ADR}">How the penalty is calculated</a>.</p></section>`;
+    skriv(PENALTY_ADR+'index.html', sida({
+      titel:'Alpine FIS races with the lowest penalty – by event | Race Point',
+      beskrivning:`Settled FIS alpine races from the last 12 months ordered by applied penalty, per event and sex. ${lopp.length} races.`,
+      adress:PENALTY_ADR, rot:'../../../',
+      brodsmula:`<a href="../../../">Race Point</a> › <a href="../../">Alpine Skiing</a> › <a href="../">Races</a> › Penalty`,
+      innehall:inneh}));
+  }
+}
+
 /* ---- övriga grenar (längd först, 13 okt 2026) – se generera-gren.mjs ----
    En gren som fallerar får aldrig stoppa alpint: varje gren i egen try/catch. */
 const KLARA_GRENAR=new Set();
+const GREN_API={};   // underlag för /api/v1/ per gren (AI-sökpaketet)
 try{
   const {GRENER, byggGren} = await import('./generera-gren.mjs');
   for(const g of GRENER){
     try{
-      await byggGren(g, {esc, slug, flagga, sida, skriv, tabell, zipFiler, forbundLank, klubbLank,
+      const ut=await byggGren(g, {esc, slug, flagga, sida, skriv, tabell, zipFiler, forbundLank, klubbLank,
         offKnapp, offTom, namnSnyggt, writeFileSync, mkdirSync, join, UT, DOMAN, SASONG,
-        PROFIL, kanalKnapp, IG_TONING, sponsorNamnUrAdress});
+        PROFIL, kanalKnapp, IG_TONING, sponsorNamnUrAdress, evenemangLd, ORG_ID});
       KLARA_GRENAR.add(g.namn);
+      if(ut && ut.api) GREN_API[g.mapp]={namn:g.namn, sport:g.sport, ...ut.api};
     }catch(e){ console.log(`${g.namn} kunde inte byggas den här gången: ${e.message} – alpint påverkas inte.`); }
   }
 }catch(e){ console.log('generera-gren.mjs kunde inte laddas: '+e.message); }
@@ -1157,7 +1350,8 @@ if(SPONSORER.length){
 skriv('/index.html', sida({
   titel:'Race Point – live FIS points for snow sports',
   beskrivning:'FIS points and penalty worked out while the race is still running, from the official live timing feed.',
-  adress:'/', rot:'', underrubrik:'Snow sports', innehall:start
+  adress:'/', rot:'', underrubrik:'Snow sports', innehall:start,
+  jsonld:{'@context':'https://schema.org','@graph':[ORG_LD, WEBB_LD]}
 }));
 
 /* ---- den levande sidan och dess data ---- */
@@ -1170,8 +1364,20 @@ const VERSION=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
  'manifest.webmanifest'].forEach(f=>{
   if(!existsSync(join(HAR,f))) return;
   if(f.endsWith('.html')){
-    const html=readFileSync(join(HAR,f),'utf8')
+    let html=readFileSync(join(HAR,f),'utf8')
       .replace(/(<script src=")([a-z0-9-]+\.js)(")/g, `$1$2?v=${VERSION}$3`);
+    /* Den levande sidan (FIS-poängkalkylatorn) är en handskriven fil. Den får
+       sin strukturerade data här, så att samma uppgifter som på resten av
+       sajten följer med varje bygge. */
+    if(f==='index.html') html=html.replace('</head>', [
+      {'@context':'https://schema.org','@type':'WebApplication', name:'Race Point – live FIS points calculator for alpine skiing',
+       url:DOMAN+'/alpine-skiing/', applicationCategory:'SportsApplication', operatingSystem:'Any', browserRequirements:'Requires JavaScript',
+       isAccessibleForFree:true, inLanguage:'en', description:'Works out the race penalty and every athlete\'s new FIS points after each finish, from the FIS live timing feed.',
+       publisher:{'@id':ORG_ID}},
+      brodsmuleLd('<a href="../">Race Point</a>', '/alpine-skiing/', 'Alpine Skiing – live FIS points calculator')
+    ].map(ldSkript).join('\n')+'\n</head>')
+      /* Datum syns även utan javascript: när datan senast byggdes och från vilken lista. */
+      .replace('<p class="foot" id="foot"></p>', `<p class="om-datum" style="font-size:12.5px;color:var(--muted)">Data updated ${new Date().toISOString().slice(0,10)} from the ${esc(hdr.Listname)} (valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}).</p>\n  <p class="foot" id="foot"></p>`);
     writeFileSync(join(UT,'alpine-skiing',f), html);
   } else {
     copyFileSync(join(HAR,f), join(UT,'alpine-skiing',f));
@@ -1226,6 +1432,8 @@ text-transform:uppercase;color:var(--sport)}
 .brod a{color:var(--muted)}
 h1{font-size:23px;font-weight:660;letter-spacing:-.01em;margin:0 0 6px;line-height:1.25}
 .ingress{color:var(--muted);font-size:14px;margin:0 0 22px}
+.ingress+.svar{margin-top:-12px}
+.svar{font-size:15px;line-height:1.55;color:var(--ink);margin:0 0 20px;max-width:68ch}
 .kort{background:var(--card);border:1px solid var(--line);border-radius:12px;
 padding:15px 17px;margin-bottom:14px;box-shadow:var(--shadow)}
 .kort h2{font-size:11.5px;font-weight:620;text-transform:uppercase;letter-spacing:.07em;
@@ -1364,6 +1572,145 @@ writeFileSync(join(UT,'CNAME'), new URL(DOMAN).hostname + '\n');
 if(alpintArkivUt) writeFileSync(join(UT,'alpine-skiing','lopp-arkiv.json'),
   JSON.stringify({uppdaterad:new Date().toISOString().slice(0,10), lopp:alpintArkivUt}));
 
+/* ---- Öppet JSON-flöde: /api/v1/ (AI-sökpaketet, 17 okt 2026) ----
+   Bara läsande, statiska filer som byggs varje natt – inga anrop, inga
+   formulär, inga nycklar. Innehåller lopp, klubbar och regelvärden, med källa
+   och datum per post. Åkarnas namn och födelseår är medvetet INTE med:
+   det är personuppgifter, och många åkare är minderåriga. Den som vill se
+   en åkare går till åkarsidan. Formatet beskrivs i /api/v1/openapi.json. */
+const API_DATUM=new Date().toISOString().slice(0,10);
+const API_UTGIVARE={name:'Race Point', url:DOMAN+'/', publisher:`${UTGIVARE.namn} (${UTGIVARE.orgnr})`};
+const API_VILLKOR='Read-only. Built every night from official FIS data. Race Point is independent and not affiliated with FIS; FIS results decide.';
+const apiSport={};   // mapp -> {name, list, races, clubs, athletes}
+apiSport['alpine-skiing']={name:'Alpine Skiing', sport:'Alpine skiing',
+  list:{name:hdr.Listname, valid_from:hdr.Validfrom, valid_to:hdr.Validto, source:'https://www.fis-ski.com/DB/alpine-skiing/fis-points-lists.html'},
+  athletes:antalAkare,
+  races:[
+    ...Object.values(tavlingar).filter(t=>t.resultat.length).map(t=>({id:String(t.raceid), codex:t.codex, date:t.datum,
+      venue:t.plats, nation:t.nat, category:t.kat, event:GRENNAMN[t.gren]||t.gren, sex:t.kon,
+      applied_penalty:t.penalty!==''&&t.penalty!=null?parseFloat(t.penalty):null,
+      calculated_penalty:t.beraknad!==''&&t.beraknad!=null?parseFloat(t.beraknad):null,
+      classified:t.resultat.filter(r=>r.pos).length, upcoming:false, url:DOMAN+tavlingAdress(t),
+      source:'FIS official results (FIS points list data)', checked:API_DATUM})),
+    ...kommande.filter(k=>!avgjordaNycklar.has(k.codex+'|'+k.datum)).map(k=>({id:null, codex:k.codex, date:k.datum,
+      venue:k.plats, nation:k.nat, category:k.kat, event:k.grennamn, sex:k.kon, applied_penalty:null, calculated_penalty:null,
+      classified:null, upcoming:true,
+      url:DOMAN+`/alpine-skiing/races/${k.datum}-${slug(k.plats)}-${slug(k.grennamn)}-${k.kon==='M'?'men':'women'}-${k.codex}.html`,
+      source:'FIS live timing calendar (fis-ski.com/DB/alpine-skiing/live.html)', checked:API_DATUM}))
+  ].sort((a,b)=>b.date.localeCompare(a.date)||a.codex.localeCompare(b.codex)),
+  clubs:Object.values(KLUBBSIDOR).map(k=>({name:k.namn, nation:k.nat, athletes:k.akare.length, url:DOMAN+k.adress,
+    website:k.webb||null, source:hdr.Listname, checked:API_DATUM}))
+    .sort((a,b)=>a.nation.localeCompare(b.nation)||a.name.localeCompare(b.name,'sv'))};
+for(const [mapp,g] of Object.entries(GREN_API)){
+  apiSport[mapp]={name:g.namn, sport:g.sport,
+    list:{name:g.lista.namn, valid_from:g.lista.giltigFran, valid_to:g.lista.giltigTill, source:g.lista.kalla},
+    athletes:g.antalAkare,
+    races:g.lopp.map(t=>({id:String(t.raceid), codex:t.codex, date:t.datum, venue:t.plats, nation:t.nat, category:t.kat,
+      event:t.gren, sex:t.kon, applied_penalty:Number.isFinite(t.penalty)?t.penalty:null,
+      calculated_penalty:Number.isFinite(t.beraknad)?t.beraknad:null, classified:t.klassade, upcoming:false,
+      url:DOMAN+t.adress, source:'FIS official results (FIS points list data)', checked:API_DATUM}))
+      .sort((a,b)=>b.date.localeCompare(a.date)||a.codex.localeCompare(b.codex)),
+    clubs:g.klubbar.map(k=>({name:k.namn, nation:k.nat, athletes:k.akare, url:DOMAN+k.adress, website:k.webb||null,
+      source:g.lista.namn, checked:API_DATUM})).sort((a,b)=>a.nation.localeCompare(b.nation)||a.name.localeCompare(b.name,'sv'))};
+}
+const apiSkriv=(rel,obj)=>{ const fil=join(UT,'api','v1',rel); mkdirSync(dirname(fil),{recursive:true});
+  writeFileSync(fil, JSON.stringify(obj, null, 1)); };
+const apiIndex={...API_UTGIVARE, description:OM_RP, generated:API_DATUM, terms:API_VILLKOR,
+  openapi:DOMAN+'/api/v1/openapi.json', documentation:DOMAN+'/api/', llms:DOMAN+'/llms.txt',
+  alpine_formula:DOMAN+'/api/v1/alpine-skiing/formula.json',
+  sports:Object.entries(apiSport).map(([mapp,x])=>({id:mapp, name:x.name, list:x.list, athletes:x.athletes,
+    races:x.races.length, clubs:x.clubs.length, page:DOMAN+'/'+mapp+'/',
+    endpoints:{races:`${DOMAN}/api/v1/${mapp}/races.json`, clubs:`${DOMAN}/api/v1/${mapp}/clubs.json`}}))};
+apiSkriv('index.json', apiIndex);
+for(const [mapp,x] of Object.entries(apiSport)){
+  apiSkriv(`${mapp}/races.json`, {sport:x.name, generated:API_DATUM, list:x.list, terms:API_VILLKOR, count:x.races.length, races:x.races});
+  apiSkriv(`${mapp}/clubs.json`, {sport:x.name, generated:API_DATUM, list:x.list, terms:API_VILLKOR, count:x.clubs.length, clubs:x.clubs});
+}
+apiSkriv('alpine-skiing/formula.json', {sport:'Alpine Skiing', generated:API_DATUM, terms:API_VILLKOR,
+  list:apiSport['alpine-skiing'].list, page:DOMAN+FORMEL_ADR,
+  formula:{race_points:'(athlete time / winner time - 1) * F, capped at max_points',
+    penalty:'(A + B - C) / 10 + category adder, never below the category minimum; A = sum of the five best FIS points among the top ten finishers, B = sum of the five best FIS points among all starters, C = sum of race points of the five athletes in A',
+    fis_points:'race points + penalty', rules:'FIS Points Rules, article 4.4'},
+  events:FORMEL.grenar.map(d=>({event:d.namn, code:d.gren, sex:d.kon, f_value:d.F, max_points:d.max, adder_by_level:d.tillagg})),
+  categories:FORMEL.kategorier.map(c=>({code:c.kod, name:c.namn, min_penalty:c.minPenalty, level:c.niva}))});
+
+/* OpenAPI 3.1 – beskriver filerna ovan. Testerna kontrollerar flödet mot de här schemana. */
+const S_STR={type:'string'}, S_NUMNULL={type:['number','null']}, S_STRNULL={type:['string','null']};
+const S_LISTA={type:'object', required:['name','valid_from','valid_to','source'],
+  properties:{name:S_STR, valid_from:S_STR, valid_to:S_STR, source:S_STR}};
+const OPENAPI={openapi:'3.1.0',
+  info:{title:'Race Point open data', version:'1.0.0', description:OM_RP+' '+API_VILLKOR,
+    contact:{name:'Race Point', url:DOMAN+'/alpine-skiing/kontakt.html'}},
+  servers:[{url:DOMAN}],
+  paths:{
+    '/api/v1/index.json':{get:{summary:'List of sports, current FIS points lists and endpoints',
+      responses:{200:{description:'OK', content:{'application/json':{schema:{$ref:'#/components/schemas/Index'}}}}}}},
+    '/api/v1/{sport}/races.json':{get:{summary:'Races with date, venue, category, penalty and number classified',
+      parameters:[{name:'sport', in:'path', required:true, schema:{type:'string', enum:Object.keys(apiSport)}}],
+      responses:{200:{description:'OK', content:{'application/json':{schema:{$ref:'#/components/schemas/Races'}}}}}}},
+    '/api/v1/{sport}/clubs.json':{get:{summary:'Clubs with athletes on the current FIS points list',
+      parameters:[{name:'sport', in:'path', required:true, schema:{type:'string', enum:Object.keys(apiSport)}}],
+      responses:{200:{description:'OK', content:{'application/json':{schema:{$ref:'#/components/schemas/Clubs'}}}}}}},
+    '/api/v1/alpine-skiing/formula.json':{get:{summary:'Alpine FIS points formula: F-values, max points, minimum penalty per category',
+      responses:{200:{description:'OK', content:{'application/json':{schema:{$ref:'#/components/schemas/Formula'}}}}}}}},
+  components:{schemas:{
+    List:S_LISTA,
+    Index:{type:'object', required:['name','url','publisher','generated','sports','openapi'],
+      properties:{name:S_STR, url:S_STR, publisher:S_STR, generated:S_STR, openapi:S_STR,
+        sports:{type:'array', items:{type:'object', required:['id','name','list','races','clubs','endpoints'],
+          properties:{id:S_STR, name:S_STR, list:S_LISTA, athletes:{type:'integer'}, races:{type:'integer'}, clubs:{type:'integer'},
+            endpoints:{type:'object', required:['races','clubs'], properties:{races:S_STR, clubs:S_STR}}}}}}},
+    Races:{type:'object', required:['sport','generated','list','count','races'],
+      properties:{sport:S_STR, generated:S_STR, list:S_LISTA, count:{type:'integer'},
+        races:{type:'array', items:{type:'object', required:['codex','date','venue','nation','category','event','sex','upcoming','url','source','checked'],
+          properties:{id:S_STRNULL, codex:S_STR, date:{type:'string', pattern:'^\\d{4}-\\d{2}-\\d{2}$'}, venue:S_STR, nation:S_STR,
+            category:S_STR, event:S_STR, sex:S_STR, applied_penalty:S_NUMNULL, calculated_penalty:S_NUMNULL,
+            classified:{type:['integer','null']}, upcoming:{type:'boolean'}, url:S_STR, source:S_STR, checked:S_STR}}}}},
+    Clubs:{type:'object', required:['sport','generated','list','count','clubs'],
+      properties:{sport:S_STR, generated:S_STR, list:S_LISTA, count:{type:'integer'},
+        clubs:{type:'array', items:{type:'object', required:['name','nation','athletes','url','source','checked'],
+          properties:{name:S_STR, nation:S_STR, athletes:{type:'integer'}, url:S_STR, website:S_STRNULL, source:S_STR, checked:S_STR}}}}},
+    Formula:{type:'object', required:['generated','list','formula','events','categories'],
+      properties:{generated:S_STR, list:S_LISTA, formula:{type:'object'},
+        events:{type:'array', items:{type:'object', required:['event','code','sex','f_value','max_points'],
+          properties:{event:S_STR, code:S_STR, sex:S_STR, f_value:{type:'number'}, max_points:{type:'number'}}}},
+        categories:{type:'array', items:{type:'object', required:['code','name','min_penalty'],
+          properties:{code:S_STR, name:S_STR, min_penalty:{type:'number'}, level:{type:'integer'}}}}}}
+  }}};
+apiSkriv('openapi.json', OPENAPI);
+
+/* Sidan som förklarar flödet för människor (och har Dataset-märkning). */
+{
+  const sporter=Object.entries(apiSport);
+  let inneh=`<h1>Race Point open data</h1>
+<p class="svar">Race Point publishes its core data as read-only JSON files, rebuilt every night from official FIS data:
+races (date, venue, category, penalty, number classified) and clubs for ${sporter.length} sports, plus the alpine FIS points
+formula. Generated ${API_DATUM}. No key, no sign-up.</p>
+<section class="kort"><h2>What is in the feed?</h2><div class="tblwrap"><table>
+<tr><th>Sport</th><th>FIS list</th><th class="n">Races</th><th class="n">Clubs</th><th>Files</th></tr>`+
+    sporter.map(([m,x])=>`<tr><td>${esc(x.name)}</td><td class="muted">${esc(x.list.name)}</td><td class="n">${x.races.length}</td><td class="n">${x.clubs.length}</td>`+
+      `<td><a href="v1/${m}/races.json">races.json</a> · <a href="v1/${m}/clubs.json">clubs.json</a></td></tr>`).join('')+
+  `</table></div></section>
+<section class="kort"><h2>Where do I start?</h2><div class="lankar">
+<a href="v1/index.json">index.json – all sports and endpoints</a><a href="v1/openapi.json">openapi.json – format description</a>
+<a href="v1/alpine-skiing/formula.json">Alpine formula (JSON)</a><a href="../llms.txt">llms.txt</a></div>
+<p class="not">Each record carries its source and the date it was checked. Athlete names and birth years are not in the feed:
+they are personal data and many athletes are minors – athlete pages are on the site itself. Race Point is independent and not
+affiliated with FIS; the official FIS results always decide.</p></section>`;
+  skriv('/api/index.html', sida({
+    titel:'Race Point open data – FIS races and clubs as JSON | Race Point',
+    beskrivning:'Read-only JSON feeds of FIS races, penalties and clubs for alpine, cross-country, snowboard and freestyle, rebuilt every night.',
+    adress:'/api/', rot:'../', underrubrik:'Open data',
+    brodsmula:`<a href="../">Race Point</a> › Open data`, innehall:inneh,
+    jsonld:sporter.map(([m,x])=>({'@context':'https://schema.org','@type':'Dataset',
+      name:`${x.name} FIS races and clubs (Race Point)`, description:`Races with date, venue, category, applied penalty and number classified, and clubs with athletes on the ${x.list.name}.`,
+      url:DOMAN+'/api/', dateModified:API_DATUM, temporalCoverage:`${x.list.valid_from}/${x.list.valid_to}`,
+      isBasedOn:x.list.source, isAccessibleForFree:true, creator:{'@id':ORG_ID}, publisher:{'@id':ORG_ID},
+      distribution:[{'@type':'DataDownload', encodingFormat:'application/json', contentUrl:`${DOMAN}/api/v1/${m}/races.json`},
+        {'@type':'DataDownload', encodingFormat:'application/json', contentUrl:`${DOMAN}/api/v1/${m}/clubs.json`}]}))
+  }));
+}
+
 /* ---- robots och sitemap ----
    Sökmotorer och AI-tjänster (ChatGPT, Claude, Perplexity m.fl.) släpps in
    uttryckligen, en grupp per bot, så att ingen av dem tolkar tystnad som nej.
@@ -1385,9 +1732,9 @@ writeFileSync(join(UT,'robots.txt'),
     ['Snowboard','/snowboard'],['Freestyle & Ski Cross','/freestyle']];
   let llms=`# Race Point
 
-> Race Point (racepoint.net) shows FIS points, race penalties, results and world rankings for snow sports. In alpine skiing it works out race points and penalty live while the race is still running.
+> ${OM_RP}
 
-Race Point is an independent site, not affiliated with FIS. It is published by Foodbergs Stockholm AB (Swedish company reg. no. 559518-4457). All points, rankings and results come from the official FIS points lists and FIS live timing; the site is rebuilt from FIS data every night (this file was generated ${new Date().toISOString().slice(0,10)}).
+Race Point is an independent site, not affiliated with FIS. It is published by ${UTGIVARE.namn} (Swedish company reg. no. ${UTGIVARE.orgnr}). All points, rankings and results come from the official FIS points lists and FIS live timing; the site is rebuilt from FIS data every night (this file was generated ${new Date().toISOString().slice(0,10)}).
 
 How lists are ordered: athlete and club directories are grouped by nation and sorted alphabetically; athletes within a club are sorted by FIS points (best first); races are listed newest first; race results are in finishing order. Nothing is ranked by payment. Upcoming-race pages may carry a link to accommodation near the venue; that link is marked "Advertising" and earns a commission, which does not affect any order or number on the site.
 
@@ -1396,6 +1743,9 @@ How lists are ordered: athlete and club directories are grouped by nation and so
   llms+=rad('Race Point – home','/','all snow sports covered, with links to each sport');
   llms+=rad('Alpine skiing – live FIS points calculator','/alpine-skiing/','live race points and penalty during a race, from the FIS live timing feed');
   llms+=rad('Alpine skiing – funding your season','/alpine-skiing/guide.html','guide for athletes on getting sponsors and funding');
+  llms+=rad('Alpine skiing – how FIS points are calculated',FORMEL_ADR,'race points, F-values per event, penalty and minimum penalty per race category, from the current FIS list');
+  llms+=rad('Alpine skiing – world ranking',RANK_ADR,'top 25 men and women per alpine event on the current FIS points list');
+  llms+=rad('Alpine skiing – races by penalty',PENALTY_ADR,'settled FIS races from the last 12 months ordered by applied penalty, per event and sex');
   llms+=rad('Cross-country FIS points calculator','/cross-country/calculator/','race points, penalty and FIS points with the official FIS formula');
   llms+=`\n## Sports\n`;
   for(const [namn,bas] of grenSidor){
@@ -1406,6 +1756,11 @@ How lists are ordered: athlete and club directories are grouped by nation and so
     llms+=rad(`${namn} – races`,bas+'/races/','races that counted for FIS points, with full results and applied penalty');
   }
   llms+=`\n## Machine-readable data\n`;
+  llms+=`- [Open data index (JSON)](${DOMAN}/api/v1/index.json): sports, current FIS points lists and links to every feed; read-only, no key\n`;
+  llms+=`- [OpenAPI description](${DOMAN}/api/v1/openapi.json): format of all feeds\n`;
+  for(const [mapp,x] of Object.entries(apiSport))
+    llms+=`- [${x.name} races and clubs (JSON)](${DOMAN}/api/v1/${mapp}/races.json): ${x.races.length} races with date, venue, category, applied penalty and number classified; clubs in ${DOMAN}/api/v1/${mapp}/clubs.json\n`;
+  llms+=`- [Alpine FIS points formula (JSON)](${DOMAN}/api/v1/alpine-skiing/formula.json): F-values, max points and minimum penalty per category\n`;
   for(const [namn,bas] of grenSidor){
     if(existsSync(join(UT,bas.slice(1),'lopp-arkiv.json')))
       llms+=`- [${namn} race archive (JSON)](${DOMAN}${bas}/lopp-arkiv.json): settled races from the last three years with results, race points and penalty (per race: raceid, codex, datum = date, plats = venue, nat = nation, kon = sex, penalty, and r = results as [position, bib, FIS code, name, nation, status, time, race points])\n`;
@@ -1414,15 +1769,56 @@ How lists are ordered: athlete and club directories are grouped by nation and so
   llms+=`\n## Optional\n`;
   llms+=rad('Add your links','/alpine-skiing/lagg-till.html','athletes can add their own social and sponsor links to their profile');
   llms+=rad('Contact','/alpine-skiing/kontakt.html','contact and sponsorship enquiries');
+  llms+=`- [Full version for AI tools](${DOMAN}/llms-full.txt): this file plus the formulas, current lists and feed fields\n`;
   writeFileSync(join(UT,'llms.txt'), llms);
+
+  /* llms-full.txt: samma karta plus det en AI-tjänst behöver för att svara
+     direkt – formlerna, vilka listor som gäller nu och fälten i flödet. Bara
+     uppgifter som står i FIS-datan eller i sajtens egna sidor. */
+  const lika=FORMEL.grenar.filter(d=>d.kon==='M');
+  let full=llms+`\n## Current FIS points lists (generated ${API_DATUM})\n`;
+  for(const [mapp,x] of Object.entries(apiSport))
+    full+=`- ${x.name}: ${x.list.name}, valid ${x.list.valid_from} to ${x.list.valid_to}; ${x.athletes} athletes, ${x.clubs.length} clubs, ${x.races.length} races on Race Point. Source: ${x.list.source}\n`;
+  full+=`\n## How alpine FIS points are calculated\n`+
+`- FIS points for a race = race points + penalty. Lower is better.\n`+
+`- Race points = (athlete time / winner time - 1) x F, capped at the max points for the event.\n`+
+`- F-values and max points on the ${hdr.Listname}: `+lika.map(d=>`${d.namn} F ${d.F}, max ${d.max}`).join('; ')+`.\n`+
+`- Penalty = (A + B - C) / 10 + category adder. A = sum of the five best FIS points among the top ten finishers; B = sum of the five best FIS points among all starters; C = sum of the race points of the five athletes in A. Never lower than the category minimum (FIS Points Rules art. 4.4).\n`+
+`- Minimum penalty per category: `+FORMEL.kategorier.map(c=>`${c.namn} (${c.kod}) ${c.minPenalty}`).join('; ')+`.\n`+
+`- Race Point's live calculation has been checked against 44 official races and reproduced the published penalty exactly in every one.\n`+
+`- Details: ${DOMAN}${FORMEL_ADR}\n`;
+  if(apiSport['cross-country']) full+=`\n## How cross-country FIS points are calculated\n`+
+`- Race points = (athlete time / winner time - 1) x F. F = 800 interval start, 1200 sprint qualification and pursuit 2nd part, 1400 mass start and skiathlon, 2800 long distance.\n`+
+`- Penalty: FIS points of the top five finishers, remove the best and the worst, sum the remaining three and divide by 3.50; at least the minimum for the level (FIS/COC senior 20, junior 35); World Cup, Olympics and World Championships have penalty 0; maximum 700. Source: FIS Points Rules Cross-Country, art. 1.2 and 5.3.\n`+
+`- Checked against 193 official races. Calculator: ${DOMAN}/cross-country/calculator/\n`;
+  full+=`\n## Snowboard and freestyle\n- In snowboard and freestyle, FIS points are awarded by placing, so higher points are better.\n`;
+  full+=`\n## Feed fields\n`+
+`- races.json: id (FIS race id), codex, date, venue, nation (FIS nation code), category (FIS category code), event, sex (M/W), applied_penalty, calculated_penalty, classified, upcoming, url (Race Point page), source, checked (date).\n`+
+`- clubs.json: name, nation, athletes (number on the current list), url, website (when known), source, checked.\n`+
+`- Athlete names and birth years are not in the feeds (personal data; many athletes are minors). Athlete pages: ${DOMAN}/<sport>/athletes/<FIS code>-<name>.html, listed per nation on ${DOMAN}/<sport>/athletes/.\n`;
+  writeFileSync(join(UT,'llms-full.txt'), full);
 }
 
 const idag=new Date().toISOString().slice(0,10);
-const karta='<?xml version="1.0" encoding="UTF-8"?>\n'+
- '<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">\n'.replace('sitemap.org','sitemaps.org')+
- adresser.map(a=>`<url><loc>${DOMAN}${a.replace(/index\.html$/,'')}</loc><lastmod>${idag}</lastmod></url>`).join('\n')+
+/* Google tar högst 50 000 adresser per fil. Sajten växer med arkiven, så över
+   45 000 delas kartan upp i sitemap-1.xml, sitemap-2.xml … och sitemap.xml
+   blir en förteckning över dem. Under gränsen: en fil, som i dag. */
+const kartfil=lista=>'<?xml version="1.0" encoding="UTF-8"?>\n'+
+ '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+ lista.map(a=>`<url><loc>${DOMAN}${a.replace(/index\.html$/,'')}</loc><lastmod>${idag}</lastmod></url>`).join('\n')+
  '\n</urlset>\n';
-writeFileSync(join(UT,'sitemap.xml'), karta);
+const KARTGRANS=45000;
+const unika=[...new Set(adresser)]; adresser.length=0; adresser.push(...unika);
+if(adresser.length<=KARTGRANS) writeFileSync(join(UT,'sitemap.xml'), kartfil(adresser));
+else{
+  const delar=[];
+  for(let i=0;i<adresser.length;i+=KARTGRANS) delar.push(adresser.slice(i,i+KARTGRANS));
+  delar.forEach((d,i)=>writeFileSync(join(UT,`sitemap-${i+1}.xml`), kartfil(d)));
+  writeFileSync(join(UT,'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n'+
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+    delar.map((d,i)=>`<sitemap><loc>${DOMAN}/sitemap-${i+1}.xml</loc><lastmod>${idag}</lastmod></sitemap>`).join('\n')+
+    '\n</sitemapindex>\n');
+}
 
 console.log(`\nKlart. ${adresser.length} adresser i webbplats/`);
 console.log(`Sitemap: ${DOMAN}/sitemap.xml`);

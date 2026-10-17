@@ -167,11 +167,15 @@ export async function byggGren(g, h){
   const loppAdress = t => `${BAS}/races/${t.datum}-${slug(t.plats)}-${slug(t.namn)}-${t.codex}.html`;
   const akareAdress = a => `${BAS}/athletes/${a.fis}-${slug(namnSnyggt(a.efter,a.forn))}.html`;
   const klubbAdress = (nat,namn) => `${BAS}/clubs/${slug(nat)}-${slug(namn)}.html`;
-  const klubbNyckel = (nat,namn) => nat+'|'+String(namn||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+  const klubbNyckel = (nat,namn) => nat+'|'+slug(namn||'');   // samma normalisering som adressen
   const brod = (...delar) => `<a href="/">Race Point</a> › <a href="${BAS}/">${esc(g.namn)}</a>`+
     delar.map(d=>' › '+d).join('');
   const sidaG = o => sida({...o, underrubrik:g.namn});
   const n2 = v => v!=null ? v.toFixed(2) : '–';
+  /* AI-sökpaketet (17 okt 2026): källan med datum i "svaret först" överst. */
+  const KALLA = `official ${hdr.Listname} (valid ${hdr.Validfrom} to ${hdr.Validto})`;
+  const DOMAN = h.DOMAN, evenemangLd = h.evenemangLd, ORG_ID = h.ORG_ID;
+  const riktOrd = g.hogreBattre ? 'Higher is better' : 'Lower is better';
 
   /* ---- åkare ---- */
   const register = [], klubbar = {};
@@ -184,7 +188,10 @@ export async function byggGren(g, h){
     const kl = klubbLank(a.klubb, a.nat), klubbVisa = kl ? kl.namn : a.klubb;
     let inneh = `<h1>${flagga(a.nat)} ${esc(visa)}</h1>
 <p class="ingress">FIS code ${esc(a.fis)} · ${esc(a.nat)}${a.fodd?' · born '+esc(a.fodd):''}${klubbVisa?' · '+esc(klubbVisa):''}</p>
-<section class="kort"><h2>FIS points</h2><div class="tblwrap"><table>
+${(()=>{ const b = disc.slice().sort((x,y)=>battre(a.poang[x],a.poang[y]))[0];
+  return `<p class="svar">${esc(visa)} has ${esc(g.namn.toLowerCase())} FIS points in ${disc.length} discipline${disc.length===1?'':'s'}.
+Strongest: ${esc(DISC[b])}, ${n2(a.poang[b])} points${a.rank[b]?` (world no. ${a.rank[b]})`:''}. ${riktOrd}. Source: ${esc(KALLA)}.</p>`; })()}
+<section class="kort"><h2>What are ${esc(visa)}’s FIS points?</h2><div class="tblwrap"><table>
 <tr><th>Event</th><th class="n">Points</th><th class="n">World ranking</th></tr>`+
       disc.map(d=>`<tr><td>${DISC[d]}</td><td class="n">${n2(a.poang[d])}</td>`+
         `<td class="n muted">${a.rank[d]?'no. '+a.rank[d]:'–'}</td></tr>`).join('')+
@@ -235,7 +242,7 @@ a couple of minutes, and everything is checked before it appears.</p>
       beskrivning:`${visa} (${a.nat}) ${g.namn.toLowerCase()} FIS points: `+
         disc.map(d=>`${DISC[d]} ${n2(a.poang[d])}`).join(', ')+'. World ranking and results.',
       adress, rot:'../../', brodsmula:brod(`<a href="${BAS}/athletes/">Athletes</a>`), innehall:inneh,
-      jsonld:{'@context':'https://schema.org','@type':'Person', name:visa, nationality:a.nat, identifier:a.fis,
+      jsonld:{'@context':'https://schema.org','@type':'Person', name:visa, url:DOMAN+adress, nationality:a.nat, identifier:a.fis,
         sameAs:`https://www.fis-ski.com/DB/general/athlete-biography.html?sectorcode=${g.kod}&competitorid=${a.id}`}
     }));
     register.push({visa, nat:a.nat, adress, kon:a.kon, poang:a.poang, rank:a.rank});
@@ -250,6 +257,8 @@ a couple of minutes, and everything is checked before it appears.</p>
     const inneh = `<h1>${flagga(k.nat)} ${esc(k.namn)}</h1>
 <p class="ingress">${antal} athlete${antal===1?'':'s'} on the FIS ${esc(g.namn.toLowerCase())} points list${
   k.webb?' · <a href="'+esc(k.webb)+'" rel="noopener">club website</a>':''}</p>
+<p class="svar">${esc(k.namn)} (${esc(k.nat)}) has ${antal} athlete${antal===1?'':'s'} with ${esc(g.namn.toLowerCase())} FIS points.
+Source: ${esc(KALLA)}.</p>
 <section class="kort"><h2>Athletes</h2><div class="tblwrap"><table>
 <tr><th>Athlete</th><th class="n">Born</th><th class="n">Best points</th></tr>`+
       k.akare.map(a=>`<tr><td><a href="${esc(a.adress)}">${esc(a.visa)}</a></td>`+
@@ -277,7 +286,11 @@ couple of minutes and costs nothing. Everything is checked before it appears.</p
     const rubrik = `${t.namn} – ${t.plats}`;
     const inneh = `<h1>${flagga(t.nat)} ${esc(rubrik)}</h1>
 <p class="ingress">${esc(t.datum)} · ${esc(t.kat)} · FIS codex ${esc(t.codex)}</p>
-${t.penalty?`<section class="kort"><h2>Penalty</h2><div class="nums">
+${(()=>{ const v = t.resultat.find(r=>r.pos===1), va = v && akare[v.fis];
+  const vn = v ? (va ? namnSnyggt(va.efter,va.forn) : v.namn) : '';
+  return `<p class="svar">${v?`${esc(vn)} (${esc(v.nat)}) won. `:''}${t.penalty?`The applied penalty was ${esc(t.penalty)}; `:''}${t.resultat.filter(r=>r.pos).length} athletes were classified.
+Source: official FIS results, race date ${esc(t.datum)}.</p>`; })()}
+${t.penalty?`<section class="kort"><h2>What was the penalty?</h2><div class="nums">
 <div><div class="n">${esc(t.penalty)}</div><small>applied</small></div>
 ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</small></div>`:''}
 <div><div class="n">${t.resultat.filter(r=>r.pos).length}</div><small>classified</small></div>
@@ -295,7 +308,8 @@ ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</sma
       titel:`${rubrik}, ${t.datum} – results | Race Point`,
       beskrivning:`${rubrik}, ${t.datum}. Full results and FIS points${t.penalty?`, applied penalty ${t.penalty}`:''}. FIS codex ${t.codex}.`,
       adress, rot:'../../', brodsmula:brod(`<a href="${BAS}/races/">Races</a>`), innehall:inneh,
-      jsonld:{'@context':'https://schema.org','@type':'SportsEvent', name:rubrik, startDate:t.datum,
+      jsonld: evenemangLd ? evenemangLd({namn:rubrik, datum:t.datum, plats:t.plats, nat:t.nat, sport:g.sport, adress, kat:t.kat})
+        : {'@context':'https://schema.org','@type':'SportsEvent', name:rubrik, startDate:t.datum,
         sport:g.sport, location:{'@type':'Place', name:t.plats, address:t.nat}}
     }));
   }
@@ -346,7 +360,7 @@ ${t.beraknad?`<div><div class="n">${esc(t.beraknad)}</div><small>calculated</sma
   inneh = `<h1>${esc(g.namn)} – FIS points and world ranking</h1>
 <p class="ingress">Every athlete on the official FIS ${esc(g.namn.toLowerCase())} points list:
 ${register.length} athletes, ${klubbLista.length} clubs and ${loppLista.length} races.
-From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}.</p>
+From ${esc(hdr.Listname)}, valid ${esc(hdr.Validfrom)} to ${esc(hdr.Validto)}. ${RIKTNING}.</p>
 <div class="lankar"><a class="knapp" href="${BAS}/athletes/">All athletes</a>
 <a class="knapp" href="${BAS}/clubs/">All clubs</a><a class="knapp" href="${BAS}/races/">Races and results</a>${g.kod==='CC'?`<a class="knapp" href="${BAS}/calculator/">FIS points calculator</a>`:''}</div>`;
   for(const d of KODER) for(const [kon,konNamn] of [['M','Men'],['W','Women']]){
@@ -365,7 +379,13 @@ world ranking and results are here, updated every night from the official FIS li
   skriv(`${BAS}/index.html`, sidaG({
     titel:`${g.namn} FIS points and world ranking | Race Point`,
     beskrivning:`FIS ${g.namn.toLowerCase()} points for every athlete: world ranking in ${KODER.map(d=>DISC[d].toLowerCase()).join(' and ')}, clubs and race results, updated every night.`,
-    adress:`${BAS}/`, rot:'../', brodsmula:`<a href="/">Race Point</a> › ${esc(g.namn)}`, innehall:inneh}));
+    adress:`${BAS}/`, rot:'../', brodsmula:`<a href="/">Race Point</a> › ${esc(g.namn)}`, innehall:inneh,
+    jsonld:{'@context':'https://schema.org','@type':'Dataset', name:`${g.namn} FIS points and world ranking (${hdr.Listname})`,
+      description:`FIS ${g.namn.toLowerCase()} points, world ranking, clubs and race results from the ${hdr.Listname}.`,
+      url:`${DOMAN}${BAS}/`, temporalCoverage:`${hdr.Validfrom}/${hdr.Validto}`, dateModified:new Date().toISOString().slice(0,10),
+      isBasedOn:g.lista, isAccessibleForFree:true, ...(ORG_ID?{creator:{'@id':ORG_ID}, publisher:{'@id':ORG_ID}}:{}),
+      distribution:[{'@type':'DataDownload', encodingFormat:'application/json', contentUrl:`${DOMAN}/api/v1/${M}/races.json`},
+        {'@type':'DataDownload', encodingFormat:'application/json', contentUrl:`${DOMAN}/api/v1/${M}/clubs.json`}]}}));
 
   /* ---- FIS-poängkalkylator för längd (14 okt 2026) ----
      Formeln ur FIS Points Rules Cross-Country 2025/26 (art. 1.2, 5.3) och kontrollerad
@@ -443,5 +463,15 @@ format suggests (e.g. on courses with little climbing) – the official result a
   }
 
   console.log(`${g.namn}: ${antalAkare} åkarsidor, ${klubbLista.length} klubbsidor, ${loppLista.length} loppsidor`);
-  return {antalAkare, klubbar:klubbLista.length, lopp:loppLista.length};
+  /* Underlag för det öppna JSON-flödet (/api/v1/). Bara lopp och klubbar –
+     inga namn eller födelseår på åkare (personuppgifter, många är minderåriga). */
+  const api = {
+    lista:{namn:hdr.Listname, giltigFran:hdr.Validfrom, giltigTill:hdr.Validto, kalla:g.lista},
+    lopp: loppLista.map(t=>({raceid:t.raceid, codex:t.codex, datum:t.datum, plats:t.plats, nat:t.nat, kat:t.kat,
+      gren:t.namn, kon:t.kon, penalty:t.penalty?parseFloat(t.penalty):null, beraknad:t.beraknad?parseFloat(t.beraknad):null,
+      klassade:t.resultat.filter(r=>r.pos).length, adress:loppAdress(t)})),
+    klubbar: klubbLista.map(k=>({namn:k.namn, nat:k.nat, akare:k.akare.length, adress:k.adress, webb:k.webb||null})),
+    antalAkare
+  };
+  return {antalAkare, klubbar:klubbLista.length, lopp:loppLista.length, api};
 }
