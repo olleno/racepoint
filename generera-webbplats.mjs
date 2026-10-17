@@ -1333,10 +1333,12 @@ article 4.4. The calculation has been checked against 44 official races and repr
 published penalty exactly in every one.</p></section>`;
 /* Logotypen ligger hos sponsorn själv. Laddar den inte visas namnet i text
    i stället, via onerror – då blir det aldrig en tom lucka. */
+/* "Powered by" är obetalda samarbeten (Olles beslut 2026-10-17) – därför
+   vanlig länk med rel="noopener", ingen reklammärkning. */
 function sponsorMarke(s){
   const fall="this.style.display='none';"+
              "var t=this.parentNode.querySelector('.namn');if(t)t.hidden=false;";
-  let h=`<a href="${esc(s.adress)}" rel="noopener sponsored nofollow">`;
+  let h=`<a href="${esc(s.adress)}" rel="noopener">`;
   if(s.marke) h+=`<img class="marke" src="${esc(s.marke)}" alt="" onerror="this.style.display='none'">`;
   if(s.bild)  h+=`<img src="${esc(s.bild)}" alt="${esc(s.namn)}" `+
                  `style="height:${s.hojd||20}px" onerror="${fall}">`;
